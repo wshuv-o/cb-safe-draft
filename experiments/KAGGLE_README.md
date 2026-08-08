@@ -1,8 +1,17 @@
-# CB-SAFE on Kaggle — full baseline comparison, one bundle
+# CB-SAFE on Kaggle — baseline comparison bundle
 
-Runs **every method on every dataset** in one place, resumable. Methods (all our
-own faithful implementations of the published algorithms, each cited in the paper —
-run under ONE shared harness for a controlled comparison):
+Two entry points share one harness (all methods are our own faithful
+implementations of the published algorithms, each cited in the paper, run under
+ONE shared harness for a controlled comparison):
+
+- **`run_edge_kaggle.py`** — **Edge-IIoTset only** (the delivered bundle's default;
+  the one dataset whose source CSV is Kaggle-hosted). ~144 runs, tabular/fast,
+  fits one T4 session. Sets `CBSAFE_DATASETS=edgeiiot`.
+- **`run_all_kaggle.py`** — all four datasets (CIFAR-10, FashionMNIST, EMNIST,
+  Edge-IIoTset). ~60-70 GPU-hours, spans several sessions. Scope it with
+  `CBSAFE_DATASETS=cifar10,emnist` etc. The image sets are normally run locally.
+
+Methods (both runners):
 
 - **Baselines:** FedAvg mean, trimmed mean, median, Multi-Krum [NeurIPS'17],
   Bulyan [ICML'18], geometric-median / RFA, FLTrust [NDSS'21], FedGT [TIFS'25].

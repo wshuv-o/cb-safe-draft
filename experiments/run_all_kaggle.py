@@ -25,7 +25,10 @@ from src.federated.data import dirichlet_partition
 from src.federated.simulation import Config, run
 
 OUT = os.environ.get("CBSAFE_OUT", "/kaggle/working/results")
-DATASETS = ["cifar10", "fmnist", "emnist", "edgeiiot"]
+# Scope the grid to a subset of datasets via CBSAFE_DATASETS (comma-separated),
+# e.g. CBSAFE_DATASETS=edgeiiot for the Edge-only Kaggle bundle. Default: all four.
+_ALL_DATASETS = ["cifar10", "fmnist", "emnist", "edgeiiot"]
+DATASETS = [d.strip() for d in os.environ.get("CBSAFE_DATASETS", ",".join(_ALL_DATASETS)).split(",") if d.strip()]
 # (aggregator, overlap, needs_root)
 METHODS = [
     ("mean", 1, False), ("trimmed", 1, False), ("median", 1, False), ("krum", 1, False),
@@ -55,6 +58,15 @@ def load(ds, seed):
     return tr, te, np.array(tr.targets), 64
 
 
+def available(ds):
+    """Cheap probe: is this dataset's source present? (edgeiiot needs its CSV
+    added to the notebook; the image sets auto-download.) Avoids retrying prep()
+    once per method when a dataset was simply not added."""
+    if ds == "edgeiiot":
+        return kd.find_edgeiiot_csv() is not None
+    return True
+
+
 def prep(ds, seed, root_size=200):
     got = load(ds, seed)
     if got is None:
@@ -75,6 +87,10 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     total = done = 0
     for ds in DATASETS:
+        if not available(ds):
+            print(f"[skip dataset] {ds}: source not found under /kaggle/input "
+                  f"(did you add the Edge-IIoTset dataset?) - skipping", flush=True)
+            continue
         attacks = ["signflip", "labelflip"] + (["backdoor"] if ds != "edgeiiot" else [])
         odir = os.path.join(OUT, subdir(ds))
         os.makedirs(odir, exist_ok=True)
