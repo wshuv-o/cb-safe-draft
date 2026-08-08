@@ -18,24 +18,27 @@ def main() -> None:
     p.add_argument("--attack", required=True, choices=["none", "labelflip", "signflip", "backdoor"])
     p.add_argument("--f", type=float, required=True)
     p.add_argument("--aggregator", required=True,
-                   choices=["mean", "median", "trimmed", "krum", "reputation", "fedgt"])
+                   choices=["mean", "median", "trimmed", "krum", "reputation",
+                            "reputation_tf", "hybrid", "hybrid_tf", "fedgt"])
     p.add_argument("--cluster-size", type=int, default=3)
     p.add_argument("--rounds", type=int, default=30)
     p.add_argument("--trim", type=int, default=2)
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--dataset", default="cifar10", choices=["cifar10", "fmnist"])
     p.add_argument("--n-clients", type=int, default=30)
+    p.add_argument("--overlap", type=int, default=1)
     args = p.parse_args()
 
     cfg = Config(
         n_clients=args.n_clients, rounds=args.rounds, aggregation="cluster",
         aggregator=args.aggregator, cluster_size=args.cluster_size, trim=args.trim,
         attack=args.attack, f_malicious=args.f, seed=args.seed, dataset=args.dataset,
+        overlap=args.overlap,
     )
     train, test = data.load_dataset(args.dataset)
     parts = data.dirichlet_partition(np.array(train.targets), cfg.n_clients, cfg.alpha, cfg.seed)
     server_dl = None
-    if args.aggregator in ("reputation", "fedgt"):
+    if args.aggregator in ("reputation", "fedgt", "hybrid"):
         # reserve a small server root set (trust anchor), excluded from all clients
         rng = np.random.default_rng(cfg.seed + 99)
         root_idx = set(rng.choice(len(train), size=cfg.root_size, replace=False).tolist())
@@ -47,7 +50,8 @@ def main() -> None:
 
     history = run(cfg, client_dls, test_dl, server_dl=server_dl)
 
-    name = f"robust_{args.attack}_{args.aggregator}_f{int(args.f * 100):02d}_c{args.cluster_size}_s{args.seed}.csv"
+    ov = f"_ov{args.overlap}" if args.overlap != 1 else ""
+    name = f"robust_{args.attack}_{args.aggregator}{ov}_f{int(args.f * 100):02d}_c{args.cluster_size}_s{args.seed}.csv"
     outdir = _bootstrap.RESULTS
     if args.dataset != "cifar10":
         outdir = os.path.join(outdir, args.dataset)

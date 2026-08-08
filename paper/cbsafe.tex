@@ -153,6 +153,21 @@ experimentally validated statement of the privacy--robustness trade-off it induc
 (Section~\ref{sec:tradeoff}).
 
 \section{The CB-SAFE Framework}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_architecture.pdf}
+\caption{CB-SAFE, one training round end to end. A one-time code-based (HQC) key
+setup establishes pairwise secrets reused every round. In the confidentiality
+layer, clients mask updates so masks cancel within clusters of size $c$; the server
+observes only the $k$ cluster sums (anonymity set $c$), never an individual update.
+The Byzantine-robustness stage (CB-SAFE+) flags clusters by a loss-probe or, in the
+trust-free variant, a consensus test; accumulates per-client suspicion across
+re-randomized rounds; adaptively excludes identified attackers; and robustly
+aggregates the clean cluster sums into the global model, which is broadcast back.}
+\label{fig:arch}
+\end{figure*}
+
 \subsection{System and Threat Model}
 A server coordinates $N$ clients running FedAvg over non-IID data partitions.
 Clients are partitioned into $k=N/c$ fixed clusters of size $c$. The server is

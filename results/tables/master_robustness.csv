@@ -1,0 +1,18 @@
+Dataset,Aggregation,SF f10,SF f20,SF f30,LF f10,LF f20,LF f30,BD-ASR f10,BD-ASR f20,BD-ASR f30
+CIFAR-10,FedAvg mean,21.4\pm8.3,10.0\pm0.0,10.0\pm0.0,53.9,51.9,47.4,87.1\pm1.2,95.1\pm0.9,96.4\pm0.7
+CIFAR-10,Trimmed mean,45.4\pm2.4,10.0\pm0.0,10.0\pm0.0,52.7,51.1,47.3,74.7\pm3.6,94.4\pm1.2,96.1\pm0.7
+CIFAR-10,Median,47.8\pm3.2,10.0\pm0.0,10.0\pm0.0,52.0,51.2,44.8,29.0\pm8.4,94.1\pm1.2,96.1\pm0.6
+CIFAR-10,Multi-Krum,53.6\pm0.8,39.8\pm2.2,20.3\pm10.1,50.5,50.4,43.6,60.2\pm38.4,93.9\pm1.2,96.5\pm1.2
+CIFAR-10,FedGT [TIFS'25],54.0\pm0.2,51.3\pm1.4,50.1\pm1.2,--,--,--,--,--,--
+CIFAR-10,CB-SAFE+,53.0\pm0.6,47.1\pm2.6,37.9\pm12.6,--,51.0,47.0,68.7\pm15.5,94.6\pm0.7,95.9\pm0.8
+CIFAR-10,CB-SAFE+ hybrid,53.9\pm0.5,49.5\pm3.4,50.0\pm2.2,--,--,--,--,--,--
+FashionMNIST,FedAvg mean,48.9\pm28.5,10.0\pm0.0,10.0\pm0.0,--,--,--,--,--,--
+FashionMNIST,Median,83.6\pm1.1,10.0\pm0.0,10.0\pm0.0,--,--,--,--,--,--
+FashionMNIST,Multi-Krum,85.9\pm0.8,83.0\pm1.6,43.1\pm23.9,--,--,--,--,--,--
+FashionMNIST,FedGT [TIFS'25],85.8\pm0.4,86.0\pm0.4,83.0\pm1.6,--,--,--,--,--,--
+FashionMNIST,CB-SAFE+,85.7\pm0.5,86.0\pm0.5,83.1\pm1.9,--,--,--,--,--,--
+Edge-IIoTset,FedAvg mean,27.0,7.3,7.3,62.7,63.5,60.8,--,--,--
+Edge-IIoTset,Trimmed mean,58.0,11.7,7.3,62.5,62.7,60.5,--,--,--
+Edge-IIoTset,Median,59.6,13.6,7.3,61.5,62.7,59.7,--,--,--
+Edge-IIoTset,Multi-Krum,63.3,59.4,38.5,62.4,62.2,60.8,--,--,--
+Edge-IIoTset,CB-SAFE+,61.9,62.3,61.5,61.9,61.5,62.4,--,--,--

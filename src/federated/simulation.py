@@ -56,6 +56,7 @@ class Config:
     dataset: str = "cifar10"     # cifar10 | fmnist | emnist | edgeiiot
     n_classes: int = 10          # label space (set per dataset; used by label-flip)
     signflip_gamma: float = 5.0  # sign-flip scale (C1 sweeps this to find gamma*)
+    overlap: int = 1             # CB-SAFE+ re-randomized partitions/round (test budget)
 
 
 def set_seeds(seed: int) -> None:
@@ -168,7 +169,10 @@ def run(cfg: Config, client_dls: list[DataLoader], test_dl: DataLoader,
     global_flat = flat_params(model)
     clusters = make_clusters(list(range(cfg.n_clients)), cfg.cluster_size, cfg.seed + 13)
     malicious = pick_malicious(cfg)
-    rep = ReputationState() if cfg.aggregator == "reputation" else None
+    rep_aggs = ("reputation", "reputation_tf", "hybrid", "hybrid_tf")
+    rep = ReputationState() if cfg.aggregator in rep_aggs else None
+    trustfree = cfg.aggregator in ("reputation_tf", "hybrid_tf")  # no server root set
+    comp = cfg.aggregator in ("hybrid", "hybrid_tf")              # per-round COMP decode
     fedgt = None
     if cfg.aggregator == "fedgt":
         from ..aggregation.fedgt import FedGTDetector
@@ -207,18 +211,27 @@ def run(cfg: Config, client_dls: list[DataLoader], test_dl: DataLoader,
             delta_agg = np.mean(np.stack(keep), axis=0) if keep else np.mean(
                 np.stack([gm for gm in g_means if gm is not None]), axis=0)
         elif rep is not None:
-            # CB-SAFE+ path: fresh random partition each round, flag clusters
-            # opposing the server's root-data direction, accumulate suspicion, exclude
-            clusters_r = make_clusters(active, cfg.cluster_size, cfg.seed + 13 + r)
+            # CB-SAFE+ path: fresh random partition(s) each round, flag clusters,
+            # accumulate suspicion, exclude. cfg.overlap>1 draws that many
+            # independent partitions so each client gets `overlap` tests/round
+            # (matching FedGT's overlapping-group test budget) -- clusters stay at
+            # size cfg.cluster_size, so the anonymity set is unchanged.
+            clusters_r = []
+            for p in range(cfg.overlap):
+                clusters_r += make_clusters(active, cfg.cluster_size,
+                                            cfg.seed + 13 + r + p * 1009)
             means = np.stack(
                 [np.mean(np.stack([deltas[i] for i in cl]), axis=0) for cl in clusters_r])
             probe = None
-            if server_dl is not None:
+            if server_dl is not None and not trustfree:
                 base = mean_loss(global_flat, server_dl, device, cfg.dataset)
                 probe = lambda m: mean_loss(  # noqa: E731
                     global_flat + m.astype(np.float32), server_dl, device,
                     cfg.dataset) - base
-            delta_agg = defend_round(rep, means, clusters_r, r, probe=probe)
+            # trustfree=True -> probe=None, ref=None -> defend_round uses the C3
+            # median-seeded consensus reference (no trusted data);
+            # comp=True -> per-round COMP decode over the overlapping groups (hybrid)
+            delta_agg = defend_round(rep, means, clusters_r, r, probe=probe, comp=comp)
         else:
             if on_round is not None:
                 on_round(r, deltas, clusters)
