@@ -81,12 +81,15 @@ cryptography, Byzantine robustness, cryptographic diversity.
 
 \section{Introduction}
 \IEEEPARstart{F}{ederated} learning (FL) trains a shared model across many clients without
-centralizing data, but the transmitted model updates leak private information:
-gradient-inversion and membership-inference attacks reconstruct training samples from
+centralizing data \cite{mcmahan2017,kairouz2021}, but the transmitted model updates leak private information:
+gradient-inversion \cite{zhu2019,geiping2020} and membership- or model-inversion
+\cite{shokri2017,fredrikson2015} attacks reconstruct training samples from
 individual updates. Secure aggregation closes this channel by ensuring the server
 observes only the \emph{sum} of updates, using pairwise additive masks that cancel on
-aggregation \cite{bonawitz2017,bell2020}. The confidentiality of those masks rests on key
-establishment that Shor's algorithm breaks once a cryptographically relevant quantum
+aggregation \cite{bonawitz2017,bell2020}; recent designs reduce its overhead
+\cite{lightsecagg,swiftagg}, though the sum itself can still leak
+\cite{elkordy2022}. The confidentiality of those masks rests on key
+establishment that Shor's algorithm \cite{shor1997} breaks once a cryptographically relevant quantum
 computer exists, and traffic recorded today can be decrypted then
 (``harvest-now, decrypt-later'').
 
@@ -97,9 +100,10 @@ efficient and standardized (ML-KEM, FIPS~203 \cite{fips203}), but concentrating 
 entire ecosystem's confidentiality on one hardness assumption is a systemic risk: a
 single cryptanalytic advance would break every such deployment simultaneously. NIST
 recognized exactly this risk when, in March~2025, it \emph{selected} the code-based
-KEM HQC (whose security reduces to syndrome decoding of quasi-cyclic codes, not to
-lattice problems) as a diversified backup to ML-KEM \cite{nistir8545}. That
-diversity has not reached federated learning.
+KEM HQC (whose security reduces to syndrome decoding of quasi-cyclic codes
+\cite{macwilliams1977}, not to lattice problems, in the tradition of code-based
+cryptography since McEliece \cite{mceliece1978}) as a diversified backup to ML-KEM
+\cite{nistir8545}. That diversity has not reached federated learning.
 
 A second, orthogonal tension is that secure aggregation and Byzantine robustness pull
 in opposite directions: hiding individual updates denies the server exactly the
@@ -157,11 +161,13 @@ KEM \cite{nistir8545}, with the KEM exposed behind an agnostic interface so latt
 and code-based variants differ in exactly one module.
 
 \textbf{Byzantine robustness and poisoning.} Model- and data-poisoning attacks
-\cite{fang2020,shejwalkar2021} and their defenses are a large literature: robust
-aggregation rules such as Multi-Krum \cite{blanchard2017}, coordinate-wise
-trimmed mean and median \cite{yin2018}, Bulyan \cite{bulyan}, and the
+\cite{fang2020,shejwalkar2021,tolpegin2020}, including stealthy \cite{baruch2019}
+and backdoor \cite{bagdasaryan2020,wangtails2020} variants, and their defenses are a
+large literature: robust aggregation rules such as Multi-Krum \cite{blanchard2017},
+coordinate-wise trimmed mean and median \cite{yin2018}, Bulyan \cite{bulyan}, and the
 geometric-median aggregator RFA \cite{rfa}; trust-bootstrapped filtering
-(FLTrust \cite{fltrust}, Zeno \cite{zeno}); and backdoor-specific defenses
+(FLTrust \cite{fltrust}, Zeno \cite{zeno}); malicious-client detection
+(FLDetector \cite{fldetector2022}); and backdoor-specific defenses
 (FLAME \cite{flame2022}). These operate on \emph{individual} client updates,
 which secure aggregation deliberately hides, creating the privacy--robustness
 tension we address.
@@ -254,8 +260,8 @@ $t$-of-$c$ threshold with $t=\lfloor c/2\rfloor+1$, so privacy holds against the
 server colluding with up to $t-1$ members of a cluster, and any $c-t$ members can
 drop without stalling the round. Update authentication is out of the code-based
 scope: HQC cannot sign and no code-based signature is standardized, so where
-signatures are required we compose the lattice-based ML-DSA and state explicitly
-that only the confidentiality layer is code-based.
+signatures are required we compose the lattice-based ML-DSA \cite{fips204} and state
+explicitly that only the confidentiality layer is code-based.
 
 \subsection{KEM-Agnostic Masked Aggregation}
 \begin{definition}[KEM-agnostic cluster masking]\label{def:kem}
@@ -441,8 +447,8 @@ after a warmup of $W$ rounds,
 By Hoeffding's inequality the two populations separate exponentially: the
 per-client misclassification probability is at most $e^{-2r(\tau-p_h)^2}$, so a few
 rounds suffice to isolate the attackers. The server thereby identifies individual
-attackers it has never observed individually: group testing where the pools are the
-privacy-preserving cluster sums and the tests repeat over training rounds. The
+attackers it has never observed individually: group testing \cite{dorfman1943,aldridge2019} where the
+pools are the privacy-preserving cluster sums and the tests repeat over training rounds. The
 \emph{hybrid} variant augments Eq.~\eqref{eq:susp} with a per-round combinatorial
 (COMP) decode over the overlapping groups (degree $o$), so a client is suspected
 only if \emph{all} its groups are flagged, further suppressing false positives.
@@ -837,14 +843,14 @@ post-quantum secure aggregation in FL.
 \appendices
 \section{Dataset Details and Models}\label{app:data}
 All datasets are partitioned across $N{=}30$ clients by a Dirichlet($\alpha{=}0.5$)
-label-skew split (Fig.~\ref{fig:dirichlet}); each client runs one local epoch of SGD
-per round. \textbf{CIFAR-10}: $50{,}000$ training / $10{,}000$ test
+label-skew split \cite{hsu2019} (Fig.~\ref{fig:dirichlet}); each client runs one local epoch of SGD
+per round. \textbf{CIFAR-10} \cite{krizhevsky2009}: $50{,}000$ training / $10{,}000$ test
 images, $10$ classes; a convolutional network with $d{=}291{,}498$ parameters (lr
-$0.01$, momentum $0.9$, batch $64$). \textbf{FashionMNIST}: $60{,}000$/$10{,}000$
+$0.01$, momentum $0.9$, batch $64$). \textbf{FashionMNIST} \cite{fashionmnist}: $60{,}000$/$10{,}000$
 grayscale images, $10$ classes, same network adapted to one input channel.
-\textbf{EMNIST-balanced}: $112{,}800$/$18{,}800$ handwritten characters, $47$ classes,
+\textbf{EMNIST-balanced} \cite{emnist}: $112{,}800$/$18{,}800$ handwritten characters, $47$ classes,
 a harder label space; same convolutional backbone. \textbf{Edge-IIoTset}
-\cite{byzpqfl2026}: a tabular IoT/IIoT intrusion-detection corpus with $15$ classes,
+\cite{edgeiiot}: a tabular IoT/IIoT intrusion-detection corpus with $15$ classes,
 class-stratified subsampling to at most $120{,}000$ rows, leakage/identifier columns
 dropped, features standardized, classified by a multilayer perceptron. Image
 datasets use $30$ rounds; Edge-IIoTset uses $25$.
@@ -939,6 +945,77 @@ Byzantine: Optimizing model poisoning attacks and defenses for federated learnin
 in \emph{Proc.\ NDSS}, 2021.
 \bibitem{flame2022} T.\ D.\ Nguyen \emph{et al.}, ``FLAME: Taming backdoors in
 federated learning,'' in \emph{Proc.\ USENIX Security}, 2022, pp.\ 1415--1432.
+\bibitem{mcmahan2017} B.\ McMahan, E.\ Moore, D.\ Ramage, S.\ Hampson, and
+B.\ A.\ y~Arcas, ``Communication-efficient learning of deep networks from
+decentralized data,'' in \emph{Proc.\ AISTATS}, 2017, pp.\ 1273--1282.
+\bibitem{kairouz2021} P.\ Kairouz \emph{et al.}, ``Advances and open problems in
+federated learning,'' \emph{Found.\ Trends Mach.\ Learn.}, vol.\ 14, no.\ 1--2,
+pp.\ 1--210, 2021.
+\bibitem{zhu2019} L.\ Zhu, Z.\ Liu, and S.\ Han, ``Deep leakage from gradients,''
+in \emph{Proc.\ NeurIPS}, 2019, pp.\ 14747--14756.
+\bibitem{geiping2020} J.\ Geiping, H.\ Bauermeister, H.\ Dr\"oge, and M.\ Moeller,
+``Inverting gradients: How easy is it to break privacy in federated learning?,''
+in \emph{Proc.\ NeurIPS}, 2020, pp.\ 16937--16947.
+\bibitem{fredrikson2015} M.\ Fredrikson, S.\ Jha, and T.\ Ristenpart, ``Model
+inversion attacks that exploit confidence information and basic countermeasures,''
+in \emph{Proc.\ ACM CCS}, 2015, pp.\ 1322--1333.
+\bibitem{shokri2017} R.\ Shokri, M.\ Stronati, C.\ Song, and V.\ Shmatikov,
+``Membership inference attacks against machine learning models,'' in
+\emph{Proc.\ IEEE Symp.\ Secur.\ Privacy}, 2017, pp.\ 3--18.
+\bibitem{elkordy2022} A.\ R.\ Elkordy, J.\ Zhang, Y.\ H.\ Ezzeldin, K.\ Psounis,
+and S.\ Avestimehr, ``How much privacy does federated learning with secure
+aggregation guarantee?,'' \emph{Proc.\ Privacy Enhancing Technol.}, 2022,
+pp.\ 510--526.
+\bibitem{lightsecagg} J.\ So \emph{et al.}, ``LightSecAgg: A lightweight and
+versatile design for secure aggregation in federated learning,'' in
+\emph{Proc.\ MLSys}, 2022, pp.\ 694--720.
+\bibitem{swiftagg} T.\ Jahani-Nezhad, M.\ A.\ Maddah-Ali, S.\ Li, and G.\ Caire,
+``SwiftAgg: Communication-efficient and dropout-resistant secure aggregation for
+federated learning with worst-case security guarantees,'' in \emph{Proc.\ IEEE
+ISIT}, 2022, pp.\ 103--108.
+\bibitem{shor1997} P.\ W.\ Shor, ``Polynomial-time algorithms for prime
+factorization and discrete logarithms on a quantum computer,'' \emph{SIAM
+J.\ Comput.}, vol.\ 26, no.\ 5, pp.\ 1484--1509, 1997.
+\bibitem{mceliece1978} R.\ J.\ McEliece, ``A public-key cryptosystem based on
+algebraic coding theory,'' \emph{JPL Deep Space Netw.\ Prog.\ Rep.}, pp.\ 114--116,
+1978.
+\bibitem{macwilliams1977} F.\ J.\ MacWilliams and N.\ J.\ A.\ Sloane, \emph{The
+Theory of Error-Correcting Codes}.\ Amsterdam, The Netherlands: North-Holland,
+1977.
+\bibitem{fips204} National Institute of Standards and Technology,
+``Module-lattice-based digital signature standard,'' FIPS 204, Aug.\ 2024.
+\bibitem{baruch2019} G.\ Baruch, M.\ Baruch, and Y.\ Goldberg, ``A little is
+enough: Circumventing defenses for distributed learning,'' in \emph{Proc.\ NeurIPS},
+2019, pp.\ 8635--8645.
+\bibitem{wangtails2020} H.\ Wang \emph{et al.}, ``Attack of the tails: Yes, you
+really can backdoor federated learning,'' in \emph{Proc.\ NeurIPS}, 2020,
+pp.\ 16070--16084.
+\bibitem{tolpegin2020} V.\ Tolpegin, S.\ Truex, M.\ E.\ Gursoy, and L.\ Liu,
+``Data poisoning attacks against federated learning systems,'' in \emph{Proc.\
+ESORICS}, 2020, pp.\ 480--501.
+\bibitem{fldetector2022} Z.\ Zhang, X.\ Cao, J.\ Jia, and N.\ Z.\ Gong,
+``FLDetector: Defending federated learning against model poisoning attacks via
+detecting malicious clients,'' in \emph{Proc.\ ACM KDD}, 2022, pp.\ 2545--2555.
+\bibitem{dorfman1943} R.\ Dorfman, ``The detection of defective members of large
+populations,'' \emph{Ann.\ Math.\ Stat.}, vol.\ 14, no.\ 4, pp.\ 436--440, 1943.
+\bibitem{aldridge2019} M.\ Aldridge, O.\ Johnson, and J.\ Scarlett, ``Group
+testing: An information theory perspective,'' \emph{Found.\ Trends Commun.\ Inf.\
+Theory}, vol.\ 15, no.\ 3--4, pp.\ 196--392, 2019.
+\bibitem{krizhevsky2009} A.\ Krizhevsky, ``Learning multiple layers of features
+from tiny images,'' Univ.\ Toronto, Tech.\ Rep., 2009.
+\bibitem{fashionmnist} H.\ Xiao, K.\ Rasul, and R.\ Vollgraf, ``Fashion-MNIST: A
+novel image dataset for benchmarking machine learning algorithms,''
+arXiv:1708.07747, 2017.
+\bibitem{emnist} G.\ Cohen, S.\ Afshar, J.\ Tapson, and A.\ van~Schaik, ``EMNIST:
+Extending MNIST to handwritten letters,'' in \emph{Proc.\ IJCNN}, 2017,
+pp.\ 2921--2926.
+\bibitem{edgeiiot} M.\ A.\ Ferrag, O.\ Friha, D.\ Hamouda, L.\ Maglaras, and
+H.\ Janicke, ``Edge-IIoTset: A new comprehensive realistic cyber security dataset
+of IoT and IIoT applications for centralized and federated learning,'' \emph{IEEE
+Access}, vol.\ 10, pp.\ 40281--40306, 2022.
+\bibitem{hsu2019} T.-M.\ H.\ Hsu, H.\ Qi, and M.\ Brown, ``Measuring the effects
+of non-identical data distribution for federated visual classification,''
+arXiv:1909.06335, 2019.
 \end{thebibliography}
 
 \end{document}
