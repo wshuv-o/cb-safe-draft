@@ -15,6 +15,9 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,calc,positioning}
 \usepackage[ruled,vlined]{algorithm2e}
+% IEEE-style blue hyperlinked citations/references (load hyperref last)
+\definecolor{linkblue}{RGB}{0,0,204}
+\usepackage[colorlinks=true,citecolor=linkblue,linkcolor=linkblue,urlcolor=linkblue,breaklinks=true]{hyperref}
 \newtheorem{definition}{Definition}
 \newtheorem{theorem}{Theorem}
 \newtheorem{proposition}{Proposition}
@@ -153,14 +156,28 @@ assumption: syndrome decoding of quasi-cyclic codes, via a standard-track classi
 KEM \cite{nistir8545}, with the KEM exposed behind an agnostic interface so lattice
 and code-based variants differ in exactly one module.
 
-\textbf{Cluster-based robust aggregation.} Outside the post-quantum setting,
-reconciling Byzantine resilience with secure aggregation is an established goal:
-BREA does so through secret-shared distance computation \cite{brea2021}, and CQSA
-through clustered aggregation on quantum hardware \cite{cqsa2026}. Aggregating
-within groups and inspecting group sums is thus a known structure; our contribution is not the cluster topology itself but (i) its
-first classical post-quantum, code-based instantiation and (ii) an explicit,
-experimentally validated statement of the privacy--robustness trade-off it induces
-(Section~\ref{sec:tradeoff}).
+\textbf{Byzantine robustness and poisoning.} Model- and data-poisoning attacks
+\cite{fang2020,shejwalkar2021} and their defenses are a large literature: robust
+aggregation rules such as Multi-Krum \cite{blanchard2017}, coordinate-wise
+trimmed mean and median \cite{yin2018}, Bulyan \cite{bulyan}, and the
+geometric-median aggregator RFA \cite{rfa}; trust-bootstrapped filtering
+(FLTrust \cite{fltrust}, Zeno \cite{zeno}); and backdoor-specific defenses
+(FLAME \cite{flame2022}). These operate on \emph{individual} client updates,
+which secure aggregation deliberately hides, creating the privacy--robustness
+tension we address.
+
+\textbf{Cluster-based robust aggregation.} Reconciling Byzantine resilience
+with secure aggregation is an established goal: BREA does so through
+secret-shared distance computation \cite{brea2021}, CQSA through clustered
+aggregation on quantum hardware \cite{cqsa2026}, and, closest to our robustness
+mechanism, FedGT \cite{fedgt} identifies malicious clients by group testing over
+overlapping secure-aggregation groups. Aggregating within groups and inspecting
+group sums is thus a known structure; our contribution is not the cluster
+topology itself but (i) its first classical post-quantum, code-based
+instantiation and (ii) an explicit, experimentally validated statement of the
+privacy--robustness trade-off it induces (Section~\ref{sec:tradeoff}), with a
+temporal group-testing defense (CB-SAFE+) that matches FedGT's identification at
+lower cost.
 
 \section{The CB-SAFE Framework}
 
@@ -316,7 +333,8 @@ updates.
 The server sees $k$ cluster sums $S_1,\dots,S_k$ (means after dividing by alive
 counts) and no individual update. CB-SAFE applies a robust rule across the cluster
 means: coordinate-wise trimmed mean (trim $\beta$ per side) or median \cite{yin2018},
-or Multi-Krum \cite{blanchard2017}. This resolves the hide-versus-inspect tension structurally (privacy
+Multi-Krum \cite{blanchard2017}, Bulyan \cite{bulyan}, or the geometric median
+(RFA) \cite{rfa}. This resolves the hide-versus-inspect tension structurally (privacy
 is enforced below the cluster boundary, robustness operates above it) at a
 quantifiable price. A cluster mean is contaminated if it contains at least one
 malicious member, so with malicious fraction $f$ and random cluster assignment,
@@ -903,6 +921,24 @@ Commun.}, vol.\ 39, no.\ 7, pp.\ 2168--2181, 2021.
 \bibitem{nguyen2025lattice} H.\ Nguyen, S.\ Huda, Y.\ Nogami, and T.\ T.\ Nguyen,
 ``Security in post-quantum era: A comprehensive survey on lattice-based
 algorithms,'' \emph{IEEE Access}, vol.\ 13, pp.\ 89003--89024, 2025.
+\bibitem{fedgt} M.\ Xhemrishi, J.\ \"Ostman, A.\ Wachter-Zeh, and A.\ Graell~i~Amat,
+``FedGT: Identification of malicious clients in federated learning with secure
+aggregation,'' \emph{IEEE Trans.\ Inf.\ Forensics Security}, vol.\ 20,
+pp.\ 2577--2592, 2025.
+\bibitem{bulyan} E.\ M.\ El Mhamdi, R.\ Guerraoui, and S.\ Rouault, ``The hidden
+vulnerability of distributed learning in Byzantium,'' in \emph{Proc.\ ICML}, 2018,
+pp.\ 3521--3530.
+\bibitem{rfa} K.\ Pillutla, S.\ M.\ Kakade, and Z.\ Harchaoui, ``Robust aggregation
+for federated learning,'' \emph{IEEE Trans.\ Signal Process.}, vol.\ 70,
+pp.\ 1142--1154, 2022.
+\bibitem{fang2020} M.\ Fang, X.\ Cao, J.\ Jia, and N.\ Z.\ Gong, ``Local model
+poisoning attacks to Byzantine-robust federated learning,'' in \emph{Proc.\ USENIX
+Security}, 2020, pp.\ 1605--1622.
+\bibitem{shejwalkar2021} V.\ Shejwalkar and A.\ Houmansadr, ``Manipulating the
+Byzantine: Optimizing model poisoning attacks and defenses for federated learning,''
+in \emph{Proc.\ NDSS}, 2021.
+\bibitem{flame2022} T.\ D.\ Nguyen \emph{et al.}, ``FLAME: Taming backdoors in
+federated learning,'' in \emph{Proc.\ USENIX Security}, 2022, pp.\ 1415--1432.
 \end{thebibliography}
 
 \end{document}
