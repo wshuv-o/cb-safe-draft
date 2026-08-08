@@ -55,6 +55,7 @@ class Config:
     root_size: int = 200         # server root-dataset size (reputation defense anchor)
     dataset: str = "cifar10"     # cifar10 | fmnist | emnist | edgeiiot
     n_classes: int = 10          # label space (set per dataset; used by label-flip)
+    signflip_gamma: float = 5.0  # sign-flip scale (C1 sweeps this to find gamma*)
 
 
 def set_seeds(seed: int) -> None:
@@ -89,7 +90,7 @@ def local_train(global_flat: np.ndarray, loader: DataLoader, cfg: Config,
             opt.step()
     delta = flat_params(model) - global_flat
     if malicious and cfg.attack == "signflip":
-        delta = attacks.signflip_delta(delta)
+        delta = attacks.signflip_delta(delta, cfg.signflip_gamma)
     return delta
 
 
@@ -168,16 +169,44 @@ def run(cfg: Config, client_dls: list[DataLoader], test_dl: DataLoader,
     clusters = make_clusters(list(range(cfg.n_clients)), cfg.cluster_size, cfg.seed + 13)
     malicious = pick_malicious(cfg)
     rep = ReputationState() if cfg.aggregator == "reputation" else None
+    fedgt = None
+    if cfg.aggregator == "fedgt":
+        from ..aggregation.fedgt import FedGTDetector
+        # groups sized to the anonymity set (== cluster_size) so FedGT and CB-SAFE+
+        # respect the SAME secure-aggregation constraint; deg=4 overlapping tests
+        fedgt = FedGTDetector(cfg.n_clients, group_size=cfg.cluster_size,
+                              deg=4, seed=cfg.seed + 13)
 
     history: list[dict] = []
     for r in range(cfg.rounds):
         t0 = time.perf_counter()
-        active = [i for i in range(cfg.n_clients) if rep is None or i not in rep.excluded]
+        excluded = rep.excluded if rep is not None else (fedgt.excluded if fedgt else set())
+        active = [i for i in range(cfg.n_clients) if i not in excluded]
         deltas = {
             i: local_train(global_flat, client_dls[i], cfg, device, i in malicious)
             for i in active
         }
-        if rep is not None:
+        if fedgt is not None:
+            # FedGT path: fixed overlapping groups, secure sums scored by root-loss,
+            # one-shot group-testing decode, then aggregate clean groups' means
+            base = mean_loss(global_flat, server_dl, device, cfg.dataset) if server_dl is not None else 0.0
+            g_means, g_scores = [], []
+            for members in fedgt.groups():
+                alive_m = [i for i in members if i in deltas]
+                if not alive_m:
+                    g_means.append(None); g_scores.append(-np.inf); continue
+                gm = np.mean(np.stack([deltas[i] for i in alive_m]), axis=0)
+                g_means.append(gm)
+                score = (mean_loss(global_flat + gm.astype(np.float32), server_dl,
+                                   device, cfg.dataset) - base) if server_dl is not None else 0.0
+                g_scores.append(score)
+            newly = fedgt.decode(np.array(g_scores))
+            fedgt.excluded |= (newly - set())  # accumulate identified malicious
+            keep = [gm for gm, s in zip(g_means, g_scores)
+                    if gm is not None and s <= np.quantile([x for x in g_scores if np.isfinite(x)], 0.5)]
+            delta_agg = np.mean(np.stack(keep), axis=0) if keep else np.mean(
+                np.stack([gm for gm in g_means if gm is not None]), axis=0)
+        elif rep is not None:
             # CB-SAFE+ path: fresh random partition each round, flag clusters
             # opposing the server's root-data direction, accumulate suspicion, exclude
             clusters_r = make_clusters(active, cfg.cluster_size, cfg.seed + 13 + r)
@@ -202,6 +231,9 @@ def run(cfg: Config, client_dls: list[DataLoader], test_dl: DataLoader,
             "t_round_s": time.perf_counter() - t0,
             "n_malicious": len(malicious),
         }
+        if fedgt is not None:
+            row["excluded_malicious"] = len(fedgt.excluded & malicious)
+            row["excluded_honest"] = len(fedgt.excluded - malicious)
         if rep is not None:
             row["excluded_malicious"] = len(rep.excluded & malicious)
             row["excluded_honest"] = len(rep.excluded - malicious)

@@ -18,7 +18,7 @@ def main() -> None:
     p.add_argument("--attack", required=True, choices=["none", "labelflip", "signflip", "backdoor"])
     p.add_argument("--f", type=float, required=True)
     p.add_argument("--aggregator", required=True,
-                   choices=["mean", "median", "trimmed", "krum", "reputation"])
+                   choices=["mean", "median", "trimmed", "krum", "reputation", "fedgt"])
     p.add_argument("--cluster-size", type=int, default=3)
     p.add_argument("--rounds", type=int, default=30)
     p.add_argument("--trim", type=int, default=2)
@@ -35,7 +35,7 @@ def main() -> None:
     train, test = data.load_dataset(args.dataset)
     parts = data.dirichlet_partition(np.array(train.targets), cfg.n_clients, cfg.alpha, cfg.seed)
     server_dl = None
-    if args.aggregator == "reputation":
+    if args.aggregator in ("reputation", "fedgt"):
         # reserve a small server root set (trust anchor), excluded from all clients
         rng = np.random.default_rng(cfg.seed + 99)
         root_idx = set(rng.choice(len(train), size=cfg.root_size, replace=False).tolist())
