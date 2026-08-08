@@ -642,6 +642,19 @@ rather than per-coordinate statistics, still reaches 42.7\% (16.9\% at $f{=}0.3$
 Robust rules that rely on magnitude order statistics are structurally weakened by
 the very mechanism that provides privacy; vector-selection rules retain power.
 
+\textbf{The full baseline panel confirms the mechanism} (Fig.~\ref{fig:signflip},
+Table~\ref{tab:signflip}). Averaged over three seeds, the eight rules separate into
+three regimes at $f{=}0.3$: the coordinate-wise rules (mean, trimmed mean, median)
+and the robust geometric median RFA \cite{rfa} are laundered to chance
+($\approx$10\%), confirming that location- and magnitude-based aggregation fails
+regardless of sophistication; the vector-selection family degrades but falls
+(Multi-Krum 20\%, Bulyan \cite{bulyan} 31\%); and only the two group-testing methods
+hold, with CB-SAFE+ hybrid at 50.0\% statistically tied to FedGT \cite{fedgt} at
+50.1\%. That RFA collapses while Bulyan merely degrades sharpens
+Proposition~\ref{prop:launder}: laundering specifically defeats rules that trust the
+\emph{aggregate} direction or magnitude, precisely what cluster averaging preserves
+for the attacker, whereas whole-vector selection resists longer.
+
 \begin{table}[t]
 \caption{Attacker identification on CIFAR-10 sign-flip (mean over 3 seeds):
 malicious clients caught out of those present ($\uparrow$ better) and honest
@@ -695,10 +708,13 @@ privacy constraints.
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{fig_signflip_acc.pdf}
-\caption{Sign-flip attack ($\gamma{=}5$): accuracy vs.\ malicious fraction across
-aggregation rules over $k{=}10$ cluster sums ($c{=}3$). Coordinate-wise rules
-collapse at the contamination boundary the $(1-f)^c$ law predicts; vector selection
-degrades gracefully; CB-SAFE+ identifies and excludes the attackers.}
+\caption{Sign-flip attack ($\gamma{=}5$) on CIFAR-10: test accuracy vs.\ malicious
+fraction across eight aggregation rules over $k{=}10$ cluster sums ($c{=}3$, mean of
+three seeds). Coordinate-wise rules (mean, trimmed mean, median) and the geometric
+median (RFA) collapse to chance at the $(1-f)^c$ contamination boundary; vector
+selection (Multi-Krum, Bulyan) degrades gracefully then falls; and only the two
+group-testing methods, CB-SAFE+ hybrid and FedGT, hold near the clean baseline
+across all $f$. (FLTrust omitted: its $f{=}0.1$ point is still computing.)}
 \label{fig:signflip}
 \end{figure}
 

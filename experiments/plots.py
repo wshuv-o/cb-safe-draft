@@ -28,10 +28,19 @@ C = {
     "ink": "#0b0b0b", "ink2": "#52514e", "muted": "#898781",
     "grid": "#e1e0d9", "axis": "#c3c2b7", "surface": "#fcfcfb",
 }
+C["black"] = "#0b0b0b"
+C["magenta"] = "#b0228c"
 AGG_COLOR = {"mean": C["blue"], "trimmed": C["aqua"], "median": C["yellow"],
-             "krum": C["green"], "reputation": C["violet"]}
+             "krum": C["green"], "bulyan": C["red"], "geomedian": C["violet"],
+             "fedgt": C["black"], "reputation": C["violet"], "hybrid_ov4": C["magenta"]}
 AGG_LABEL = {"mean": "Mean (no robustness)", "trimmed": "Trimmed mean",
-             "median": "Median", "krum": "Multi-Krum", "reputation": "CB-SAFE+ (ours)"}
+             "median": "Median", "krum": "Multi-Krum", "bulyan": "Bulyan",
+             "geomedian": "Geo-median/RFA", "fedgt": "FedGT [TIFS'25]",
+             "reputation": "CB-SAFE+ (ours)", "hybrid_ov4": "CB-SAFE+ hybrid (ours)"}
+# per-(attack,metric) series order; only methods with complete data are drawn
+ACC_METHODS = ["mean", "trimmed", "median", "krum", "bulyan", "geomedian",
+               "fedgt", "hybrid_ov4"]
+ASR_METHODS = ["mean", "trimmed", "median", "krum", "reputation"]
 
 plt.rcParams.update({
     "font.size": 8, "font.family": "sans-serif",
@@ -107,7 +116,8 @@ def fig_amortization() -> None:
 def _robust_runs() -> pd.DataFrame:
     rows = []
     for path in glob.glob(os.path.join(R, "robust_*.csv")):
-        m = re.match(r"robust_(\w+)_(\w+)_f(\d+)_c(\d+)_s(\d+)\.csv", os.path.basename(path))
+        m = re.match(r"robust_(signflip|labelflip|backdoor|none)_(.+)_f(\d+)_c(\d+)_s(\d+)\.csv",
+                     os.path.basename(path))
         if not m:
             continue
         if int(m[4]) != 3:  # c != 3 belongs to the c-dial figure, not these
@@ -133,19 +143,22 @@ def fig_robustness() -> None:
             sub = data[(data.attack == attack) & data[metric].notna()]
             if sub.empty:
                 continue
+            # average over seeds: one point per (agg, f)
+            sub = sub.groupby(["agg", "f"], as_index=False)[metric].mean()
             fig, ax = plt.subplots(figsize=(FIG_W, 2.3))
-            for agg in ["mean", "trimmed", "median", "krum", "reputation"]:
+            methods = ACC_METHODS if metric == "acc" else ASR_METHODS
+            for agg in methods:
                 s = sub[sub["agg"] == agg].sort_values("f")
-                if s.empty:
+                if len(s) < 3:  # only draw methods with a complete f-sweep
                     continue
                 ax.plot(s["f"] * 100, s[metric], color=AGG_COLOR[agg], lw=2,
                         marker="o", ms=4, label=AGG_LABEL[agg])
-            ax.legend(fontsize=6, frameon=False, loc="best")
+            ax.legend(fontsize=5.5, frameon=False, loc="best", ncol=2)
             if metric == "acc" and base is not None:
                 ax.axhline(base, color=C["muted"], lw=1, ls=(0, (4, 3)))
                 ax.annotate("no-attack baseline", (2, base), textcoords="offset points",
                             xytext=(0, 4), fontsize=6.5, color=C["muted"])
-            ax.set_title(f"{attack} attack, robust rules across k=10 cluster sums (c=3)",
+            ax.set_title(f"CIFAR-10 {attack} attack: robust rules across k=10 cluster sums (c=3)",
                          fontsize=7.5, color=C["ink"], loc="left")
             ax.set_xlabel("Malicious fraction f (%)")
             ax.set_ylabel(ylabel)
