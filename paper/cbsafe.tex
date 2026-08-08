@@ -1,10 +1,10 @@
 %==============================================================================
-% CB-SAFE: full paper (IEEEtran conference). Compile:
+% CB-SAFE: full paper (IEEEtran journal / IEEE Transactions, TIFS-style). Compile:
 %   pdflatex cbsafe && pdflatex cbsafe
 % References are inline (thebibliography); no bibtex pass required.
 % Figures are produced by experiments/plots.py into results/figs/.
 %==============================================================================
-\documentclass[conference]{IEEEtran}
+\documentclass[journal]{IEEEtran}
 \IEEEoverridecommandlockouts
 \usepackage{cite}
 \usepackage{amsmath,amssymb}
@@ -18,13 +18,17 @@
 
 \begin{document}
 
-\title{CB-SAFE: Code-Based Post-Quantum Secure Aggregation\\ for Byzantine-Robust Federated Learning}
+\title{CB-SAFE: Code-Based Post-Quantum Secure Aggregation for Byzantine-Robust Federated Learning}
 
-\author{
-\IEEEauthorblockN{Md Wahiduzzaman Suva (26-94088-2)\qquad Esm-e Moula Chowdhury Abha (26-94089-2)}
-\IEEEauthorblockA{Department of Computer Science, American International University-Bangladesh\\
-wshuvo360@gmail.com}
-}
+\author{Md~Wahiduzzaman~Suva and Esm-e~Moula~Chowdhury~Abha%
+\thanks{M.~W.~Suva (ID 26-94088-2) and E.~M.~C.~Abha (ID 26-94089-2) are with the
+Department of Computer Science, American International University-Bangladesh,
+Dhaka, Bangladesh (e-mail: wshuvo360@gmail.com).}%
+\thanks{Manuscript prepared August 2026. Source code and artifacts are available at
+the project repository.}}
+
+\markboth{IEEE Transactions on Information Forensics and Security,~Vol.~XX, No.~X, 2026}%
+{Suva \MakeLowercase{\textit{et al.}}: CB-SAFE: Code-Based Post-Quantum Secure Aggregation for Byzantine-Robust Federated Learning}
 
 \maketitle
 
@@ -67,7 +71,7 @@ cryptography, Byzantine robustness, cryptographic diversity.
 \end{IEEEkeywords}
 
 \section{Introduction}
-Federated learning (FL) trains a shared model across many clients without
+\IEEEPARstart{F}{ederated} learning (FL) trains a shared model across many clients without
 centralizing data, but the transmitted model updates leak private information:
 gradient-inversion and membership-inference attacks reconstruct training samples from
 individual updates. Secure aggregation closes this channel by ensuring the server
