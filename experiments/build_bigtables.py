@@ -43,7 +43,7 @@ def val(paths, asr=False):
 
 def fmt(v, bold=False):
     if v is None:
-        return "--"
+        return "$-$"          # pending: number not computed yet
     m, s, n = v
     txt = f"{m:.1f}\\,{{\\scriptsize$\\pm${s:.1f}}}" if n > 1 else f"{m:.1f}"
     return f"\\textbf{{{txt}}}" if bold else txt
@@ -73,9 +73,12 @@ def identfp(dsdir, agg, f):
 
 # ============ TABLE I: sign-flip robustness, all datasets x f x methods ============
 methods1 = [("mean", "FedAvg (mean)"), ("trimmed", "Trimmed mean"), ("median", "Median"),
-            ("krum", "Multi-Krum"), ("reputation", "CB-SAFE+ (ours)"), ("hybrid_ov4", "CB-SAFE+ hybrid (ours)")]
+            ("krum", "Multi-Krum"), ("bulyan", "Bulyan"), ("geomedian", "Geo-median / RFA"),
+            ("fltrust", "FLTrust"), ("fedgt", "FedGT [TIFS'25]"),
+            ("reputation", "CB-SAFE+ (ours)"), ("reputation_ov4", "CB-SAFE+ ov4 (ours)"),
+            ("reputation_tf", "CB-SAFE+ trust-free (ours)"), ("hybrid_ov4", "CB-SAFE+ hybrid (ours)")]
 L = [r"\begin{table*}[t]\centering\footnotesize",
-     r"\caption{Test accuracy (\%) under the sign-flip (laundering) attack across four datasets and malicious fractions $f$ (mean\,$\pm$\,std over 3 seeds for CIFAR-10/FashionMNIST; single seed for EMNIST/Edge-IIoTset). Higher is better; best per column in bold.}",
+     r"\caption{Test accuracy (\%) under the sign-flip (laundering) attack across four datasets and malicious fractions $f$ (mean\,$\pm$\,std over 3 seeds for CIFAR-10/FashionMNIST/Edge-IIoTset; single seed for EMNIST). Higher is better; best per column in bold. A dash ($-$) marks a cell still being computed.}",
      r"\label{tab:signflip}", r"\setlength{\tabcolsep}{4pt}",
      r"\begin{tabular}{@{}l" + "ccc" * 4 + r"@{}}\toprule",
      r"& \multicolumn{3}{c}{CIFAR-10} & \multicolumn{3}{c}{FashionMNIST} & \multicolumn{3}{c}{EMNIST} & \multicolumn{3}{c}{Edge-IIoTset}\\",

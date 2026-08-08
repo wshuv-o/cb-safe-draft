@@ -511,7 +511,7 @@ dataset, we repeat the sign-flip evaluation on FashionMNIST (a second image
 benchmark, three seeds) and on Edge-IIoTset (tabular IoT/IIoT intrusion detection
 with a multilayer perceptron, a different modality in the security domain of the
 closest prior work \cite{byzpqfl2026}). The pattern is identical everywhere
-(Table~\ref{tab:general}, Fig.~\ref{fig:general}): every coordinate-wise rule
+(Table~\ref{tab:signflip}, Fig.~\ref{fig:general}): every coordinate-wise rule
 collapses to chance at $f{\ge}0.2$ (10.0\% on the 10-class image sets, 7.3\% on
 15-class Edge-IIoTset), Multi-Krum degrades gracefully then falls at $f{=}0.3$, and
 CB-SAFE+ tracks the clean baseline. At $f{=}0.3$ CB-SAFE+ retains 84\%, high-$80$s,
@@ -523,33 +523,7 @@ with Holm correction: versus the mean by 48.3 points ($p{<}10^{-4}$), the median
 Edge-IIoTset result is the sharpest: at $f{=}0.3$ CB-SAFE+ holds 61.5\% against a
 63.7\% clean baseline while mean, trimmed mean, and median all sit at 7.3\%.
 
-\begin{table}[t]
-\caption{Sign-flip robustness across datasets ($c{=}3$): final test accuracy (\%),
-mean over seeds. Coordinate-wise rules collapse to chance at $f{\ge}0.2$ on every
-dataset; CB-SAFE+ tracks the clean baseline. (CIFAR-10, FashionMNIST: 3 seeds;
-Edge-IIoTset: 1 seed.)}
-\label{tab:general}
-\centering
-\footnotesize
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}llrrrr@{}}
-\toprule
-Dataset & Rule & clean & $f{=}.1$ & $f{=}.2$ & $f{=}.3$\\
-\midrule
-CIFAR-10 & Median      & 59.0 & 47.8 & 10.0 & 10.0\\
-(images) & Multi-Krum  & 59.0 & 53.6 & 39.8 & 20.3\\
-         & CB-SAFE+    & 59.0 & 52.6 & \textbf{45.6} & \textbf{46.4}\\
-\midrule
-FashionMNIST & Median     & 88.5 & 84.9 & 10.0 & 10.0\\
-(images)     & Multi-Krum & 88.5 & 85.9 & 83.0 & 43.1\\
-             & CB-SAFE+   & 88.5 & 85.8 & \textbf{86.1} & \textbf{84.1}\\
-\midrule
-Edge-IIoTset & Median     & 63.7 & 59.6 & 13.6 & 7.3\\
-(tabular)    & Multi-Krum & 63.7 & 63.3 & 59.4 & 38.5\\
-             & CB-SAFE+   & 63.7 & 61.9 & \textbf{62.3} & \textbf{61.5}\\
-\bottomrule
-\end{tabular}
-\end{table}
+\input{table1_signflip.tex}
 
 \begin{figure}[t]
 \centering
