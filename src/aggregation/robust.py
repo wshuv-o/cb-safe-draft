@@ -42,9 +42,69 @@ def multi_krum(cluster_means: np.ndarray, n_byzantine: int = 2, n_select: int | 
     return cluster_means[chosen].mean(axis=0)
 
 
+def bulyan(cluster_means: np.ndarray, n_byzantine: int = 2) -> np.ndarray:
+    """Bulyan (El Mhamdi et al., ICML 2018): iteratively pick a Multi-Krum-selected
+    set of size m = k - 2b, then take a coordinate-wise trimmed mean over that set
+    (trim b per side). Implemented from the paper's specification over cluster means."""
+    k = cluster_means.shape[0]
+    b = min(n_byzantine, (k - 3) // 2 if k >= 3 else 0)
+    m = max(1, k - 2 * b)
+    remaining = list(range(k))
+    selected = []
+    while len(selected) < m and len(remaining) > 0:
+        sub = cluster_means[remaining]
+        ks = len(remaining)
+        d2 = ((sub[:, None, :] - sub[None, :, :]) ** 2).sum(axis=2)
+        n_close = max(1, ks - b - 2)
+        scores = [np.sort(d2[i][np.arange(ks) != i])[:n_close].sum() for i in range(ks)]
+        pick = int(np.argmin(scores))
+        selected.append(remaining.pop(pick))
+    sel = cluster_means[selected]
+    beta = max(0, (len(sel) - m + 2 * b) // 2) if len(sel) > 2 * b else 0
+    if 2 * beta >= len(sel):
+        return sel.mean(axis=0)
+    s = np.sort(sel, axis=0)
+    return s[beta: len(sel) - beta].mean(axis=0) if beta else sel.mean(axis=0)
+
+
+def geometric_median(cluster_means: np.ndarray, iters: int = 100,
+                     eps: float = 1e-7) -> np.ndarray:
+    """Geometric median (RFA; Pillutla et al.) via Weiszfeld's algorithm over the
+    cluster means -- the smoothed-Weiszfeld robust aggregate."""
+    y = cluster_means.mean(axis=0)
+    for _ in range(iters):
+        d = np.linalg.norm(cluster_means - y, axis=1)
+        d = np.maximum(d, eps)
+        w = 1.0 / d
+        y_new = (w[:, None] * cluster_means).sum(axis=0) / w.sum()
+        if np.linalg.norm(y_new - y) < eps:
+            break
+        y = y_new
+    return y
+
+
+def fltrust(cluster_means: np.ndarray, root_update: np.ndarray) -> np.ndarray:
+    """FLTrust (Cao et al., NDSS 2021): trust score = ReLU(cosine(update, root
+    update)); each update is length-normalized to the root's norm; aggregate is the
+    trust-weighted average. Here 'updates' are the cluster means and the root update
+    is the server's own update on a small root dataset."""
+    r = root_update
+    rn = np.linalg.norm(r) + 1e-12
+    num = np.zeros_like(r)
+    den = 0.0
+    for g in cluster_means:
+        gn = np.linalg.norm(g) + 1e-12
+        ts = max(0.0, float(g @ r) / (gn * rn))          # ReLU(cos)
+        num += ts * (rn / gn) * g                          # normalize to ||root||
+        den += ts
+    return num / den if den > 1e-12 else np.zeros_like(r)
+
+
 AGGREGATORS = {
     "mean": mean,
     "median": median,
     "trimmed": trimmed_mean,
     "krum": multi_krum,
+    "bulyan": bulyan,
+    "geomedian": geometric_median,
 }

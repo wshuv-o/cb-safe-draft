@@ -1,0 +1,15 @@
+\begin{table*}[t]\centering\footnotesize
+\caption{Test accuracy (\%) under the sign-flip (laundering) attack across four datasets and malicious fractions $f$ (mean\,$\pm$\,std over 3 seeds for CIFAR-10/FashionMNIST; single seed for EMNIST/Edge-IIoTset). Higher is better; best per column in bold.}
+\label{tab:signflip}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lcccccccccccc@{}}\toprule
+& \multicolumn{3}{c}{CIFAR-10} & \multicolumn{3}{c}{FashionMNIST} & \multicolumn{3}{c}{EMNIST} & \multicolumn{3}{c}{Edge-IIoTset}\\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}\cmidrule(l){11-13}
+Method & $f{=}.1$ & $f{=}.2$ & $f{=}.3$ & $f{=}.1$ & $f{=}.2$ & $f{=}.3$ & $f{=}.1$ & $f{=}.2$ & $f{=}.3$ & $f{=}.1$ & $f{=}.2$ & $f{=}.3$\\\midrule
+FedAvg (mean) & 21.4\,{\scriptsize$\pm$8.3} & 10.0\,{\scriptsize$\pm$0.0} & 10.0\,{\scriptsize$\pm$0.0} & 48.9\,{\scriptsize$\pm$28.5} & 10.0\,{\scriptsize$\pm$0.0} & 10.0\,{\scriptsize$\pm$0.0} & -- & -- & -- & 27.0 & 7.3 & 7.3\\
+Trimmed mean & 45.4\,{\scriptsize$\pm$2.4} & 10.0\,{\scriptsize$\pm$0.0} & 10.0\,{\scriptsize$\pm$0.0} & -- & -- & -- & -- & -- & -- & 58.0 & 11.7 & 7.3\\
+Median & 47.8\,{\scriptsize$\pm$3.2} & 10.0\,{\scriptsize$\pm$0.0} & 10.0\,{\scriptsize$\pm$0.0} & 83.6\,{\scriptsize$\pm$1.1} & 10.0\,{\scriptsize$\pm$0.0} & 10.0\,{\scriptsize$\pm$0.0} & -- & -- & -- & 59.6 & 13.6 & 7.3\\
+Multi-Krum & 53.6\,{\scriptsize$\pm$0.8} & 39.8\,{\scriptsize$\pm$2.2} & 20.3\,{\scriptsize$\pm$10.1} & \textbf{85.9\,{\scriptsize$\pm$0.8}} & 83.0\,{\scriptsize$\pm$1.6} & 43.1\,{\scriptsize$\pm$23.9} & -- & -- & -- & \textbf{63.3} & 59.4 & 38.5\\
+CB-SAFE+ (ours) & 53.0\,{\scriptsize$\pm$0.6} & 47.1\,{\scriptsize$\pm$2.6} & 37.9\,{\scriptsize$\pm$12.6} & 85.7\,{\scriptsize$\pm$0.5} & \textbf{86.0\,{\scriptsize$\pm$0.5}} & \textbf{83.1\,{\scriptsize$\pm$1.9}} & -- & -- & -- & 61.9 & \textbf{62.3} & \textbf{61.5}\\
+CB-SAFE+ hybrid (ours) & \textbf{53.9\,{\scriptsize$\pm$0.5}} & \textbf{49.5\,{\scriptsize$\pm$3.4}} & \textbf{50.0\,{\scriptsize$\pm$2.2}} & -- & -- & -- & -- & -- & -- & -- & -- & --\\
+\bottomrule\end{tabular}\end{table*}

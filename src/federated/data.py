@@ -39,6 +39,15 @@ def load_dataset(name: str):
         test = datasets.FashionMNIST(FMNIST_ROOT, train=False, download=True,
                                      transform=FMNIST_TF)
         return train, test
+    if name == "emnist":
+        # EMNIST-balanced (47 classes). Data root on D: (C: is out of space).
+        tf = transforms.Compose([transforms.ToTensor(),
+                                 transforms.Normalize((0.1751,), (0.3332,))])
+        train = datasets.EMNIST(DATA_ROOT, split="balanced", train=True,
+                                download=True, transform=tf)
+        test = datasets.EMNIST(DATA_ROOT, split="balanced", train=False,
+                               download=True, transform=tf)
+        return train, test
     raise ValueError(f"unknown dataset {name!r}")
 
 

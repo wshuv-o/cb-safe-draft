@@ -232,6 +232,13 @@ def run(cfg: Config, client_dls: list[DataLoader], test_dl: DataLoader,
             # median-seeded consensus reference (no trusted data);
             # comp=True -> per-round COMP decode over the overlapping groups (hybrid)
             delta_agg = defend_round(rep, means, clusters_r, r, probe=probe, comp=comp)
+        elif cfg.aggregator == "fltrust":
+            # FLTrust: trust-weighted aggregation of cluster means against the
+            # server's own root-data update (needs server_dl; fixed clusters)
+            means = np.stack([np.mean(np.stack([deltas[i] for i in cl]), axis=0)
+                              for cl in clusters])
+            root_update = local_train(global_flat, server_dl, cfg, device, malicious=False)
+            delta_agg = robust.fltrust(means, root_update)
         else:
             if on_round is not None:
                 on_round(r, deltas, clusters)
