@@ -25,7 +25,7 @@ P = Presentation()
 P.slide_width = Inches(13.333)
 P.slide_height = Inches(7.5)
 BLANK = P.slide_layouts[6]
-TOTAL = 23
+TOTAL = 24
 _PG = [0]
 
 REF = {
@@ -198,7 +198,7 @@ content("Proposed Method", [
 # System Architecture moved here (right after Proposed Method), per the user's edit
 content("System Architecture (Ours)", [],
     lead="One training round: confidentiality within clusters [2], temporal group testing over re-randomized clusters [1], robust aggregation.",
-    cite=[1, 2], fig_center=("fig_architecture.png", 2.5, 3.85))
+    cite=[1, 2], fig_center=("fig_architecture.png", 2.0, 4.35))
 
 content("Methodology (Ours): Masking", [
     "We adopt Bonawitz-style double masking [2]: pairwise masks cancel in the cluster sum, so individuals stay hidden.",
@@ -280,6 +280,12 @@ content("Results: Efficiency", [
     "One-time setup is paid once and stays under 0.03% of total traffic; per-round bytes are KEM-independent.",
 ], lead="Measured per-client overhead (from the paper, Table II).",
     cite=[3, 9], bullet_w=11.9, fig_center=("shot_overhead_table.png", 3.45, 3.05))
+
+content("Results: Scalability", [
+    "CB-SAFE masks only within clusters of c=3, so each client keeps c−1 partners: per-client cost is flat in N, unlike all-pairs secure aggregation [2] which grows O(N).",
+    "At N=1000, one-time setup is 15.2 KiB (HQC) vs 7.4 MiB for all-pairs — a 500× reduction; the privacy law (1−f)^c and the laundering bound are per-cluster, so guarantees are N-independent.",
+], lead="Per-client cost vs client population (from the paper).",
+    cite=[2], fig_center=("fig_scaling_cost.png", 3.55, 2.75))
 
 content("Conclusion", [
     "CB-SAFE unifies code-based PQ secure aggregation [2], [3] with temporal group-testing robustness [1] in one protocol.",

@@ -128,8 +128,9 @@ print("\n=== TABLE Ib: CB-SAFE+ ablation (preview, acc%) ===")
 print("\n".join(prevA))
 
 # TABLE (secondary): label-flip accuracy, same roster as the main table.
-lf_cap = (r"Test accuracy (\%) under the label-flip attack (single seed) across four datasets "
-          r"and malicious fractions $f$. Label flipping is a mild attack: unlike sign-flip "
+lf_cap = (r"Test accuracy (\%) under the label-flip attack across four datasets "
+          r"and malicious fractions $f$ (single seed, except CB-SAFE+ and FedGT on EMNIST, "
+          r"which are mean\,$\pm$\,std over 3 seeds). Label flipping is a mild attack: unlike sign-flip "
           r"(Table~\ref{tab:signflip}), coordinate-wise rules do \emph{not} collapse, which "
           r"isolates laundering as the mechanism behind the sign-flip failures. Higher is better; "
           r"best per column in bold. A dash ($-$) marks a configuration not evaluated.")

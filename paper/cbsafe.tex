@@ -566,6 +566,34 @@ HQC-256     & 49.4 & 10.6 & 2\,277 & 26 \\
 \end{tabular}
 \end{table}
 
+\subsection{Scalability in the Client Population}
+Secure-aggregation cost is set by how many pairwise partners each client must
+maintain. All-pairs masking~\cite{bonawitz2017} gives every client $N-1$ partners,
+so per-client setup traffic and per-round mask derivation grow as $O(N)$. CB-SAFE
+masks only \emph{within} clusters of size $c$, capping partners at $c-1$, so both
+quantities are \emph{constant in $N$}. Fig.~\ref{fig:scaling} extrapolates the
+measured HQC-128 and ML-KEM-512 primitives (Table~\ref{tab:overhead}) by partner
+count: at $N{=}1000$ a client's one-time setup is $15.2$~KiB (HQC) or $3.8$~KiB
+(ML-KEM) regardless of population, versus $7.4$~MiB for all-pairs masking, a
+$500\times$ reduction that widens linearly with $N$. Because the privacy law
+$\Pr[S_j\ \mathrm{clean}]{=}(1-f)^c$ and the laundering boundary
+(Prop.~\ref{prop:launder}) are stated \emph{per cluster}, they are independent of
+$N$, and the re-randomized group tests add no per-round KEM cost
+(Fig.~\ref{fig:arch}d). CB-SAFE therefore targets the cross-device regime where
+all-pairs masking is infeasible.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_scaling_cost.pdf}
+\caption{Per-client cost versus client population $N$. Because CB-SAFE masks within
+clusters of size $c{=}3$, each client keeps only $c-1$ pairwise partners, so
+one-time setup traffic (left) and per-round mask compute (right) are constant in
+$N$, whereas all-pairs secure aggregation grows as $O(N)$. Curves extrapolate the
+measured HQC-128 / ML-KEM-512 primitives of Table~\ref{tab:overhead} by partner
+count (log--log axes).}
+\label{fig:scaling}
+\end{figure*}
+
 
 \subsection{Utility and Cryptographic Equivalence}
 Plain FedAvg reaches 59.0\% test accuracy (mean of the final five of 40 rounds;
