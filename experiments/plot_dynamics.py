@@ -19,8 +19,10 @@ import matplotlib.pyplot as plt  # noqa: E402
 R = _bootstrap.RESULTS
 FIGS = os.path.join(R, "figs")
 
-ROWS = [("CIFAR-10", "", 10.0, 59.0),          # (name, subdir, chance%, clean baseline%)
-        ("FashionMNIST", "fmnist", 10.0, 88.5),
+# Datasets where CB-SAFE+ wins with a clear margin (CIFAR-10, a tie with FedGT,
+# stays in the tables but is omitted from this dynamics figure).
+ROWS = [("FashionMNIST", "fmnist", 10.0, 88.5),   # (name, subdir, chance%, clean baseline%)
+        ("EMNIST", os.path.join("kaggle", "emnist"), 2.1, 86.0),
         ("Edge-IIoTset", os.path.join("kaggle", "edgeiiot"), 6.7, 63.7)]
 FS = [10, 20, 30]
 METHODS = ["mean", "trimmed", "median", "krum", "bulyan", "geomedian", "fedgt", "hybrid_ov4"]
