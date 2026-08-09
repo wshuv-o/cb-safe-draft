@@ -39,7 +39,9 @@ METHODS = [
 FS = [0.1, 0.2, 0.3]
 SF_SEEDS = [0, 1, 2]       # sign-flip: 3 seeds (headline)
 OTHER_SEEDS = [0]          # backdoor/label-flip: 1 seed (bound runtime; footnoted)
-ROUNDS = 25
+ROUNDS = int(os.environ.get("CBSAFE_ROUNDS", "25"))
+# Optionally scope attacks (comma-separated), e.g. CBSAFE_ATTACKS=labelflip.
+_ATTACKS = [a.strip() for a in os.environ.get("CBSAFE_ATTACKS", "").split(",") if a.strip()] or None
 
 
 def subdir(ds):
@@ -92,6 +94,8 @@ def main():
                   f"(did you add the Edge-IIoTset dataset?) - skipping", flush=True)
             continue
         attacks = ["signflip", "labelflip"] + (["backdoor"] if ds != "edgeiiot" else [])
+        if _ATTACKS:
+            attacks = [a for a in attacks if a in _ATTACKS]
         odir = os.path.join(OUT, subdir(ds))
         os.makedirs(odir, exist_ok=True)
         prepared = {}
