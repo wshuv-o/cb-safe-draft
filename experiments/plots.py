@@ -99,9 +99,10 @@ def fig_amortization() -> None:
     plt.close(fig)
 
 
-def _robust_runs() -> pd.DataFrame:
+def _robust_runs(subdir: str = "") -> pd.DataFrame:
+    base = os.path.join(R, subdir) if subdir else R
     rows = []
-    for path in glob.glob(os.path.join(R, "robust_*.csv")):
+    for path in glob.glob(os.path.join(base, "robust_*.csv")):
         m = re.match(r"robust_(signflip|labelflip|backdoor|none)_(.+)_f(\d+)_c(\d+)_s(\d+)\.csv",
                      os.path.basename(path))
         if not m:
@@ -115,44 +116,41 @@ def _robust_runs() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def fig_robustness() -> None:
-    data = _robust_runs()
-    if data.empty:
+def _acc_vs_f(subdir, attack, metric, methods, ylabel, outname, baseline=None):
+    data = _robust_runs(subdir)
+    sub = data[(data.attack == attack) & data[metric].notna()] if not data.empty else data
+    if sub is None or sub.empty:
         return
-    base = None
-    upath = os.path.join(R, "utility_acc.csv")
-    if os.path.exists(upath):
-        base = pd.read_csv(upath).tail(5)["acc"].mean() * 100
-    for attack in data["attack"].unique():
-        for metric, ylabel, suffix in [("acc", "Test accuracy (%)", "acc"),
-                                       ("asr", "Attack success rate (%)", "asr")]:
-            sub = data[(data.attack == attack) & data[metric].notna()]
-            if sub.empty:
-                continue
-            # average over seeds: one point per (agg, f)
-            sub = sub.groupby(["agg", "f"], as_index=False)[metric].mean()
-            fig, ax = plt.subplots(figsize=(FIG_W, 2.3))
-            methods = ACC_METHODS if metric == "acc" else ASR_METHODS
-            for agg in methods:
-                s = sub[sub["agg"] == agg].sort_values("f")
-                if len(s) < 3:  # only draw methods with a complete f-sweep
-                    continue
-                sty = st.style(agg)
-                ax.plot(s["f"] * 100, s[metric], color=sty["color"], ls=sty["ls"],
-                        lw=sty["lw"], marker=sty["marker"], label=sty["label"],
-                        zorder=6 if sty.get("ours") else 3)
-            if metric == "acc" and base is not None:
-                ax.axhline(base, color="#9e9e9e", lw=0.8, ls=(0, (4, 3)), zorder=1)
-                ax.annotate("no-attack baseline", (2, base), textcoords="offset points",
-                            xytext=(0, 3), fontsize=6, color="#6b6b6b")
-            # legend outside (below), never over the data (FIGURE_RULES.md §5); no in-axes title (§2)
-            ax.legend(fontsize=6, frameon=False, loc="upper center",
-                      bbox_to_anchor=(0.5, -0.22), ncol=3, handlelength=2.2)
-            ax.set_xlabel(r"malicious fraction $f$ (\%)" if False else "malicious fraction f (%)")
-            ax.set_ylabel(ylabel)
-            ax.set_xlim(left=0)
-            fig.savefig(os.path.join(FIGS, f"fig_{attack}_{suffix}.pdf"))
-            plt.close(fig)
+    sub = sub.groupby(["agg", "f"], as_index=False)[metric].mean()
+    fig, ax = plt.subplots(figsize=(FIG_W, 2.3))
+    for agg in methods:
+        s = sub[sub["agg"] == agg].sort_values("f")
+        if len(s) < 3:
+            continue
+        sty = st.style(agg)
+        ax.plot(s["f"] * 100, s[metric], color=sty["color"], ls=sty["ls"], lw=sty["lw"],
+                marker=sty["marker"], label=sty["label"], zorder=6 if sty.get("ours") else 3)
+    if baseline is not None:
+        ax.axhline(baseline, color="#9e9e9e", lw=0.8, ls=(0, (4, 3)), zorder=1)
+        ax.annotate("no-attack baseline", (2, baseline), textcoords="offset points",
+                    xytext=(0, 3), fontsize=6, color="#6b6b6b")
+    # legend below the axes so it never covers data (§5); no in-axes title (§2)
+    ax.legend(fontsize=6, frameon=False, loc="upper center",
+              bbox_to_anchor=(0.5, -0.22), ncol=3, handlelength=2.2)
+    ax.set_xlabel("malicious fraction f (%)")
+    ax.set_ylabel(ylabel)
+    ax.set_xlim(left=0)
+    fig.savefig(os.path.join(FIGS, outname))
+    plt.close(fig)
+
+
+def fig_robustness() -> None:
+    # Fig. 6: sign-flip accuracy on FashionMNIST (a clear-margin win, not the CIFAR tie).
+    _acc_vs_f("fmnist", "signflip", "acc", ACC_METHODS, "Test accuracy (%)",
+              "fig_signflip_acc.pdf", baseline=88.5)
+    # Fig. 7: backdoor ASR on CIFAR-10 (where the backdoor sweep was run).
+    _acc_vs_f("", "backdoor", "asr", ASR_METHODS, "Attack success rate (%)",
+              "fig_backdoor_asr.pdf")
 
 
 def fig_tradeoff() -> None:

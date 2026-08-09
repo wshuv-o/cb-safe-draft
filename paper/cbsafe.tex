@@ -537,7 +537,7 @@ KEM appears only in setup: at NIST level~1, HQC costs 15.2~KiB per client agains
 ML-KEM's 3.8~KiB ($4.0\times$; $6.4\times$ at level~5), and 2.0\,s of one-time
 compute for all 30 clients against 0.02\,s. Amortized over 40 training rounds
 ($\sim$89\,MiB of per-client update traffic), the code-based premium is below
-$0.03\%$ of total communication (Fig.~\ref{fig:amort}). A round with 10\% dropouts
+$0.03\%$ of total communication (Table~\ref{tab:overhead}). A round with 10\% dropouts
 adds only seed-reveal messages (32~B per survivor--dropout pair) and kept server
 unmasking below 0.28\,s in all configurations. The practicality question that
 motivated this work has a quantitative answer: \emph{cryptographic diversity in FL
@@ -565,14 +565,6 @@ HQC-256     & 49.4 & 10.6 & 2\,277 & 26 \\
 \end{tabular}
 \end{table}
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{fig_amortization.pdf}
-\caption{One-time setup traffic per client versus a single round of masked updates
-(log scale). Even HQC-256's setup is $\sim$2\% of one round's traffic; per-round
-traffic is identical for all KEMs.}
-\label{fig:amort}
-\end{figure}
 
 \subsection{Utility and Cryptographic Equivalence}
 Plain FedAvg reaches 59.0\% test accuracy (mean of the final five of 40 rounds;
@@ -709,13 +701,14 @@ privacy constraints.
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{fig_signflip_acc.pdf}
-\caption{Sign-flip attack ($\gamma{=}5$) on CIFAR-10: test accuracy vs.\ malicious
-fraction across eight aggregation rules over $k{=}10$ cluster sums ($c{=}3$, mean of
-three seeds). Coordinate-wise rules (mean, trimmed mean, median) and the geometric
-median (RFA) collapse to chance at the $(1-f)^c$ contamination boundary; vector
-selection (Multi-Krum, Bulyan) degrades gracefully then falls; and only the two
-group-testing methods, CB-SAFE+ hybrid and FedGT, hold near the clean baseline
-across all $f$. (FLTrust omitted: its $f{=}0.1$ point is still computing.)}
+\caption{Sign-flip attack ($\gamma{=}5$) on FashionMNIST: test accuracy vs.\
+malicious fraction across eight aggregation rules over $k{=}10$ cluster sums
+($c{=}3$, mean of three seeds). Coordinate-wise rules (mean, trimmed mean, median)
+and the geometric median (RFA) collapse toward chance at the $(1-f)^c$
+contamination boundary; vector selection (Multi-Krum, Bulyan) degrades then falls;
+only CB-SAFE+ and FedGT hold near the clean baseline across all $f$, with CB-SAFE+
+highest at $f{=}0.3$. CIFAR-10 (a statistical tie with FedGT) and the other datasets
+are reported in Table~\ref{tab:signflip}.}
 \label{fig:signflip}
 \end{figure}
 
@@ -735,7 +728,7 @@ dataset, we repeat the sign-flip evaluation on FashionMNIST (a second image
 benchmark, three seeds) and on Edge-IIoTset (tabular IoT/IIoT intrusion detection
 with a multilayer perceptron, a different modality in the security domain of the
 closest prior work \cite{byzpqfl2026}). The pattern is identical everywhere
-(Table~\ref{tab:signflip}, Fig.~\ref{fig:general}): every coordinate-wise rule
+(Table~\ref{tab:signflip}, Fig.~\ref{fig:dynamics}): every coordinate-wise rule
 collapses to chance at $f{\ge}0.2$ (10.0\% on the 10-class image sets, 7.3\% on
 15-class Edge-IIoTset), Multi-Krum degrades gracefully then falls at $f{=}0.3$, and
 CB-SAFE+ tracks the clean baseline. The round-by-round view
@@ -752,14 +745,6 @@ Edge-IIoTset result is the sharpest: at $f{=}0.3$ CB-SAFE+ holds 61.5\% against 
 
 \input{../results/tables/table1_signflip.tex}
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{fig_generalization.pdf}
-\caption{Sign-flip at $f{=}30\%$: fraction of clean-baseline accuracy retained by
-the worst static rule, the best static rule, and CB-SAFE+, on every dataset.
-CB-SAFE+ preserves $84$--$97\%$ where static rules keep $12$--$60\%$.}
-\label{fig:general}
-\end{figure}
 
 \begin{figure*}[t]
 \centering
@@ -854,7 +839,7 @@ Fixing the rule (median) and sweeping cluster size traces the dial empirically
 50\% to 39\% as $f$ grows to $0.3$, i.e., classical robust aggregation. At $c{=}3$ the
 same rule holds to $f{=}0.1$ (43.4\%) and collapses beyond; at $c{=}5$ degradation
 begins already at $f{=}0.1$ (33.7\%): the breakdown frontier shifts left exactly as
-$(1-f)^c$ predicts (Fig.~\ref{fig:tradeoff}). Two further observations sharpen the
+$(1-f)^c$ predicts (Fig.~\ref{fig:cdial}). Two further observations sharpen the
 picture. First, at $f{=}0.05$ privacy is \emph{free}: $c{=}3$ and $c{=}5$ match or
 slightly exceed $c{=}1$ (52.2\% vs.\ 50.2\%), because cluster averaging denoises
 before the median. Second, the dial's cost is refundable: at $c{=}3$, $f{=}0.3$,
@@ -871,14 +856,6 @@ left, as $(1-f)^c$ predicts; at $f{=}5\%$ privacy costs nothing.}
 \label{fig:cdial}
 \end{figure}
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{fig_tradeoff.pdf}
-\caption{The privacy--robustness dial, analytically: the anonymity set grows with
-cluster size $c$, while the probability that a cluster sum is uncontaminated decays
-as $(1-f)^c$.}
-\label{fig:tradeoff}
-\end{figure}
 
 \section{Security Discussion and Limitations}
 \textbf{What the design guarantees.} Within a cluster, privacy reduces to the
