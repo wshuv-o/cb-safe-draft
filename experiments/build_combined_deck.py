@@ -261,7 +261,7 @@ content("Results: Detection", [
 
 content("Results: Generalization", [
     "Label-flip is milder: no coordinate-wise rule collapses, which isolates laundering as the cause of the sign-flip failures.",
-], lead="Label-flip test accuracy (from the paper, Table VI); CB-SAFE+ wins EMNIST outright.",
+], lead="Label-flip test accuracy (from the paper, Table VI); CB-SAFE+ matches FedGT and leads at the hardest setting (f=0.3).",
     cite=[1], page="20 / 22",
     fig_center=("shot_labelflip_table.png", 2.55, 3.5))
 
