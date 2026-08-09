@@ -71,40 +71,61 @@ def identfp(dsdir, agg, f):
     return f"{np.mean(fp):.1f}" if fp else "--"
 
 
-# ============ TABLE I: sign-flip robustness, all datasets x f x methods ============
-methods1 = [("mean", "FedAvg (mean)"), ("trimmed", "Trimmed mean"), ("median", "Median"),
-            ("krum", "Multi-Krum"), ("bulyan", "Bulyan"), ("geomedian", "Geo-median / RFA"),
-            ("fltrust", "FLTrust"), ("fedgt", "FedGT [TIFS'25]"),
-            ("reputation", "CB-SAFE+ (ours)"), ("reputation_ov4", "CB-SAFE+ ov4 (ours)"),
-            ("reputation_tf", "CB-SAFE+ trust-free (ours)"), ("hybrid_ov4", "CB-SAFE+ hybrid (ours)")]
-L = [r"\begin{table*}[t]\centering\footnotesize",
-     r"\caption{Test accuracy (\%) under the sign-flip (laundering) attack across four datasets and malicious fractions $f$ (mean\,$\pm$\,std over 3 seeds for CIFAR-10/FashionMNIST/Edge-IIoTset; single seed for EMNIST). Higher is better; best per column in bold. A dash ($-$) marks a cell still being computed.}",
-     r"\label{tab:signflip}", r"\setlength{\tabcolsep}{4pt}",
-     r"\begin{tabular}{@{}l" + "ccc" * 4 + r"@{}}\toprule",
-     r"& \multicolumn{3}{c}{CIFAR-10} & \multicolumn{3}{c}{FashionMNIST} & \multicolumn{3}{c}{EMNIST} & \multicolumn{3}{c}{Edge-IIoTset}\\",
-     r"\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}\cmidrule(l){11-13}",
-     r"Method & " + " & ".join([f"$f{{=}}.{int(f*10)}$" for _ in DSROOT for f in FS]) + r"\\\midrule"]
-prev = ["METHOD".ljust(22) + "".join(f"{ds[:8]:>26}" for ds in DSROOT)]
-# precompute best per (ds,f)
-best = {}
-for ds, dsdir in DSROOT.items():
-    for f in FS:
-        vals = {a: val(runs(dsdir, a, "signflip", f)) for a, _ in methods1}
-        best[(ds, f)] = max((v[0], a) for a, v in vals.items() if v)[1] if any(vals.values()) else None
-for agg, label in methods1:
-    cells = []
-    pcells = []
+# ============ sign-flip tables (full-width table*), reusable builder ============
+def build_signflip_table(methods, caption, label, outfile):
+    L = [r"\begin{table*}[t]\centering\footnotesize",
+         r"\caption{" + caption + r"}",
+         r"\label{" + label + r"}", r"\setlength{\tabcolsep}{4pt}",
+         r"\begin{tabular}{@{}l" + "ccc" * 4 + r"@{}}\toprule",
+         r"& \multicolumn{3}{c}{CIFAR-10} & \multicolumn{3}{c}{FashionMNIST} & \multicolumn{3}{c}{EMNIST} & \multicolumn{3}{c}{Edge-IIoTset}\\",
+         r"\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}\cmidrule(l){11-13}",
+         r"Method & " + " & ".join([f"$f{{=}}.{int(f*10)}$" for _ in DSROOT for f in FS]) + r"\\\midrule"]
+    prev = ["METHOD".ljust(30) + "".join(f"{ds[:8]:>26}" for ds in DSROOT)]
+    best = {}
     for ds, dsdir in DSROOT.items():
         for f in FS:
-            v = val(runs(dsdir, agg, "signflip", f))
-            cells.append(fmt(v, bold=(best.get((ds, f)) == agg)))
-            pcells.append(f"{v[0]:.0f}" if v else "--")
-    L.append(f"{label} & " + " & ".join(cells) + r"\\")
-    prev.append(label.ljust(22) + "".join(f"{c:>9}" for c in pcells))
-L += [r"\bottomrule\end{tabular}\end{table*}"]
-open(os.path.join(TBL, "table1_signflip.tex"), "w").write("\n".join(L))
-print("=== TABLE I: sign-flip robustness (preview, acc%) ===")
+            vals = {a: val(runs(dsdir, a, "signflip", f)) for a, _ in methods}
+            best[(ds, f)] = max((v[0], a) for a, v in vals.items() if v)[1] if any(vals.values()) else None
+    for agg, lbl in methods:
+        cells, pcells = [], []
+        for ds, dsdir in DSROOT.items():
+            for f in FS:
+                v = val(runs(dsdir, agg, "signflip", f))
+                cells.append(fmt(v, bold=(best.get((ds, f)) == agg)))
+                pcells.append(f"{v[0]:.0f}" if v else "--")
+        L.append(f"{lbl} & " + " & ".join(cells) + r"\\")
+        prev.append(lbl.ljust(30) + "".join(f"{c:>9}" for c in pcells))
+    L += [r"\bottomrule\end{tabular}\end{table*}"]
+    open(os.path.join(TBL, outfile), "w").write("\n".join(L))
+    return prev
+
+
+# TABLE I (main): baselines + FedGT + our flagship (hybrid) only.
+main_methods = [("mean", "FedAvg (mean)"), ("trimmed", "Trimmed mean"), ("median", "Median"),
+                ("krum", "Multi-Krum"), ("bulyan", "Bulyan"), ("geomedian", "Geo-median / RFA"),
+                ("fltrust", "FLTrust"), ("fedgt", "FedGT [TIFS'25]"),
+                ("hybrid_ov4", "\\textbf{CB-SAFE+ (ours)}")]
+main_cap = (r"Test accuracy (\%) under the sign-flip (laundering) attack across four datasets and "
+            r"malicious fractions $f$ (mean\,$\pm$\,std over 3 seeds for CIFAR-10/FashionMNIST/"
+            r"Edge-IIoTset; single seed for EMNIST). Higher is better; best per column in bold. "
+            r"A dash ($-$) marks a cell still being computed. CB-SAFE+ variants are ablated in "
+            r"Table~\ref{tab:ablation-variants}.")
+prev = build_signflip_table(main_methods, main_cap, "tab:signflip", "table1_signflip.tex")
+print("=== TABLE I: sign-flip robustness, main (preview, acc%) ===")
 print("\n".join(prev))
+
+# TABLE Ib (ablation): CB-SAFE+ components + trust-free capability.
+abl_methods = [("reputation", "Base: temporal reputation (ov1)"),
+               ("reputation_ov4", "\\;+ overlapping groups (ov4)"),
+               ("hybrid_ov4", "\\;+ hybrid COMP decode (full)"),
+               ("reputation_tf", "Trust-free (no root data)")]
+abl_cap = (r"Ablation of CB-SAFE+ components under sign-flip (same protocol as "
+           r"Table~\ref{tab:signflip}). Overlapping groups and the hybrid COMP decode each add "
+           r"robustness at high $f$; the trust-free variant uses no root dataset but degrades "
+           r"beyond $f{=}0.1$. Best per column in bold.")
+prevA = build_signflip_table(abl_methods, abl_cap, "tab:ablation-variants", "table2_ablation.tex")
+print("\n=== TABLE Ib: CB-SAFE+ ablation (preview, acc%) ===")
+print("\n".join(prevA))
 
 # ============ TABLE II: FedGT head-to-head + identification + cost (CIFAR + FMNIST) ============
 methods2 = [("fedgt", "FedGT [TIFS'25]"), ("reputation", "CB-SAFE+ ov1"),

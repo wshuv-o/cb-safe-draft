@@ -757,6 +757,21 @@ CB-SAFE+ preserves $84$--$97\%$ where static rules keep $12$--$60\%$.}
 \label{fig:general}
 \end{figure}
 
+\subsection{Ablation: Which Component Earns the Robustness}
+CB-SAFE+ layers three ingredients on top of clustered secure aggregation: temporal
+reputation, overlapping re-randomized groups, and a per-round COMP decode.
+Table~\ref{tab:ablation-variants} isolates each under the identical sign-flip
+protocol. The base temporal reputation (ov1) already restores learning at moderate
+contamination but degrades at $f{=}0.3$ (37.9\% on CIFAR-10); adding overlapping
+groups (ov4) lifts it to 48.8\%, and the full hybrid COMP decode reaches 50.0\%,
+matching FedGT. Each component contributes, and the gains concentrate in the
+high-$f$ regime where laundering is strongest. The trust-free variant, which uses
+\emph{no} root dataset, matches the others at $f{=}0.1$ but collapses beyond it:
+attacker identification without any trusted anchor is possible only in the
+low-contamination regime, a capability boundary we state rather than hide.
+
+\input{../results/tables/table2_ablation.tex}
+
 \subsection{The Privacy--Robustness Dial, Measured}
 
 \begin{table}[t]
