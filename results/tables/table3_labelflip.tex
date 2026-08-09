@@ -1,5 +1,5 @@
 \begin{table*}[t]\centering\footnotesize
-\caption{Test accuracy (\%) under the label-flip attack (single seed) across four datasets and malicious fractions $f$. Label flipping is a mild attack: unlike sign-flip (Table~\ref{tab:signflip}), coordinate-wise rules do \emph{not} collapse, which isolates laundering as the mechanism behind the sign-flip failures. Higher is better; best per column in bold. A dash ($-$) marks a cell not yet computed (EMNIST runs on a separate node).}
+\caption{Test accuracy (\%) under the label-flip attack (single seed) across four datasets and malicious fractions $f$. Label flipping is a mild attack: unlike sign-flip (Table~\ref{tab:signflip}), coordinate-wise rules do \emph{not} collapse, which isolates laundering as the mechanism behind the sign-flip failures. Higher is better; best per column in bold. A dash ($-$) marks a configuration not evaluated.}
 \label{tab:labelflip}
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{@{}lcccccccccccc@{}}\toprule
@@ -7,12 +7,12 @@
 \cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}\cmidrule(l){11-13}
 Method & $f{=}.1$ & $f{=}.2$ & $f{=}.3$ & $f{=}.1$ & $f{=}.2$ & $f{=}.3$ & $f{=}.1$ & $f{=}.2$ & $f{=}.3$ & $f{=}.1$ & $f{=}.2$ & $f{=}.3$\\\midrule
 FedAvg (mean) & \textbf{53.9} & 51.9 & 47.4 & 85.4 & 78.4 & 62.6 & 84.9 & 82.9 & 77.0 & \textbf{62.7} & \textbf{63.5} & 60.8\\
-Trimmed mean & 52.7 & 51.1 & 47.3 & 85.6 & 78.7 & 77.0 & 85.4 & 83.5 & \textbf{80.0} & 62.5 & 62.7 & 60.5\\
-Median & 52.0 & 51.2 & 44.8 & 85.5 & 84.7 & 75.2 & \textbf{85.6} & \textbf{83.6} & $-$ & 61.5 & 62.7 & 59.7\\
-Multi-Krum & 50.5 & 50.4 & 43.6 & 85.6 & 86.2 & 83.2 & $-$ & $-$ & $-$ & 62.4 & 62.2 & 60.8\\
-Bulyan & 50.9 & 49.0 & 43.7 & 85.2 & $-$ & $-$ & $-$ & $-$ & $-$ & 61.2 & 61.6 & 60.5\\
-Geo-median / RFA & 53.6 & 52.1 & 46.1 & $-$ & $-$ & $-$ & $-$ & $-$ & $-$ & 62.2 & 63.4 & 61.6\\
-FLTrust & 25.7 & 26.3 & 25.0 & $-$ & $-$ & $-$ & $-$ & $-$ & $-$ & 37.4 & 38.2 & 37.1\\
-FedGT [TIFS'25] & 53.8 & \textbf{52.8} & \textbf{51.7} & $-$ & 86.3 & 86.1 & $-$ & $-$ & $-$ & 62.0 & 62.7 & 62.0\\
-\textbf{CB-SAFE+ (ours)} & $-$ & $-$ & $-$ & \textbf{86.4} & \textbf{86.5} & \textbf{86.2} & $-$ & $-$ & $-$ & 62.4 & 62.5 & \textbf{62.4}\\
+Trimmed mean & 52.7 & 51.1 & 47.3 & 85.6 & 78.7 & 77.0 & 85.4 & 83.5 & 80.0 & 62.5 & 62.7 & 60.5\\
+Median & 52.0 & 51.2 & 44.8 & 85.5 & 84.7 & 75.2 & 85.6 & 83.6 & 78.2 & 61.5 & 62.7 & 59.7\\
+Multi-Krum & 50.5 & 50.4 & 43.6 & 85.6 & 86.2 & 83.2 & 85.5 & 84.2 & 82.0 & 62.4 & 62.2 & 60.8\\
+Bulyan & 50.9 & 49.0 & 43.7 & 85.2 & 85.5 & 81.9 & 85.2 & 84.2 & 81.5 & 61.2 & 61.6 & 60.5\\
+Geo-median / RFA & 53.6 & 52.1 & 46.1 & 85.6 & 85.6 & 69.8 & 85.6 & 83.5 & 79.8 & 62.2 & 63.4 & 61.6\\
+FLTrust & 25.7 & 26.3 & 25.0 & 75.4 & 75.3 & 73.0 & 50.0 & 48.2 & $-$ & 37.4 & 38.2 & 37.1\\
+FedGT [TIFS'25] & 53.8 & 52.8 & \textbf{51.7} & 86.0 & 86.3 & 86.1 & $-$ & $-$ & $-$ & 62.0 & 62.7 & 62.0\\
+\textbf{CB-SAFE+ (ours)} & 53.6 & \textbf{53.2} & 51.1 & \textbf{86.4} & \textbf{86.5} & \textbf{86.2} & \textbf{85.8} & \textbf{85.5} & \textbf{85.4} & 62.4 & 62.5 & \textbf{62.4}\\
 \bottomrule\end{tabular}\end{table*}

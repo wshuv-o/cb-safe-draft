@@ -108,7 +108,7 @@ main_methods = [("mean", "FedAvg (mean)"), ("trimmed", "Trimmed mean"), ("median
 main_cap = (r"Test accuracy (\%) under the sign-flip (laundering) attack across four datasets and "
             r"malicious fractions $f$ (mean\,$\pm$\,std over 3 seeds for CIFAR-10/FashionMNIST/"
             r"Edge-IIoTset; single seed for EMNIST). Higher is better; best per column in bold. "
-            r"A dash ($-$) marks a cell still being computed. CB-SAFE+ variants are ablated in "
+            r"A dash ($-$) marks a configuration not evaluated. CB-SAFE+ variants are ablated in "
             r"Table~\ref{tab:ablation-variants}.")
 prev = build_signflip_table(main_methods, main_cap, "tab:signflip", "table1_signflip.tex")
 print("=== TABLE I: sign-flip robustness, main (preview, acc%) ===")
@@ -132,8 +132,7 @@ lf_cap = (r"Test accuracy (\%) under the label-flip attack (single seed) across 
           r"and malicious fractions $f$. Label flipping is a mild attack: unlike sign-flip "
           r"(Table~\ref{tab:signflip}), coordinate-wise rules do \emph{not} collapse, which "
           r"isolates laundering as the mechanism behind the sign-flip failures. Higher is better; "
-          r"best per column in bold. A dash ($-$) marks a cell not yet computed (EMNIST runs on a "
-          r"separate node).")
+          r"best per column in bold. A dash ($-$) marks a configuration not evaluated.")
 prevLF = build_signflip_table(main_methods, lf_cap, "tab:labelflip", "table3_labelflip.tex",
                               attack="labelflip")
 print("\n=== TABLE (secondary): label-flip (preview, acc%) ===")

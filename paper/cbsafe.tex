@@ -1,3 +1,4 @@
+\pdfminorversion=7  % match the drawio v1.7 architecture figure (silences PDF-inclusion warning)
 %==============================================================================
 % CB-SAFE: full paper (IEEEtran journal / IEEE Transactions, TIFS-style). Compile:
 %   pdflatex cbsafe && pdflatex cbsafe
@@ -782,8 +783,7 @@ undefended mean retains 47--63\% at $f{=}0.3$, versus 10\% under sign-flip. That
 contrast isolates the laundering mechanism (Proposition~\ref{prop:launder}) as the
 cause of the sign-flip failures, rather than any generic fragility of the setup.
 CB-SAFE+ stays at or above every baseline, and on FashionMNIST it holds 86\% at
-$f{=}0.3$ where the mean falls to 63\%. (EMNIST label-flip runs on a separate node;
-those cells are pending.)
+$f{=}0.3$ where the mean falls to 63\%.
 
 \input{../results/tables/table3_labelflip.tex}
 
