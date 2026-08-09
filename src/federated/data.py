@@ -12,7 +12,15 @@ import torch
 from torch.utils.data import DataLoader, Subset
 from torchvision import datasets, transforms
 
-DATA_ROOT = os.path.join(os.path.dirname(__file__), "..", "..", "data")
+DATA_ROOT = os.environ.get("CBSAFE_DATA_ROOT") or os.path.join(os.path.dirname(__file__), "..", "..", "data")
+# On a read-only repo mount (e.g. Kaggle /kaggle/input) fall back to a writable dir
+# so torchvision downloads (EMNIST etc.) do not crash with OSError [Errno 30].
+try:
+    os.makedirs(DATA_ROOT, exist_ok=True)
+except OSError:
+    _base = "/kaggle/working" if os.path.isdir("/kaggle/working") else os.getcwd()
+    DATA_ROOT = os.path.join(_base, "data")
+    os.makedirs(DATA_ROOT, exist_ok=True)
 # FashionMNIST lives on C: because D: is out of space (see README status note)
 FMNIST_ROOT = os.path.join(os.path.expanduser("~"), "fl_data")
 
