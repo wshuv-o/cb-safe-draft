@@ -72,7 +72,7 @@ def identfp(dsdir, agg, f):
 
 
 # ============ sign-flip tables (full-width table*), reusable builder ============
-def build_signflip_table(methods, caption, label, outfile):
+def build_signflip_table(methods, caption, label, outfile, attack="signflip"):
     L = [r"\begin{table*}[t]\centering\footnotesize",
          r"\caption{" + caption + r"}",
          r"\label{" + label + r"}", r"\setlength{\tabcolsep}{4pt}",
@@ -84,13 +84,13 @@ def build_signflip_table(methods, caption, label, outfile):
     best = {}
     for ds, dsdir in DSROOT.items():
         for f in FS:
-            vals = {a: val(runs(dsdir, a, "signflip", f)) for a, _ in methods}
+            vals = {a: val(runs(dsdir, a, attack, f)) for a, _ in methods}
             best[(ds, f)] = max((v[0], a) for a, v in vals.items() if v)[1] if any(vals.values()) else None
     for agg, lbl in methods:
         cells, pcells = [], []
         for ds, dsdir in DSROOT.items():
             for f in FS:
-                v = val(runs(dsdir, agg, "signflip", f))
+                v = val(runs(dsdir, agg, attack, f))
                 cells.append(fmt(v, bold=(best.get((ds, f)) == agg)))
                 pcells.append(f"{v[0]:.0f}" if v else "--")
         L.append(f"{lbl} & " + " & ".join(cells) + r"\\")
@@ -126,6 +126,18 @@ abl_cap = (r"Ablation of CB-SAFE+ components under sign-flip (same protocol as "
 prevA = build_signflip_table(abl_methods, abl_cap, "tab:ablation-variants", "table2_ablation.tex")
 print("\n=== TABLE Ib: CB-SAFE+ ablation (preview, acc%) ===")
 print("\n".join(prevA))
+
+# TABLE (secondary): label-flip accuracy, same roster as the main table.
+lf_cap = (r"Test accuracy (\%) under the label-flip attack (single seed) across four datasets "
+          r"and malicious fractions $f$. Label flipping is a mild attack: unlike sign-flip "
+          r"(Table~\ref{tab:signflip}), coordinate-wise rules do \emph{not} collapse, which "
+          r"isolates laundering as the mechanism behind the sign-flip failures. Higher is better; "
+          r"best per column in bold. A dash ($-$) marks a cell not yet computed (EMNIST runs on a "
+          r"separate node).")
+prevLF = build_signflip_table(main_methods, lf_cap, "tab:labelflip", "table3_labelflip.tex",
+                              attack="labelflip")
+print("\n=== TABLE (secondary): label-flip (preview, acc%) ===")
+print("\n".join(prevLF))
 
 # ============ TABLE II: FedGT head-to-head + identification + cost (CIFAR + FMNIST) ============
 methods2 = [("fedgt", "FedGT [TIFS'25]"), ("reputation", "CB-SAFE+ ov1"),

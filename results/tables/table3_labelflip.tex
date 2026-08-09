@@ -1,0 +1,18 @@
+\begin{table*}[t]\centering\footnotesize
+\caption{Test accuracy (\%) under the label-flip attack (single seed) across four datasets and malicious fractions $f$. Label flipping is a mild attack: unlike sign-flip (Table~\ref{tab:signflip}), coordinate-wise rules do \emph{not} collapse, which isolates laundering as the mechanism behind the sign-flip failures. Higher is better; best per column in bold. A dash ($-$) marks a cell not yet computed (EMNIST runs on a separate node).}
+\label{tab:labelflip}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lcccccccccccc@{}}\toprule
+& \multicolumn{3}{c}{CIFAR-10} & \multicolumn{3}{c}{FashionMNIST} & \multicolumn{3}{c}{EMNIST} & \multicolumn{3}{c}{Edge-IIoTset}\\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}\cmidrule(l){11-13}
+Method & $f{=}.1$ & $f{=}.2$ & $f{=}.3$ & $f{=}.1$ & $f{=}.2$ & $f{=}.3$ & $f{=}.1$ & $f{=}.2$ & $f{=}.3$ & $f{=}.1$ & $f{=}.2$ & $f{=}.3$\\\midrule
+FedAvg (mean) & \textbf{53.9} & 51.9 & \textbf{47.4} & 85.4 & 78.4 & 62.6 & $-$ & $-$ & $-$ & \textbf{62.7} & \textbf{63.5} & 60.8\\
+Trimmed mean & 52.7 & 51.1 & 47.3 & 85.6 & 78.7 & 77.0 & $-$ & $-$ & $-$ & 62.5 & 62.7 & 60.5\\
+Median & 52.0 & 51.2 & 44.8 & $-$ & $-$ & $-$ & $-$ & $-$ & $-$ & 61.5 & 62.7 & 59.7\\
+Multi-Krum & 50.5 & 50.4 & 43.6 & $-$ & $-$ & $-$ & $-$ & $-$ & $-$ & 62.4 & 62.2 & 60.8\\
+Bulyan & 50.9 & 49.0 & 43.7 & $-$ & $-$ & $-$ & $-$ & $-$ & $-$ & 61.2 & 61.6 & 60.5\\
+Geo-median / RFA & 53.6 & \textbf{52.1} & 46.1 & $-$ & $-$ & $-$ & $-$ & $-$ & $-$ & 62.2 & 63.4 & 61.6\\
+FLTrust & $-$ & $-$ & $-$ & $-$ & $-$ & $-$ & $-$ & $-$ & $-$ & 37.4 & 38.2 & 37.1\\
+FedGT [TIFS'25] & $-$ & $-$ & $-$ & $-$ & $-$ & $-$ & $-$ & $-$ & $-$ & 62.0 & 62.7 & 62.0\\
+\textbf{CB-SAFE+ (ours)} & $-$ & $-$ & $-$ & \textbf{86.4} & \textbf{86.5} & \textbf{86.2} & $-$ & $-$ & $-$ & 62.4 & 62.5 & \textbf{62.4}\\
+\bottomrule\end{tabular}\end{table*}
