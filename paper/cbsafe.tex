@@ -446,7 +446,8 @@ after a warmup of $W$ rounds,
 \end{equation}
 By Hoeffding's inequality the two populations separate exponentially: the
 per-client misclassification probability is at most $e^{-2r(\tau-p_h)^2}$, so a few
-rounds suffice to isolate the attackers. The server thereby identifies individual
+rounds suffice to isolate the attackers, as the measured suspicion trajectories
+confirm (Fig.~\ref{fig:suspicion}). The server thereby identifies individual
 attackers it has never observed individually: group testing \cite{dorfman1943,aldridge2019} where the
 pools are the privacy-preserving cluster sums and the tests repeat over training rounds. The
 \emph{hybrid} variant augments Eq.~\eqref{eq:susp} with a per-round combinatorial
@@ -737,7 +738,10 @@ closest prior work \cite{byzpqfl2026}). The pattern is identical everywhere
 (Table~\ref{tab:signflip}, Fig.~\ref{fig:general}): every coordinate-wise rule
 collapses to chance at $f{\ge}0.2$ (10.0\% on the 10-class image sets, 7.3\% on
 15-class Edge-IIoTset), Multi-Krum degrades gracefully then falls at $f{=}0.3$, and
-CB-SAFE+ tracks the clean baseline. At $f{=}0.3$ CB-SAFE+ retains 84\%, high-$80$s,
+CB-SAFE+ tracks the clean baseline. The round-by-round view
+(Fig.~\ref{fig:dynamics}) shows this is not an endpoint artifact: the static rules
+decay progressively while CB-SAFE+ dips during warmup and recovers as exclusions
+fire. At $f{=}0.3$ CB-SAFE+ retains 84\%, high-$80$s,
 and 97\% of the no-attack accuracy on CIFAR-10, FashionMNIST, and Edge-IIoTset
 respectively, versus 12--18\% for the worst static rule. Pooling all matched
 (dataset, $f$, seed) cells, CB-SAFE+ beats every baseline under a paired $t$-test
@@ -756,6 +760,35 @@ the worst static rule, the best static rule, and CB-SAFE+, on every dataset.
 CB-SAFE+ preserves $84$--$97\%$ where static rules keep $12$--$60\%$.}
 \label{fig:general}
 \end{figure}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_dynamics_signflip.pdf}
+\caption{Training dynamics under the sign-flip attack: test accuracy versus
+communication round for eight aggregation rules, across three datasets (rows) and
+malicious fractions $f$ (columns). Curves are the mean over 3 seeds (single seed
+for EMNIST); shaded bands are $\pm 1$ SD for CB-SAFE+ and FedGT. The dashed
+vertical marks the warmup $W{=}5$ after which exclusions begin; dotted lines mark
+chance and the no-attack baseline. Coordinate-wise rules and the geometric median
+decay progressively to chance at $f{\ge}0.2$, whereas CB-SAFE+ dips during warmup
+and then recovers as attackers are excluded, tracking or exceeding FedGT.
+CIFAR-10 (a statistical tie with FedGT) is reported in Table~\ref{tab:signflip}.}
+\label{fig:dynamics}
+\end{figure*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_suspicion.pdf}
+\caption{Temporal suspicion separation (CB-SAFE+ on CIFAR-10): population-mean
+flagged fraction $s_i^{\,r}/r$ of malicious versus honest clients over rounds, for
+each malicious fraction $f$ (mean over 3 seeds). The two populations separate
+within a few rounds, so attackers are identified from group-level observations
+alone (Eqs.~\eqref{eq:susp}--\eqref{eq:excl}). The dashed line is the predicted
+honest co-clustering rate $p_h{=}1-(1-f)^{c-1}$ (Eq.~\eqref{eq:ph}); the loss
+probe adds a few honest flags at low $f$. Exclusion uses an adaptive gap between
+the two populations rather than a fixed threshold; the warmup window is shaded.}
+\label{fig:suspicion}
+\end{figure*}
 
 \subsection{Secondary Attack: Label Flipping}
 Label flipping is a far milder attack than sign-flip, and it doubles as a control.

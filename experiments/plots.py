@@ -17,6 +17,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+import tifs_style as st  # shared serif style (FIGURE_RULES.md §11)
+st.apply()
+
 R = _bootstrap.RESULTS
 FIGS = os.path.join(R, "figs")
 os.makedirs(FIGS, exist_ok=True)
@@ -42,17 +45,7 @@ ACC_METHODS = ["mean", "trimmed", "median", "krum", "bulyan", "geomedian",
                "fedgt", "hybrid_ov4"]
 ASR_METHODS = ["mean", "trimmed", "median", "krum", "reputation"]
 
-plt.rcParams.update({
-    "font.size": 8, "font.family": "sans-serif",
-    "axes.edgecolor": C["axis"], "axes.labelcolor": C["ink2"],
-    "xtick.color": C["muted"], "ytick.color": C["muted"],
-    "axes.grid": True, "grid.color": C["grid"], "grid.linewidth": 0.6,
-    "axes.spines.top": False, "axes.spines.right": False,
-    "figure.facecolor": "white", "axes.facecolor": C["surface"],
-    "savefig.bbox": "tight", "savefig.dpi": 300,
-})
-
-FIG_W = 3.45  # IEEE column width in inches
+FIG_W = st.COL_SINGLE  # IEEE single-column width (in), from the shared style
 
 
 def fig_utility() -> None:
@@ -64,11 +57,7 @@ def fig_utility() -> None:
     ax.plot(acc["round"] + 1, acc["acc"] * 100, color=C["blue"], lw=2)
     eq = os.path.join(R, "secure_equivalence.csv")
     if os.path.exists(eq):
-        e = pd.read_csv(eq)
-        ax.set_title(
-            f"FedAvg on CIFAR-10 (30 clients, Dirichlet $\\alpha$=0.5) — CB-SAFE secure\n"
-            f"aggregates (HQC & ML-KEM) match to $\\leq${e['max_abs_err'].max():.0e} per coord.",
-            fontsize=7.5, color=C["ink"], loc="left")
+        pass  # in-axes title removed (FIGURE_RULES.md §2); details belong in the caption
     ax.set_xlabel("Round")
     ax.set_ylabel("Test accuracy (%)")
     fig.savefig(os.path.join(FIGS, "fig_utility.pdf"))
@@ -104,9 +93,6 @@ def fig_amortization() -> None:
     ax.set_yticks(range(len(order)), [names[k] for k in order], fontsize=7)
     ax.set_xscale("log")
     ax.set_xlim(0.9, one_round * 4)
-    ax.set_title("One-time setup traffic per client (N=30, c=3) vs a single\n"
-                 "round: the code-based premium is a setup-only cost",
-                 fontsize=7.5, color=C["ink"], loc="left")
     ax.set_xlabel("Traffic per client (KiB, log scale)")
     ax.grid(axis="y", visible=False)
     fig.savefig(os.path.join(FIGS, "fig_amortization.pdf"))
@@ -151,16 +137,18 @@ def fig_robustness() -> None:
                 s = sub[sub["agg"] == agg].sort_values("f")
                 if len(s) < 3:  # only draw methods with a complete f-sweep
                     continue
-                ax.plot(s["f"] * 100, s[metric], color=AGG_COLOR[agg], lw=2,
-                        marker="o", ms=4, label=AGG_LABEL[agg])
-            ax.legend(fontsize=5.5, frameon=False, loc="best", ncol=2)
+                sty = st.style(agg)
+                ax.plot(s["f"] * 100, s[metric], color=sty["color"], ls=sty["ls"],
+                        lw=sty["lw"], marker=sty["marker"], label=sty["label"],
+                        zorder=6 if sty.get("ours") else 3)
             if metric == "acc" and base is not None:
-                ax.axhline(base, color=C["muted"], lw=1, ls=(0, (4, 3)))
+                ax.axhline(base, color="#9e9e9e", lw=0.8, ls=(0, (4, 3)), zorder=1)
                 ax.annotate("no-attack baseline", (2, base), textcoords="offset points",
-                            xytext=(0, 4), fontsize=6.5, color=C["muted"])
-            ax.set_title(f"CIFAR-10 {attack} attack: robust rules across k=10 cluster sums (c=3)",
-                         fontsize=7.5, color=C["ink"], loc="left")
-            ax.set_xlabel("Malicious fraction f (%)")
+                            xytext=(0, 3), fontsize=6, color="#6b6b6b")
+            # legend outside (below), never over the data (FIGURE_RULES.md §5); no in-axes title (§2)
+            ax.legend(fontsize=6, frameon=False, loc="upper center",
+                      bbox_to_anchor=(0.5, -0.22), ncol=3, handlelength=2.2)
+            ax.set_xlabel(r"malicious fraction $f$ (\%)" if False else "malicious fraction f (%)")
             ax.set_ylabel(ylabel)
             ax.set_xlim(left=0)
             fig.savefig(os.path.join(FIGS, f"fig_{attack}_{suffix}.pdf"))
@@ -177,9 +165,6 @@ def fig_tradeoff() -> None:
                     (f[-1] * 100, ((1 - f[-1]) ** c) * 100),
                     textcoords="offset points", xytext=(4, 0), fontsize=6.5,
                     color=color, va="center")
-    ax.set_title("Privacy–robustness tension: larger anonymity sets (c)\n"
-                 "leave fewer clean cluster sums for the robust rule",
-                 fontsize=7.5, color=C["ink"], loc="left")
     ax.set_xlabel("Malicious fraction f (%)")
     ax.set_ylabel("P(cluster sum clean) (%)")
     ax.set_xlim(0, 46)
@@ -215,9 +200,6 @@ def fig_cdial() -> None:
             continue
         ax.plot(s["f"] * 100, s["acc"], color=color, lw=2, marker="o", ms=4, label=label)
     ax.legend(fontsize=6.5, frameon=False, loc="upper right")
-    ax.set_title("The privacy dial, measured: median rule under sign-flip.\n"
-                 "Larger anonymity sets move the breakdown frontier left",
-                 fontsize=7.5, color=C["ink"], loc="left")
     ax.set_xlabel("Malicious fraction f (%)")
     ax.set_ylabel("Test accuracy (%)")
     ax.set_xlim(left=0)
