@@ -107,9 +107,9 @@ main_methods = [("mean", "FedAvg (mean)"), ("trimmed", "Trimmed mean"), ("median
                 ("hybrid_ov4", "\\textbf{CB-SAFE+ (ours)}")]
 main_cap = (r"Test accuracy (\%) under the sign-flip (laundering) attack across four datasets and "
             r"malicious fractions $f$ (mean\,$\pm$\,std over 3 seeds for CIFAR-10/FashionMNIST/"
-            r"Edge-IIoTset; single seed for EMNIST). Higher is better; best per column in bold. "
-            r"A dash ($-$) marks a configuration not evaluated. CB-SAFE+ variants are ablated in "
-            r"Table~\ref{tab:ablation-variants}.")
+            r"Edge-IIoTset, and for CB-SAFE+ and FedGT on EMNIST; other EMNIST baselines are single "
+            r"seed). Higher is better; best per column in bold. A dash ($-$) marks a configuration "
+            r"not evaluated. CB-SAFE+ variants are ablated in Table~\ref{tab:ablation-variants}.")
 prev = build_signflip_table(main_methods, main_cap, "tab:signflip", "table1_signflip.tex")
 print("=== TABLE I: sign-flip robustness, main (preview, acc%) ===")
 print("\n".join(prev))
