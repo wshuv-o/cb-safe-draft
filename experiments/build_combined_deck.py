@@ -14,13 +14,15 @@ BLUE = RGBColor(0x2A, 0x78, 0xD6)
 INK  = RGBColor(0x0B, 0x0B, 0x0B)
 INK2 = RGBColor(0x26, 0x25, 0x1F)
 MUT  = RGBColor(0x89, 0x87, 0x81)
-BODY = "Segoe UI"
+BODY = "Calibri"
 FIG  = r"d:/ISM_Quantum/results/figs/"
 
 P = Presentation()
 P.slide_width = Inches(13.333)
 P.slide_height = Inches(7.5)
 BLANK = P.slide_layouts[6]
+TOTAL = 23
+_PG = [0]
 
 REF = {
  1: '[1] M. Xhemrishi, J. \u00d6stman, A. Wachter-Zeh, and A. Graell i Amat, "FedGT: Identification of '
@@ -78,7 +80,7 @@ def cites(s, keys):
     bx = tb(s, 0.75, 6.5, 11.9, 0.55).text_frame
     for i, k in enumerate(keys):
         p = bx.paragraphs[0] if i == 0 else bx.add_paragraph()
-        p.space_after = Pt(1); run(p, REF[k], 8, BLUE, italic=True)
+        p.space_after = Pt(1); run(p, REF[k], 8, INK2, italic=True)
 
 
 def img_ar(name):
@@ -112,7 +114,8 @@ def content(title, bullets, cite=None, page=None, lead=None,
             W = 12.4; fh = W / img_ar(name)
         s.shapes.add_picture(FIG + name, Inches((13.333 - W) / 2), Inches(ftop), height=Inches(fh))
     cites(s, cite or [])
-    footer(s, page)
+    _PG[0] += 1
+    footer(s, f"{_PG[0]} / {TOTAL}")
     return s
 
 
@@ -128,7 +131,7 @@ run(tb(s, 0.75, 4.95, 11.7, 0.5).text_frame.paragraphs[0],
 run(tb(s, 0.75, 5.42, 11.7, 0.4).text_frame.paragraphs[0],
     "Department of Computer Science, American International University\u2013Bangladesh", 14, MUT)
 run(tb(s, 0.75, 6.35, 11.7, 0.4).text_frame.paragraphs[0],
-    "Slides 1\u201315: required method presentation.   Slides 16\u201322: full-paper research walkthrough.", 12.5, MUT, italic=True)
+    "Slides 1\u201315: required method presentation.   Slides 16\u201323: full-paper research walkthrough.", 12.5, MUT, italic=True)
 
 # ===================== PART I: METHOD PRESENTATION (1-15) =====================
 content("Introduction", [
@@ -252,6 +255,11 @@ content("Results: Robustness", [
 ], lead="Sign-flip test accuracy across four datasets (from the paper, Table V).",
     cite=[1], page="18 / 22",
     fig_center=("shot_signflip_table.png", 2.55, 3.55))
+
+content("Results: Training Dynamics", [],
+    lead="Test accuracy vs. round for eight rules, over three datasets (rows) and three malicious fractions (columns); "
+         "CB-SAFE+ tracks the clean baseline while the others diverge (from the paper, Fig. 7).",
+    cite=[1], fig_center=("shot_dynamics_fig.png", 2.15, 4.28))
 
 content("Results: Detection", [
     "Malicious and honest suspicion separate within a few rounds; attackers are named from group-level observations alone.",
