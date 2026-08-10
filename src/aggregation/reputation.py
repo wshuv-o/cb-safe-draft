@@ -37,6 +37,17 @@ from . import robust
 # margin (cross-entropy units); poisoned ascent directions overshoot it by far
 PROBE_MARGIN = 0.25
 
+# --- scale-adaptive thresholds (activate only for large client populations) ---
+# At small N the absolute/gap rules above are well separated and used verbatim, so
+# the main experiments (N=30) are unchanged. At large N per-client data shrinks:
+# loss deltas compress (the absolute probe margin never trips) and the suspicion
+# histogram densifies (the gap rule finds no separation). For N>SCALE_N we switch
+# to robust median+MAD outlier thresholds, which are invariant to the absolute
+# scale and to the number of clusters.
+SCALE_N = 50
+PROBE_K_MAD = 1.0        # flag clusters with delta-loss > median + K*MAD
+EXCL_K_MAD = 2.5         # exclude clients with suspicion > median + K*MAD
+
 
 @dataclass
 class ReputationState:
@@ -46,6 +57,7 @@ class ReputationState:
     min_gap: float = 0.20    # smallest suspicion gap that counts as a real separation
     min_floor: float = 0.35  # a flagged group must sit above this to be excluded
     n_byzantine: int = 2     # Krum parameter for the reference
+    n_clients: int = 0       # population size; >SCALE_N switches to scale-adaptive rules
     flags: dict = field(default_factory=dict)     # client -> times in flagged cluster
     rounds: dict = field(default_factory=dict)    # client -> rounds participated
     excluded: set = field(default_factory=set)
@@ -68,6 +80,18 @@ class ReputationState:
             return set()
         if not self.adaptive:
             return {i for i, s in cand if s > self.tau}
+        if self.n_clients > SCALE_N:
+            # large-N: the suspicion histogram is dense, so the single-largest-gap
+            # test rarely finds a separation. Use a robust upper-outlier threshold:
+            # honest scores concentrate near p_h=1-(1-f)^{c-1}, attackers near 1.
+            arr = np.array([s for _, s in cand])
+            med = float(np.median(arr))
+            mad = float(np.median(np.abs(arr - med))) + 1e-9
+            thr = max(self.min_floor, med + EXCL_K_MAD * mad)
+            high = {i for i, s in cand if s > thr}
+            if 0 < len(high) <= len(cand) // 2:   # attackers must be a minority
+                return high
+            return set()
         vals = np.sort(np.array([s for _, s in cand]))
         gaps = np.diff(vals)
         if gaps.size == 0 or gaps.max() < self.min_gap:
@@ -111,8 +135,19 @@ def defend_round(
         # relative-to-best rule: honest non-IID deltas can slightly raise loss on a
         # small balanced root set, so an absolute >0 test over-flags; poisoned
         # clusters spike loss far above the cleanest cluster instead
-        best = min(scores)
-        flagged = [j for j, s in enumerate(scores) if s > best + PROBE_MARGIN]
+        if state.n_clients > SCALE_N:
+            # large-N: absolute loss deltas compress (tiny per-client data), so the
+            # >best+margin test flags nothing. Flag by a robust upper-outlier rule
+            # on the score distribution -- poisoned ascent directions are the top
+            # mode regardless of absolute magnitude or cluster count.
+            arr = np.array(scores)
+            med = float(np.median(arr))
+            mad = float(np.median(np.abs(arr - med))) + 1e-9
+            thr = med + PROBE_K_MAD * mad
+            flagged = [j for j, s in enumerate(scores) if s > thr]
+        else:
+            best = min(scores)
+            flagged = [j for j, s in enumerate(scores) if s > best + PROBE_MARGIN]
     else:
         if ref is None:
             # C3 TRUST-FREE reference (no root data): seed with the coordinate-wise

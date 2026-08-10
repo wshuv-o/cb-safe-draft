@@ -18,8 +18,13 @@ from torch.utils.data import DataLoader, Subset
 from src.federated import data, models
 from src.federated.simulation import Config, run
 
-# (aggregator, overlap, needs_root)
-METHODS = [("hybrid", 4, True), ("fedgt", 1, True), ("mean", 1, False)]
+# (aggregator, overlap, needs_root) -- full roster for the scaling comparison
+METHODS = [
+    ("hybrid", 4, True), ("fedgt", 1, True),          # ours + closest peer
+    ("mean", 1, False), ("trimmed", 1, False), ("median", 1, False),
+    ("krum", 1, False), ("bulyan", 1, False), ("geomedian", 1, False),
+    ("fltrust", 1, True),
+]
 
 
 def prep(ds, n_clients, seed, root_size=200):
@@ -37,7 +42,7 @@ def prep(ds, n_clients, seed, root_size=200):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--ns", default="100,500,1000")
-    p.add_argument("--methods", default="hybrid,fedgt,mean")
+    p.add_argument("--methods", default="")   # empty = all in METHODS
     p.add_argument("--dataset", default="fmnist")
     p.add_argument("--attack", default="signflip")
     p.add_argument("--f", type=float, default=0.2)
@@ -51,7 +56,8 @@ def main():
     odir = os.path.join(_bootstrap.RESULTS, "scale")
     os.makedirs(odir, exist_ok=True)
 
-    jobs = [(N, agg, ov, nr) for N in ns for (agg, ov, nr) in METHODS if agg in want]
+    jobs = [(N, agg, ov, nr) for N in ns for (agg, ov, nr) in METHODS
+            if not want or agg in want]
     if args.reverse:
         jobs = list(reversed(jobs))
 

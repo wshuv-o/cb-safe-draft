@@ -170,7 +170,7 @@ def run(cfg: Config, client_dls: list[DataLoader], test_dl: DataLoader,
     clusters = make_clusters(list(range(cfg.n_clients)), cfg.cluster_size, cfg.seed + 13)
     malicious = pick_malicious(cfg)
     rep_aggs = ("reputation", "reputation_tf", "hybrid", "hybrid_tf")
-    rep = ReputationState() if cfg.aggregator in rep_aggs else None
+    rep = ReputationState(n_clients=cfg.n_clients) if cfg.aggregator in rep_aggs else None
     trustfree = cfg.aggregator in ("reputation_tf", "hybrid_tf")  # no server root set
     comp = cfg.aggregator in ("hybrid", "hybrid_tf")              # per-round COMP decode
     fedgt = None
