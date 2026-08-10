@@ -62,10 +62,20 @@ def load_dataset(name: str):
 def dirichlet_partition(labels: np.ndarray, n_clients: int, alpha: float, seed: int,
                         min_size: int = 20) -> list[np.ndarray]:
     """Standard Dirichlet(alpha) label-skew partition; resamples until every client
-    has at least min_size samples."""
+    has at least `floor` samples.
+
+    The floor relaxes for large populations: with N clients over |labels| samples,
+    each client averages |labels|/N samples, and requiring all of them to clear a
+    fixed 20 under a skewed Dirichlet is unsatisfiable once N is large (e.g. ~60
+    samples/client at N=1000), which made the original `while True` loop spin
+    forever. We cap the floor at avg/4, bound the retries, and fall back to the
+    best partition seen. For N<=500 (avg/4 >= 30) the floor stays 20 and the first
+    satisfying draw is returned exactly as before, so existing results are unchanged."""
     rng = np.random.default_rng(seed)
     n_classes = int(labels.max()) + 1
-    while True:
+    floor = min(min_size, max(1, len(labels) // n_clients // 4))
+    best: tuple[int, list[list[int]]] | None = None
+    for _ in range(200):
         idx_per_client: list[list[int]] = [[] for _ in range(n_clients)]
         for k in range(n_classes):
             idx_k = np.where(labels == k)[0]
@@ -74,8 +84,12 @@ def dirichlet_partition(labels: np.ndarray, n_clients: int, alpha: float, seed: 
             cuts = (np.cumsum(props) * len(idx_k)).astype(int)[:-1]
             for cid, part in enumerate(np.split(idx_k, cuts)):
                 idx_per_client[cid].extend(part.tolist())
-        if min(len(ix) for ix in idx_per_client) >= min_size:
+        worst = min(len(ix) for ix in idx_per_client)
+        if best is None or worst > best[0]:
+            best = (worst, idx_per_client)
+        if worst >= floor:
             return [np.array(sorted(ix)) for ix in idx_per_client]
+    return [np.array(sorted(ix)) for ix in best[1]]  # best effort after retry cap
 
 
 def client_loaders(train_set, partitions: list[np.ndarray], batch_size: int = 64) -> list[DataLoader]:
