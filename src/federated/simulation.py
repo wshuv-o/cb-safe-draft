@@ -57,6 +57,7 @@ class Config:
     n_classes: int = 10          # label space (set per dataset; used by label-flip)
     signflip_gamma: float = 5.0  # sign-flip scale (C1 sweeps this to find gamma*)
     overlap: int = 1             # CB-SAFE+ re-randomized partitions/round (test budget)
+    participation: float = 1.0   # fraction of clients sampled per round (1.0 = full participation)
 
 
 def set_seeds(seed: int) -> None:
@@ -186,6 +187,15 @@ def run(cfg: Config, client_dls: list[DataLoader], test_dl: DataLoader,
         t0 = time.perf_counter()
         excluded = rep.excluded if rep is not None else (fedgt.excluded if fedgt else set())
         active = [i for i in range(cfg.n_clients) if i not in excluded]
+        if cfg.participation < 1.0 and len(active) > cfg.cluster_size:
+            # partial participation (realistic cross-device FL): sample a fraction of
+            # clients each round. Keep the count a multiple of cluster_size so clean
+            # clusters of size c still form. Downstream paths key off `active`/`deltas`.
+            k = int(round(cfg.participation * len(active)))
+            k -= k % cfg.cluster_size
+            k = max(cfg.cluster_size, min(k, len(active)))
+            rng_r = np.random.default_rng(cfg.seed + 1000 + r)
+            active = sorted(int(i) for i in rng_r.choice(active, size=k, replace=False))
         deltas = {
             i: local_train(global_flat, client_dls[i], cfg, device, i in malicious)
             for i in active
@@ -271,6 +281,12 @@ def run(cfg: Config, client_dls: list[DataLoader], test_dl: DataLoader,
             row["asr"] = attack_success_rate(global_flat, test_dl, device,
                                              dataset=cfg.dataset)
         history.append(row)
+        _hb = os.environ.get("CBSAFE_HEARTBEAT")
+        if _hb:  # live, flushed per-round signal for detached runs (overwrite = latest)
+            with open(_hb, "w") as _f:
+                _f.write(f"round {r + 1}/{cfg.rounds} acc={acc:.4f} "
+                         f"exc_mal={row.get('excluded_malicious', '-')} "
+                         f"exc_hon={row.get('excluded_honest', '-')}\n")
         print(f"[{cfg.attack}|{cfg.aggregation}/{cfg.aggregator}|f={cfg.f_malicious}] "
               f"round {r + 1}/{cfg.rounds} acc={acc:.4f}"
               + (f" asr={row['asr']:.4f}" if "asr" in row else ""),

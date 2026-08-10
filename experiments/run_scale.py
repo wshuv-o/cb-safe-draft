@@ -48,6 +48,7 @@ def main():
     p.add_argument("--f", type=float, default=0.2)
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--rounds", type=int, default=30)
+    p.add_argument("--participation", type=float, default=1.0)  # <1.0 = client sampling
     p.add_argument("--reverse", action="store_true")
     args = p.parse_args()
 
@@ -74,7 +75,8 @@ def main():
         client_dls, test_dl, server_dl = prepared[N]
         cfg = Config(n_clients=N, rounds=args.rounds, aggregation="cluster", aggregator=agg,
                      cluster_size=3, attack=args.attack, f_malicious=args.f, seed=args.seed,
-                     dataset=args.dataset, overlap=ov, n_classes=models.n_classes_of(args.dataset))
+                     dataset=args.dataset, overlap=ov, participation=args.participation,
+                     n_classes=models.n_classes_of(args.dataset))
         print(f"[{i+1}/{len(jobs)}] run {name}", flush=True)
         hist = run(cfg, client_dls, test_dl, server_dl=(server_dl if needs_root else None))
         with open(path, "w", newline="") as fh:
