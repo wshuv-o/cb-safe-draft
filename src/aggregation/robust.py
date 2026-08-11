@@ -30,12 +30,21 @@ def trimmed_mean(cluster_means: np.ndarray, trim: int = 2) -> np.ndarray:
     return s[trim : k - trim].mean(axis=0)
 
 
+def _pairwise_sq_dists(X: np.ndarray) -> np.ndarray:
+    """Pairwise squared L2 distances via the Gram identity ||a-b||^2 = ||a||^2 +
+    ||b||^2 - 2 a.b -- O(k^2) memory instead of the O(k^2 d) difference tensor, which
+    OOMs at large cluster counts (23.6 GiB at k=166, d=229k). Mathematically identical."""
+    sq = np.einsum("ij,ij->i", X, X)
+    d2 = sq[:, None] + sq[None, :] - 2.0 * (X @ X.T)
+    return np.maximum(d2, 0.0)
+
+
 def multi_krum(cluster_means: np.ndarray, n_byzantine: int = 2, n_select: int | None = None) -> np.ndarray:
     """Multi-Krum over cluster means: score by sum of closest k-b-2 squared distances,
     average the n_select lowest-scored vectors."""
     k = cluster_means.shape[0]
     n_select = n_select or max(1, k - 2 * n_byzantine)
-    d2 = ((cluster_means[:, None, :] - cluster_means[None, :, :]) ** 2).sum(axis=2)
+    d2 = _pairwise_sq_dists(cluster_means)
     n_close = max(1, k - n_byzantine - 2)
     scores = np.array([np.sort(d2[i][np.arange(k) != i])[:n_close].sum() for i in range(k)])
     chosen = np.argsort(scores)[:n_select]
@@ -54,7 +63,7 @@ def bulyan(cluster_means: np.ndarray, n_byzantine: int = 2) -> np.ndarray:
     while len(selected) < m and len(remaining) > 0:
         sub = cluster_means[remaining]
         ks = len(remaining)
-        d2 = ((sub[:, None, :] - sub[None, :, :]) ** 2).sum(axis=2)
+        d2 = _pairwise_sq_dists(sub)
         n_close = max(1, ks - b - 2)
         scores = [np.sort(d2[i][np.arange(ks) != i])[:n_close].sum() for i in range(ks)]
         pick = int(np.argmin(scores))
