@@ -1,5 +1,5 @@
 \begin{table*}[t]\centering\footnotesize
-\caption{Test accuracy (\%) under the label-flip attack across four datasets and malicious fractions $f$. CIFAR-10/FashionMNIST baselines are single seed; CB-SAFE+ is single seed there and mean\,$\pm$\,std over 3 seeds on EMNIST; FedGT is its actual BCJR group-testing decoder~\cite{fedgt}, reported as mean\,$\pm$\,std over 3 seeds on CIFAR-10/FashionMNIST/EMNIST and not evaluated on Edge-IIoTset (dash). Label flipping is a mild attack: unlike sign-flip (Table~\ref{tab:signflip}), coordinate-wise rules do \emph{not} collapse, which isolates laundering as the mechanism behind the sign-flip failures. Even here the real BCJR decoder is markedly noisier than CB-SAFE+ (e.g.\ $\pm6.8$ vs $\pm0.2$ on CIFAR-10). Higher is better; best per column in bold. A dash ($-$) marks a configuration not evaluated.}
+\caption{Test accuracy (\%) under label-flip across four datasets and malicious fractions $f$; mean\,$\pm$\,std over 3 seeds where shown (CIFAR-10/FashionMNIST baselines single seed). FedGT is its real BCJR decoder~\cite{fedgt}, not evaluated on Edge-IIoTset (dash). Best per column in bold.}
 \label{tab:labelflip}
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{@{}lcccccccccccc@{}}\toprule

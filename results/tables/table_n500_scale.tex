@@ -1,18 +1,11 @@
 \begin{table*}[t]
-\caption{Scaling with the client population. Test accuracy (\%) at $N{=}100$ (30
-rounds) and $N{=}500$ (50 rounds) under sign-flip $f{=}0.2$ on FashionMNIST
-(Dirichlet $\alpha{=}0.5$); per-seed values are the mean of the final five rounds,
-over three seeds. The detection block reports, at $N{=}500$, malicious clients
-caught of 100, honest clients wrongly excluded (FP) of 400, and the derived
-false-alarm ($P_{\mathrm{FA}}$) and missed-detection ($P_{\mathrm{MD}}$) rates. Best
-value per column in bold. At a converged horizon the two group-testing methods tie
-at the top; coordinate-wise rules collapse; only CB-SAFE+ pairs top accuracy with
-near-zero false exclusion. Rounds scale with $N$ because attacker exclusion consumes
-a fixed number of early rounds regardless of population. The final column is
-per-client secure-aggregation cost versus population: CB-SAFE's fixed $c{=}3$
-clusters keep it $O(1)$ ($15.2$/$3.8$~KiB one-time setup for HQC/ML-KEM,
-${\sim}27$~ms mask compute per round, all constant in $N$), whereas an all-pairs
-private instantiation is $O(N)$---${\sim}500\times$ larger at $N{=}1000$.}
+\caption{Scaling with client population: test accuracy (\%) at $N{=}100$ (30 rounds)
+and $N{=}500$ (50 rounds) under sign-flip $f{=}0.2$ on FashionMNIST, mean of the
+final five rounds over three seeds. Detection block ($N{=}500$): attackers caught of
+100, honest false exclusions (FP) of 400, and the derived false-alarm
+($P_{\mathrm{FA}}$) and missed-detection ($P_{\mathrm{MD}}$) rates. Final column:
+per-client secure-aggregation cost vs $N$---$O(1)$ for CB-SAFE's fixed $c{=}3$
+clusters, $O(N)$ for an all-pairs instantiation. Best per column in bold.}
 \label{tab:scale-n500}
 \centering
 \setlength{\tabcolsep}{4pt}

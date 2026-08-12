@@ -208,14 +208,11 @@ small-population design.
 \begin{figure*}[tp]
 \centering
 \includegraphics[width=\textwidth]{fig_architecture.pdf}
-\caption{CB-SAFE, one training round end to end. A one-time code-based (HQC) key
-setup establishes pairwise secrets reused every round. In the confidentiality
-layer, clients mask updates so masks cancel within clusters of size $c$; the server
-observes only the $k$ cluster sums (anonymity set $c$), never an individual update.
-The Byzantine-robustness stage (CB-SAFE+) flags clusters by a loss-probe or, in the
-trust-free variant, a consensus test; accumulates per-client suspicion across
-re-randomized rounds; adaptively excludes identified attackers; and robustly
-aggregates the clean cluster sums into the global model, which is broadcast back.}
+\caption{CB-SAFE, one training round end to end. A one-time HQC key setup establishes
+pairwise secrets; the confidentiality layer masks updates so they cancel within
+clusters of size $c$, and the server sees only the $k$ cluster sums; the CB-SAFE+
+stage flags clusters, accumulates per-client suspicion over re-randomized rounds,
+excludes attackers, and robustly aggregates the clean sums.}
 \label{fig:arch}
 \end{figure*}
 
@@ -419,12 +416,10 @@ arbitrary honest-update distributions.
   \draw[->,accent] (0,0) -- (214:\R) node[below,font=\scriptsize] {$\boldsymbol{\mu}$};
 \end{tikzpicture}
 \caption{Laundering geometry (schematic; $-\gamma\mathbf{h}$ drawn with a scale
-break). Averaging $c{-}m$ honest updates $\mathbf{h}$ with $m$ amplified
-sign-flips $-\gamma\mathbf{h}$ yields the cluster mean
-$\boldsymbol{\mu}=\tfrac{c-m(1+\gamma)}{c}\,\mathbf{h}$. At
-$\gamma^{\!*}{=}2c/m-1$ it lands on the $|\mathbf{h}|$ circle: same magnitude as an
-honest mean, opposite direction, so magnitude- and order-statistic rules cannot
-see it (Proposition~\ref{prop:launder}).}
+break). Averaging $c{-}m$ honest updates $\mathbf{h}$ with $m$ amplified sign-flips
+$-\gamma\mathbf{h}$ gives cluster mean
+$\boldsymbol{\mu}=\tfrac{c-m(1+\gamma)}{c}\,\mathbf{h}$; at $\gamma^{\!*}{=}2c/m-1$
+it lands on the $|\mathbf{h}|$ circle (Proposition~\ref{prop:launder}).}
 \label{fig:launder-geom}
 \end{figure}
 
@@ -625,13 +620,9 @@ honest exclusion and post-quantum security.
 \begin{figure*}[tp]
 \centering
 \includegraphics[width=\textwidth]{fig_convergence_allmethods_n500.pdf}
-\caption{Test accuracy versus communication round at $N{=}500$ (FashionMNIST,
-sign-flip $f{=}0.2$, 50 rounds), one panel per seed (three seeds), all eight
-aggregation rules that admit a configuration at this scale (FedGT excluded; see
-text). CB-SAFE+ (heavy black) recovers to $\sim$66\%; the coordinate-wise rules
-stay laundered near chance ($10\%$); FLTrust leads early but plateaus lower.
-Recovery begins only after attacker exclusion ($\sim$round 15--20), so a 30-round
-budget would truncate every curve mid-climb.}
+\caption{Test accuracy vs communication round at $N{=}500$ (FashionMNIST, sign-flip
+$f{=}0.2$, 50 rounds), one panel per seed; the eight aggregation rules that admit a
+configuration at this scale (FedGT excluded, see text).}
 \label{fig:convergence-n500}
 \end{figure*}
 
@@ -661,9 +652,7 @@ versus predicted $0.73/0.51/0.34$ for $f{=}0.1/0.2/0.3$.
 \begin{table}[t]
 \caption{Robustness of aggregation rules over cluster sums ($c{=}3$, $k{=}10$,
 seed 0): final test accuracy under sign-flip and attack success rate (ASR, lower is
-better) under the backdoor, at malicious fraction $f$. Best per column in bold.
-CB-SAFE+ additionally reports zero honest false-positive exclusions in every
-configuration.}
+better) under the backdoor, at malicious fraction $f$. Best per column in bold.}
 \label{tab:robust}
 \centering
 \footnotesize
@@ -711,11 +700,9 @@ for the attacker, whereas whole-vector selection resists longer.
 
 \begin{table}[t]
 \caption{Attacker identification on CIFAR-10 sign-flip ($N{=}30$, mean over 3
-seeds): malicious clients caught out of those present ($\uparrow$ better) and honest
-false-positive exclusions ($\downarrow$ better; 24/24/21 honest clients at
-$f{=}.1/.2/.3$). FedGT is its actual BCJR group-testing decoder~\cite{fedgt}, run
-per round. CB-SAFE+ catches every attacker with near-zero false positives, whereas
-FedGT both misses attackers and wrongly excludes 13--16 honest clients.}
+seeds): attackers caught of those present ($\uparrow$) and honest false-positive
+exclusions ($\downarrow$; of 24/24/21 at $f{=}.1/.2/.3$). FedGT is its real BCJR
+decoder~\cite{fedgt}. Best per column in bold.}
 \label{tab:detect}
 \centering
 \footnotesize
@@ -764,10 +751,8 @@ privacy constraints.
 \begin{figure}[tbp]
 \centering
 \includegraphics[width=\columnwidth]{fig_backdoor_asr.pdf}
-\caption{Backdoor attack success rate vs.\ malicious fraction. No sum-level rule
-suppresses the trigger (median at $f{=}0.1$ partially excepted): backdoored sums
-help the main task and evade loss/direction probes, the honest scope limit of
-robustness under secure aggregation.}
+\caption{Backdoor attack success rate vs.\ malicious fraction (CIFAR-10); lower is
+better.}
 \label{fig:backdoor}
 \end{figure}
 
@@ -807,10 +792,7 @@ which has no configuration for Edge-IIoTset and is therefore omitted from that r
 Curves are the mean over 3 seeds (single seed for the EMNIST baselines); shaded
 bands are $\pm 1$ SD for CB-SAFE+ and FedGT. The dashed vertical marks the warmup
 $W{=}5$ after which exclusions begin; dotted lines mark chance and the no-attack
-baseline. Coordinate-wise rules and the geometric median decay progressively to
-chance at $f{\ge}0.2$; CB-SAFE+ dips during warmup and then recovers and holds,
-whereas FedGT degrades and collapses toward chance at $f{=}0.3$ by over-excluding
-honest clients. Final accuracies for all datasets and fractions are in
+baseline. Final accuracies for all datasets and fractions are in
 Table~\ref{tab:signflip}.}
 \label{fig:dynamics}
 \end{figure*}
@@ -820,12 +802,8 @@ Table~\ref{tab:signflip}.}
 \includegraphics[width=\textwidth]{fig_suspicion.pdf}
 \caption{Temporal suspicion separation (CB-SAFE+ on CIFAR-10): population-mean
 flagged fraction $s_i^{\,r}/r$ of malicious versus honest clients over rounds, for
-each malicious fraction $f$ (mean over 3 seeds). The two populations separate
-within a few rounds, so attackers are identified from group-level observations
-alone (Eqs.~\eqref{eq:susp}--\eqref{eq:excl}). The dashed line is the predicted
-honest co-clustering rate $p_h{=}1-(1-f)^{c-1}$ (Eq.~\eqref{eq:ph}); the loss
-probe adds a few honest flags at low $f$. Exclusion uses an adaptive gap between
-the two populations rather than a fixed threshold; the warmup window is shaded.}
+each malicious fraction $f$ (mean over 3 seeds). Dashed line: predicted honest
+co-clustering rate $p_h{=}1-(1-f)^{c-1}$ (Eq.~\eqref{eq:ph}); warmup shaded.}
 \label{fig:suspicion}
 \end{figure*}
 
@@ -880,9 +858,7 @@ low-contamination regime, a capability boundary we state rather than hide.
 
 \begin{table}[t]
 \caption{Ablations on CIFAR-10 sign-flip (final accuracy, \%). (a) The cluster-size
-dial: larger $c$ enlarges the anonymity set but shifts the median's breakdown
-frontier left, exactly as $(1-f)^c$ (Eq.~\eqref{eq:contam}) predicts. (b) Overlapping
-re-randomized clusters (degree $o$) extend CB-SAFE+ recovery to higher $f$.}
+dial (median rule). (b) Overlap degree $o$ (CB-SAFE+ reputation).}
 \label{tab:ablation}
 \centering
 \footnotesize
@@ -924,9 +900,8 @@ by paying in rounds (warmup) rather than in privacy.
 \begin{figure}[tbp]
 \centering
 \includegraphics[width=\columnwidth]{fig_cdial.pdf}
-\caption{The privacy--robustness dial, measured: median-rule accuracy under
-sign-flip for $c\in\{1,3,5\}$. Larger anonymity sets shift the breakdown frontier
-left, as $(1-f)^c$ predicts; at $f{=}5\%$ privacy costs nothing.}
+\caption{Privacy--robustness dial: median-rule accuracy under sign-flip for
+$c\in\{1,3,5\}$ (CIFAR-10).}
 \label{fig:cdial}
 \end{figure}
 
