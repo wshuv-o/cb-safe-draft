@@ -211,8 +211,18 @@ def run(cfg: Config, client_dls: list[DataLoader], test_dl: DataLoader,
                     g_means.append(None); g_scores.append(-np.inf); continue
                 gm = np.mean(np.stack([deltas[i] for i in alive_m]), axis=0)
                 g_means.append(gm)
-                score = (mean_loss(global_flat + gm.astype(np.float32), server_dl,
-                                   device, cfg.dataset) - base) if server_dl is not None else 0.0
+                if server_dl is None:
+                    score = 0.0
+                elif os.environ.get("FEDGT_STAT") == "acc":
+                    # FedGT-original-style test statistic: the group model's
+                    # validation accuracy on the root set (low accuracy => likely
+                    # poisoned). Negated so higher score = worse = positive, to
+                    # match the COMP threshold direction.
+                    score = -evaluate(global_flat + gm.astype(np.float32), server_dl,
+                                      device, cfg.dataset)
+                else:
+                    score = mean_loss(global_flat + gm.astype(np.float32), server_dl,
+                                      device, cfg.dataset) - base
                 g_scores.append(score)
             newly = fedgt.decode(np.array(g_scores))
             fedgt.excluded |= (newly - set())  # accumulate identified malicious

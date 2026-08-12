@@ -10,6 +10,7 @@
 \usepackage{cite}
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs}
+\usepackage{rotating}
 \usepackage{graphicx}
 \usepackage[T1]{fontenc}
 \usepackage{array}
@@ -183,8 +184,9 @@ group sums is thus a known structure; our contribution is not the cluster
 topology itself but (i) its first classical post-quantum, code-based
 instantiation and (ii) an explicit, experimentally validated statement of the
 privacy--robustness trade-off it induces (Section~\ref{sec:tradeoff}), with a
-temporal group-testing defense (CB-SAFE+) that matches FedGT's identification at
-lower cost.
+temporal group-testing defense (CB-SAFE+) that matches FedGT's attacker
+identification at far lower false-positive cost, and scales past FedGT's fixed
+small-population design.
 
 \section{The CB-SAFE Framework}
 
@@ -595,6 +597,42 @@ count (log--log axes).}
 \end{figure*}
 
 
+\textbf{Robustness holds as the population scales.} Cost is only half the
+scaling question; the other is whether robustness survives a $16\times$ larger
+client population. We ran every rule that admits a configuration at $N{=}500$ under
+sign-flip ($f{=}0.2$) for 50 rounds (Table~\ref{tab:scale-n500},
+Fig.~\ref{fig:convergence-n500}). FedGT is necessarily absent here: its
+parity-check matrices and prevalence-estimation tables are hardcoded for
+$n{\le}31$~\cite{fedgt}, so it has no configuration at this population and cannot be
+run without hand-designing new ones---a concrete scalability ceiling in the method,
+not a tuning choice. At this scale each client holds only $\sim$100 samples and
+attacker exclusion consumes the first $\sim$15--20 rounds, so a short 30-round
+budget truncates every method mid-recovery; extending to 50 rounds lets recovery
+complete and collapses the between-seed spread (from $\pm$10 to $\pm$2,
+Fig.~\ref{fig:convergence-n500}). At the converged horizon CB-SAFE+ reaches
+$66.4\%$ (last-five-round mean over three seeds), the coordinate-wise rules remain
+laundered near chance, and FLTrust's trust weighting, which recovers fastest early,
+plateaus $\sim$5 points lower ($61.3\%$) because soft down-weighting never fully
+removes the laundered mass. CB-SAFE+ reaches that accuracy while excluding only
+$\sim$5 honest clients of 400. Among the methods that admit a configuration at this
+scale, CB-SAFE+ is the only one that pairs top-tier robustness with near-zero
+honest exclusion and post-quantum security.
+
+\input{../results/tables/table_n500_scale.tex}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig_convergence_allmethods_n500.pdf}
+\caption{Test accuracy versus communication round at $N{=}500$ (FashionMNIST,
+sign-flip $f{=}0.2$, 50 rounds), one panel per seed (three seeds), all eight
+aggregation rules that admit a configuration at this scale (FedGT excluded; see
+text). CB-SAFE+ (heavy black) recovers to $\sim$66\%; the coordinate-wise rules
+stay laundered near chance ($10\%$); FLTrust leads early but plateaus lower.
+Recovery begins only after attacker exclusion ($\sim$round 15--20), so a 30-round
+budget would truncate every curve mid-climb.}
+\label{fig:convergence-n500}
+\end{figure*}
+
 \subsection{Utility and Cryptographic Equivalence}
 Plain FedAvg reaches 59.0\% test accuracy (mean of the final five of 40 rounds;
 59.6\% at round 40) on the non-IID split (Fig.~\ref{fig:utility}). In every round,
@@ -670,18 +708,21 @@ three regimes at $f{=}0.3$: the coordinate-wise rules (mean, trimmed mean, media
 and the robust geometric median RFA \cite{rfa} are laundered to chance
 ($\approx$10\%), confirming that location- and magnitude-based aggregation fails
 regardless of sophistication; the vector-selection family degrades but falls
-(Multi-Krum 20\%, Bulyan \cite{bulyan} 31\%); and only the two group-testing methods
-hold, with CB-SAFE+ hybrid at 50.0\% statistically tied to FedGT \cite{fedgt} at
-50.1\%. That RFA collapses while Bulyan merely degrades sharpens
+(Multi-Krum 20\%, Bulyan \cite{bulyan} 31\%); and only CB-SAFE+ holds near the
+clean baseline at 50.0\%, whereas FedGT's actual BCJR decoder \cite{fedgt}, run per
+round, collapses to chance ($10.0\%$) at this contamination by over-excluding honest
+clients (Table~\ref{tab:detect}). That RFA collapses while Bulyan merely degrades sharpens
 Proposition~\ref{prop:launder}: laundering specifically defeats rules that trust the
 \emph{aggregate} direction or magnitude, precisely what cluster averaging preserves
 for the attacker, whereas whole-vector selection resists longer.
 
 \begin{table}[t]
-\caption{Attacker identification on CIFAR-10 sign-flip (mean over 3 seeds):
-malicious clients caught out of those present ($\uparrow$ better) and honest
-false-positive exclusions ($\downarrow$ better). CB-SAFE+ hybrid matches FedGT's
-perfect catch rate with far fewer false positives.}
+\caption{Attacker identification on CIFAR-10 sign-flip ($N{=}30$, mean over 3
+seeds): malicious clients caught out of those present ($\uparrow$ better) and honest
+false-positive exclusions ($\downarrow$ better; 24/24/21 honest clients at
+$f{=}.1/.2/.3$). FedGT is its actual BCJR group-testing decoder~\cite{fedgt}, run
+per round. CB-SAFE+ catches every attacker with near-zero false positives, whereas
+FedGT both misses attackers and wrongly excludes 13--16 honest clients.}
 \label{tab:detect}
 \centering
 \footnotesize
@@ -692,9 +733,9 @@ perfect catch rate with far fewer false positives.}
 \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(l){6-7}
 Method & caught$\uparrow$ & FP$\downarrow$ & caught$\uparrow$ & FP$\downarrow$ & caught$\uparrow$ & FP$\downarrow$\\
 \midrule
-FedGT [TIFS'25]  & 3/3 & 1.3 & 6/6 & 3.3 & 9/9 & 1.3\\
+FedGT~\cite{fedgt}  & 2.7/3 & 13.0 & 5.7/6 & 14.7 & 7.7/9 & 15.7\\
 CB-SAFE+ (ov1)   & 3/3 & 0.3 & 3/6 & 0.7 & 4/9 & 1.3\\
-CB-SAFE+ hybrid  & 3/3 & \textbf{0.0} & 6/6 & \textbf{0.7} & 9/9 & \textbf{0.3}\\
+CB-SAFE+ hybrid  & \textbf{3/3} & \textbf{0.0} & \textbf{6/6} & \textbf{0.7} & \textbf{9/9} & \textbf{0.3}\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -735,9 +776,9 @@ malicious fraction across eight aggregation rules over $k{=}10$ cluster sums
 ($c{=}3$, mean of three seeds). Coordinate-wise rules (mean, trimmed mean, median)
 and the geometric median (RFA) collapse toward chance at the $(1-f)^c$
 contamination boundary; vector selection (Multi-Krum, Bulyan) degrades then falls;
-only CB-SAFE+ and FedGT hold near the clean baseline across all $f$, with CB-SAFE+
-highest at $f{=}0.3$. CIFAR-10 (a statistical tie with FedGT) and the other datasets
-are reported in Table~\ref{tab:signflip}.}
+only CB-SAFE+ holds near the clean baseline across all $f$, whereas FedGT (its actual
+BCJR decoder) degrades to $\sim$31\% at $f{=}0.3$. All datasets are reported in
+Table~\ref{tab:signflip}.}
 \label{fig:signflip}
 \end{figure}
 
@@ -780,13 +821,15 @@ Edge-IIoTset result is the sharpest: at $f{=}0.3$ CB-SAFE+ holds 61.5\% against 
 \includegraphics[width=\textwidth]{fig_dynamics_signflip.pdf}
 \caption{Training dynamics under the sign-flip attack: test accuracy versus
 communication round for eight aggregation rules, across three datasets (rows) and
-malicious fractions $f$ (columns). Curves are the mean over 3 seeds (single seed
-for EMNIST); shaded bands are $\pm 1$ SD for CB-SAFE+ and FedGT. The dashed
-vertical marks the warmup $W{=}5$ after which exclusions begin; dotted lines mark
-chance and the no-attack baseline. Coordinate-wise rules and the geometric median
-decay progressively to chance at $f{\ge}0.2$, whereas CB-SAFE+ dips during warmup
-and then recovers as attackers are excluded, tracking or exceeding FedGT.
-CIFAR-10 (a statistical tie with FedGT) is reported in Table~\ref{tab:signflip}.}
+malicious fractions $f$ (columns). FedGT is its actual BCJR decoder~\cite{fedgt},
+which has no configuration for Edge-IIoTset and is therefore omitted from that row.
+Curves are the mean over 3 seeds (single seed for the EMNIST baselines); shaded
+bands are $\pm 1$ SD for CB-SAFE+ and FedGT. The dashed vertical marks the warmup
+$W{=}5$ after which exclusions begin; dotted lines mark chance and the no-attack
+baseline. Coordinate-wise rules and the geometric median decay progressively to
+chance at $f{\ge}0.2$; CB-SAFE+ dips during warmup and then recovers and holds,
+whereas FedGT degrades and collapses toward chance at $f{=}0.3$ by over-excluding
+honest clients. CIFAR-10 is reported in Table~\ref{tab:signflip}.}
 \label{fig:dynamics}
 \end{figure*}
 

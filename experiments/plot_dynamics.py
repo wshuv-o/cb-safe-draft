@@ -30,13 +30,34 @@ BAND = {"hybrid_ov4", "fedgt"}     # show +-1 SD band only for these
 W = 5                              # warmup / exclusions-begin round
 
 
+# FedGT curve uses its ACTUAL BCJR decoder (faithful reimplementation) at N=30;
+# it has no configuration for Edge-IIoTset (tabular loader) so it drops from that row.
+_FAITHFUL = os.path.join(R, "fedgt_faithful")
+_DS = {"fmnist": "fmnist", os.path.join("kaggle", "emnist"): "emnist"}
+
+
 def series(subdir, agg, f):
     """Return (rounds, mean_acc%, std_acc%) averaged over seeds, or None."""
+    import re
+    if agg == "fedgt":
+        ds = _DS.get(subdir)
+        paths = sorted(glob.glob(os.path.join(
+            _FAITHFUL, f"faithful_fedgt_{ds}_signflip_f{f:02d}_N30_s*.csv"))) if ds else []
+        curves = []
+        for p in paths:
+            if "_oneshot" in p:
+                continue
+            d = pd.read_csv(p)
+            curves.append(d["acc"].to_numpy() * 100)
+        if not curves:
+            return None
+        n = min(len(c) for c in curves)
+        M = np.vstack([c[:n] for c in curves])
+        return np.arange(1, n + 1), M.mean(0), M.std(0)
     base = os.path.join(R, subdir) if subdir else R
     paths = sorted(glob.glob(os.path.join(base, f"robust_signflip_{agg}_f{f:02d}_c3_s*.csv")))
     curves = []
     for p in paths:
-        import re
         core = re.sub(r"_f\d+_c3_s\d+\.csv$", "", os.path.basename(p)).replace("robust_signflip_", "")
         if core != agg:
             continue

@@ -109,10 +109,23 @@ def _robust_runs(subdir: str = "") -> pd.DataFrame:
             continue
         if int(m[4]) != 3:  # c != 3 belongs to the c-dial figure, not these
             continue
+        if m[2].startswith("fedgt"):  # skip COMP stand-in; use the real BCJR below
+            continue
         df = pd.read_csv(path).tail(5)
         rows.append({"attack": m[1], "agg": m[2], "f": int(m[3]) / 100,
                      "acc": df["acc"].mean() * 100,
                      "asr": df["asr"].mean() * 100 if "asr" in df.columns else np.nan})
+    # FedGT = its actual BCJR decoder (faithful reimplementation) at N=30
+    ds = {"": "cifar10", "fmnist": "fmnist", os.path.join("kaggle", "emnist"): "emnist"}.get(subdir)
+    if ds:
+        for path in glob.glob(os.path.join(R, "fedgt_faithful",
+                                           f"faithful_fedgt_{ds}_signflip_f*_N30_s*.csv")):
+            if "_oneshot" in path:
+                continue
+            fm = re.search(r"_signflip_f(\d+)_N30", path)
+            df = pd.read_csv(path).tail(5)
+            rows.append({"attack": "signflip", "agg": "fedgt", "f": int(fm[1]) / 100,
+                         "acc": df["acc"].mean() * 100, "asr": np.nan})
     return pd.DataFrame(rows)
 
 

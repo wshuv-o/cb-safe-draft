@@ -50,14 +50,16 @@ def main():
     p.add_argument("--rounds", type=int, default=30)
     p.add_argument("--participation", type=float, default=1.0)  # <1.0 = client sampling
     p.add_argument("--reverse", action="store_true")
+    p.add_argument("--outdir", default="scale")  # subdir under results/ (e.g. scale50 for 50-round runs)
+    p.add_argument("--overlap", type=int, default=0)  # >0 overrides each method's default overlap
     args = p.parse_args()
 
     ns = [int(x) for x in args.ns.split(",") if x.strip()]
     want = {m.strip() for m in args.methods.split(",") if m.strip()}
-    odir = os.path.join(_bootstrap.RESULTS, "scale")
+    odir = os.path.join(_bootstrap.RESULTS, args.outdir)
     os.makedirs(odir, exist_ok=True)
 
-    jobs = [(N, agg, ov, nr) for N in ns for (agg, ov, nr) in METHODS
+    jobs = [(N, agg, (args.overlap or ov), nr) for N in ns for (agg, ov, nr) in METHODS
             if not want or agg in want]
     if args.reverse:
         jobs = list(reversed(jobs))
@@ -78,10 +80,17 @@ def main():
                      dataset=args.dataset, overlap=ov, participation=args.participation,
                      n_classes=models.n_classes_of(args.dataset))
         print(f"[{i+1}/{len(jobs)}] run {name}", flush=True)
-        hist = run(cfg, client_dls, test_dl, server_dl=(server_dl if needs_root else None))
-        with open(path, "w", newline="") as fh:
-            w = csv.DictWriter(fh, fieldnames=list(hist[0]))
-            w.writeheader(); w.writerows(hist)
+        try:
+            hist = run(cfg, client_dls, test_dl, server_dl=(server_dl if needs_root else None))
+            with open(path, "w", newline="") as fh:
+                w = csv.DictWriter(fh, fieldnames=list(hist[0]))
+                w.writeheader(); w.writerows(hist)
+        except Exception:  # isolate a buggy method so the serial batch keeps going
+            import traceback
+            print(f"[{i+1}/{len(jobs)}] FAILED {name}:\n{traceback.format_exc()}", flush=True)
+            with open(os.path.join(odir, "_failures.log"), "a") as fh:
+                fh.write(f"{name}\n{traceback.format_exc()}\n")
+            continue
     print("SCALE SWEEP COMPLETE", flush=True)
 
 
