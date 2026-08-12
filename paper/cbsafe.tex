@@ -510,17 +510,9 @@ and every experiment is reproducible from a per-run CSV and the released scripts
 \textbf{Task and data.} Primary task: CIFAR-10 partitioned across $N{=}30$ clients
 by a Dirichlet($\alpha{=}0.5$) label-skew split; a CNN with $d{=}291\,498$
 parameters; one local epoch per round (SGD, lr $0.01$, momentum $0.9$, batch $64$);
-$k{=}10$ clusters of $c{=}3$ unless stated.
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.82\columnwidth]{fig_dirichlet.pdf}
-\caption{Non-IID client partition (CIFAR-10, Dirichlet $\alpha{=}0.5$, $N{=}30$):
-per-client class-sample counts (darker $=$ more samples). Clients hold $631$ to
-$3298$ samples with sharply skewed label distributions, the heterogeneity under
-which all robustness results are reported.}
-\label{fig:dirichlet}
-\end{figure}
+$k{=}10$ clusters of $c{=}3$ unless stated. The split is sharply non-IID: clients
+hold $631$ to $3298$ samples with strongly skewed label distributions, the
+heterogeneity under which all robustness results are reported.
 
 Generalization (Section~\ref{sec:general})
 adds FashionMNIST (same CNN) and Edge-IIoTset (a 15-class tabular IoT
@@ -641,7 +633,7 @@ budget would truncate every curve mid-climb.}
 
 \subsection{Utility and Cryptographic Equivalence}
 Plain FedAvg reaches 59.0\% test accuracy (mean of the final five of 40 rounds;
-59.6\% at round 40) on the non-IID split (Fig.~\ref{fig:utility}). In every round,
+59.6\% at round 40) on the non-IID split. In every round,
 the same client updates were pushed through the full cryptographic pipeline twice
 (once under HQC-128, once under ML-KEM-768), and every per-cluster secure sum was
 compared coordinate-wise against the plain sum. The maximum deviation across all 40
@@ -656,15 +648,6 @@ all recovered by seed-reveal plus Shamir reconstruction. Measured in-run, setup 
 2.6\,s (HQC-128) vs.\ 0.02\,s (ML-KEM-768) for all 30 clients, and steady-state
 rounds took $\sim$30\,ms of client-side masking and $\sim$0.29\,s of server-side
 unmasking, negligible against the $\sim$21\,s of local training per round.
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{fig_utility.pdf}
-\caption{Test accuracy of FedAvg on non-IID CIFAR-10; CB-SAFE's secure aggregates
-(HQC and ML-KEM) are numerically equivalent to plain aggregation, so the accuracy
-curve is shared by all three configurations.}
-\label{fig:utility}
-\end{figure}
 
 \subsection{Robustness Under Attack}
 \textbf{The contamination law holds.} Across all runs, the realized fraction of
@@ -963,7 +946,7 @@ post-quantum secure aggregation in FL.
 \appendices
 \section{Dataset Details and Models}\label{app:data}
 All datasets are partitioned across $N{=}30$ clients by a Dirichlet($\alpha{=}0.5$)
-label-skew split \cite{hsu2019} (Fig.~\ref{fig:dirichlet}); each client runs one local epoch of SGD
+label-skew split \cite{hsu2019}; each client runs one local epoch of SGD
 per round. \textbf{CIFAR-10} \cite{krizhevsky2009}: $50{,}000$ training / $10{,}000$ test
 images, $10$ classes; a convolutional network with $d{=}291{,}498$ parameters (lr
 $0.01$, momentum $0.9$, batch $64$). \textbf{FashionMNIST} \cite{fashionmnist}: $60{,}000$/$10{,}000$
