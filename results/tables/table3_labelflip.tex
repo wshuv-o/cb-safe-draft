@@ -1,5 +1,5 @@
 \begin{table*}[t]\centering\footnotesize
-\caption{Test accuracy (\%) under the label-flip attack across four datasets and malicious fractions $f$ (single seed, except CB-SAFE+ and FedGT on EMNIST, which are mean\,$\pm$\,std over 3 seeds). Label flipping is a mild attack: unlike sign-flip (Table~\ref{tab:signflip}), coordinate-wise rules do \emph{not} collapse, which isolates laundering as the mechanism behind the sign-flip failures. Higher is better; best per column in bold. A dash ($-$) marks a configuration not evaluated.}
+\caption{Test accuracy (\%) under the label-flip attack across four datasets and malicious fractions $f$. CIFAR-10/FashionMNIST baselines are single seed; CB-SAFE+ is single seed there and mean\,$\pm$\,std over 3 seeds on EMNIST; FedGT is its actual BCJR group-testing decoder~\cite{fedgt}, reported as mean\,$\pm$\,std over 3 seeds on CIFAR-10/FashionMNIST/EMNIST and not evaluated on Edge-IIoTset (dash). Label flipping is a mild attack: unlike sign-flip (Table~\ref{tab:signflip}), coordinate-wise rules do \emph{not} collapse, which isolates laundering as the mechanism behind the sign-flip failures. Even here the real BCJR decoder is markedly noisier than CB-SAFE+ (e.g.\ $\pm6.8$ vs $\pm0.2$ on CIFAR-10). Higher is better; best per column in bold. A dash ($-$) marks a configuration not evaluated.}
 \label{tab:labelflip}
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{@{}lcccccccccccc@{}}\toprule
@@ -13,6 +13,6 @@ Multi-Krum & 50.5 & 50.4 & 43.6 & 85.6 & 86.2 & 83.2 & 85.5 & 84.2 & 82.0 & 62.4
 Bulyan & 50.9 & 49.0 & 43.7 & 85.2 & 85.5 & 81.9 & 85.2 & 84.2 & 81.5 & 61.2 & 61.6 & 60.5\\
 Geo-median / RFA & 53.6 & 52.1 & 46.1 & 85.6 & 85.6 & 69.8 & 85.6 & 83.5 & 79.8 & 62.2 & 63.4 & 61.6\\
 FLTrust & 25.7 & 26.3 & 25.0 & 75.4 & 75.3 & 73.0 & 50.0 & 48.2 & 44.8 & 37.4 & 38.2 & 37.1\\
-FedGT [TIFS'25] & 53.8 & 52.8 & \textbf{51.7} & 86.0 & 86.3 & 86.1 & \textbf{85.7\,{\scriptsize$\pm$0.3}} & 85.3\,{\scriptsize$\pm$0.3} & 84.9\,{\scriptsize$\pm$0.3} & 62.0 & 62.7 & 62.0\\
-\textbf{CB-SAFE+ (ours)} & 53.6 & \textbf{53.2} & 51.1 & \textbf{86.4} & \textbf{86.5} & \textbf{86.2} & 85.7\,{\scriptsize$\pm$0.2} & \textbf{85.4\,{\scriptsize$\pm$0.2}} & \textbf{85.4\,{\scriptsize$\pm$0.1}} & 62.4 & 62.5 & \textbf{62.4}\\
+FedGT~\cite{fedgt} & 48.1\,{\scriptsize$\pm$6.8} & 44.4\,{\scriptsize$\pm$6.4} & 47.6\,{\scriptsize$\pm$2.1} & 85.6\,{\scriptsize$\pm$0.5} & 85.0\,{\scriptsize$\pm$0.8} & 79.1\,{\scriptsize$\pm$5.7} & 84.7\,{\scriptsize$\pm$0.1} & 84.1\,{\scriptsize$\pm$1.4} & 81.2\,{\scriptsize$\pm$1.4} & $-$ & $-$ & $-$\\
+\textbf{CB-SAFE+ (ours)} & 53.6 & \textbf{53.2} & \textbf{51.1} & \textbf{86.4} & \textbf{86.5} & \textbf{86.2} & \textbf{85.7\,{\scriptsize$\pm$0.2}} & \textbf{85.4\,{\scriptsize$\pm$0.2}} & \textbf{85.4\,{\scriptsize$\pm$0.1}} & 62.4 & 62.5 & \textbf{62.4}\\
 \bottomrule\end{tabular}\end{table*}

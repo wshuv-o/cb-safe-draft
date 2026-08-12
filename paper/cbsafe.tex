@@ -836,7 +836,11 @@ undefended mean retains 47--63\% at $f{=}0.3$, versus 10\% under sign-flip. That
 contrast isolates the laundering mechanism (Proposition~\ref{prop:launder}) as the
 cause of the sign-flip failures, rather than any generic fragility of the setup.
 CB-SAFE+ stays at or above every baseline, and on FashionMNIST it holds 86\% at
-$f{=}0.3$ where the mean falls to 63\%.
+$f{=}0.3$ where the mean falls to 63\%. FedGT's actual BCJR decoder survives this
+mild attack---unlike its sign-flip collapse---but trails CB-SAFE+ on CIFAR-10
+($\sim$45--48\% vs $\sim$51--54\%) and is far noisier between seeds ($\pm6.8$ vs
+$\pm0.2$), so even where its accuracy signal is informative it is the less stable
+identifier.
 
 \input{../results/tables/table3_labelflip.tex}
 
