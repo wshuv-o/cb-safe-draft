@@ -844,6 +844,22 @@ identifier.
 
 \input{../results/tables/table3_labelflip.tex}
 
+\subsection{Adaptive Attacker: Duty-Cycled Poisoning}
+The exclusion rule $s_i^r/r>\tau$ ($\tau{=}0.85$) invites an obvious evasion: poison
+only a fraction $\delta<\tau$ of rounds, keeping most of the attack while never
+crossing the threshold. We test this directly (Table~\ref{tab:duty}), and it fails.
+Because the partition is re-randomized every round, a resting attacker is still
+flagged whenever it co-clusters with an \emph{active} one, so its accumulated
+suspicion runs ahead of its nominal duty: at $\delta{=}0.84$, right at the threshold,
+CB-SAFE+ still excludes all six attackers in every seed. Across
+$\delta\in[0.5,1.0]$ it excludes $4$--$6$ of $6$ and accuracy never drops below
+$\sim$50\% (clean baseline $59\%$), where coordinate-wise rules sit at $10\%$. The
+duty-cycler faces a no-win trade-off: raise $\delta$ and it is caught; lower it and
+the attack is correspondingly weaker (accuracy rises to $53.7\%$). A stronger
+threshold-aware adversary that jointly minimizes footprint and detectability remains
+open, but the naive duty-cycle evasion does not succeed.
+\input{../results/tables/table_duty.tex}
+
 \subsection{Ablation: Which Component Earns the Robustness}
 CB-SAFE+ layers three ingredients on top of clustered secure aggregation: temporal
 reputation, overlapping re-randomized groups, and a per-round COMP decode.
@@ -944,9 +960,9 @@ loss) accumulated over time. CB-SAFE+ shows one such design that identifies
 individual attackers from group observations without spending any privacy. The open
 questions our results make concrete: targeted backdoors remain invisible to
 sum-level probes at every malicious fraction we tested, an actively malicious server
-is outside our threat model, and the temporal identification argument should extend
-to an adaptive attacker who modulates its poisoning to stay below the probe margin;
-quantifying that game is the natural next step. The implementation and all measurement scripts are
+is outside our threat model, and while a naive duty-cycled attacker does not evade
+the temporal test (Table~\ref{tab:duty}), a threshold-aware adversary that jointly
+minimizes its footprint and detectability remains the natural next step. The implementation and all measurement scripts are
 released open-source as, to our knowledge, the first code-based reference point for
 post-quantum secure aggregation in FL.
 

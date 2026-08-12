@@ -1,0 +1,16 @@
+\begin{table}[t]\centering\footnotesize
+\caption{Adaptive duty-cycled attacker (CIFAR-10 sign-flip, $\gamma{=}5$, $f{=}0.2$,
+$N{=}30$, mean over 3 seeds). A malicious client poisons only a fraction $\delta$ of
+rounds to stay under the exclusion threshold $\tau{=}0.85$; $\delta{=}1$ is the
+always-on attack. Because the partition is re-randomized every round, a resting
+attacker is still flagged when it co-clusters with an active one, so CB-SAFE+
+excludes $4$--$6$ of $6$ attackers throughout---all six even at $\delta{=}0.84$---and
+accuracy never falls below $\sim$50\% (clean baseline $59\%$), where coordinate-wise
+rules collapse to $10\%$. Lowering $\delta$ to evade only weakens the attack.}
+\label{tab:duty}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lcccccc@{}}\toprule
+Attacker duty $\delta$ & $0.50$ & $0.70$ & $0.80$ & $0.84$ & $0.90$ & $1.00$\\\midrule
+Test accuracy (\%) & $53.7$ & $52.5$ & $52.2$ & $51.3$ & $49.9$ & $49.5$\\
+Attackers excluded (of 6) & $4.0$ & $6.0$ & $5.3$ & $6.0$ & $4.7$ & $6.0$\\
+\bottomrule\end{tabular}\end{table}
