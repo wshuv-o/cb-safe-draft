@@ -314,8 +314,9 @@ $Y \leftarrow \sum_{i\in\mathrm{alive}} \mathbf{y}_i$ \tcp*{pairwise masks cance
 \begin{theorem}[Privacy against honest-but-curious coalitions]\label{thm:priv}
 Assume $\mathcal{K}$ is IND-CCA2, $H$ is a secure KDF, and $G$ is a secure PRG. Fix
 a cluster $C$ of size $c$ with threshold $t=\lfloor c/2\rfloor+1$, and let the
-adversary $\mathcal{A}$ comprise the honest-but-curious server and any $T \subset C$
-with $|T| \le t-1$. There exists a PPT simulator that, given only the corrupted
+adversary $\mathcal{A}$ comprise the honest-but-curious server and any statically
+chosen $T \subset C$ with $|T| \le t-1$ (the corruption set is fixed before the
+protocol runs; we do not claim adaptive-corruption security). There exists a PPT simulator that, given only the corrupted
 clients' inputs and the sum $\sum_{i \in \mathrm{alive}(C)\setminus T} q(x_i)$,
 produces a view computationally indistinguishable from $\mathcal{A}$'s view of a
 CB-SAFE round. The CB-SAFE+ flag bits are a deterministic function of the revealed
@@ -374,7 +375,12 @@ coordinate-wise trimmed mean and median toward $0$, stalling learning entirely.
 
 This laundering effect explains the empirical collapse of every coordinate-wise
 rule in Section~\ref{sec:eval} and motivates direction-based detection: what
-cluster averaging cannot hide is the \emph{sign} of the update.
+cluster averaging cannot hide is the \emph{sign} of the update. The proposition
+idealizes honest updates as a common $h$; under non-IID heterogeneity real honest
+updates vary, so it predicts the boundary $\gamma^{*}$ in the mean rather than
+exactly per cluster. We therefore read the four-dataset collapse as strong
+empirical validation \emph{near} that boundary, not as a guarantee of collapse for
+arbitrary honest-update distributions.
 
 \begin{figure}[t]
 \centering
@@ -691,7 +697,7 @@ CB-SAFE+      & 51.7 & 37.6 & \textbf{42.8} & -- & 94.2 & \textbf{95.1}\\
 \end{table}
 
 \textbf{Sign-flip: laundering collapses coordinate-wise rules exactly at the
-predicted boundary} (Table~\ref{tab:robust}, Fig.~\ref{fig:signflip}). At $f{=}0.1$ ($\approx$3 dirty
+predicted boundary} (Table~\ref{tab:robust}, Fig.~\ref{fig:dynamics}). At $f{=}0.1$ ($\approx$3 dirty
 clusters, within trim capacity) the static rules work: trimmed mean 42.0\%, median
 43.4\%, Multi-Krum 52.9\%, versus 29.6\% for the undefended mean and 59\% clean
 baseline. At $f{=}0.2$ ($\approx$5 dirty clusters) every coordinate-wise rule is
@@ -702,7 +708,7 @@ rather than per-coordinate statistics, still reaches 42.7\% (16.9\% at $f{=}0.3$
 Robust rules that rely on magnitude order statistics are structurally weakened by
 the very mechanism that provides privacy; vector-selection rules retain power.
 
-\textbf{The full baseline panel confirms the mechanism} (Fig.~\ref{fig:signflip},
+\textbf{The full baseline panel confirms the mechanism} (Fig.~\ref{fig:dynamics},
 Table~\ref{tab:signflip}). Averaged over three seeds, the eight rules separate into
 three regimes at $f{=}0.3$: the coordinate-wise rules (mean, trimmed mean, median)
 and the robust geometric median RFA \cite{rfa} are laundered to chance
@@ -770,20 +776,6 @@ privacy constraints.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{fig_signflip_acc.pdf}
-\caption{Sign-flip attack ($\gamma{=}5$) on FashionMNIST: test accuracy vs.\
-malicious fraction across eight aggregation rules over $k{=}10$ cluster sums
-($c{=}3$, mean of three seeds). Coordinate-wise rules (mean, trimmed mean, median)
-and the geometric median (RFA) collapse toward chance at the $(1-f)^c$
-contamination boundary; vector selection (Multi-Krum, Bulyan) degrades then falls;
-only CB-SAFE+ holds near the clean baseline across all $f$, whereas FedGT (its actual
-BCJR decoder) degrades to $\sim$31\% at $f{=}0.3$. All datasets are reported in
-Table~\ref{tab:signflip}.}
-\label{fig:signflip}
-\end{figure}
-
-\begin{figure}[t]
-\centering
 \includegraphics[width=\columnwidth]{fig_backdoor_asr.pdf}
 \caption{Backdoor attack success rate vs.\ malicious fraction. No sum-level rule
 suppresses the trigger (median at $f{=}0.1$ partially excepted): backdoored sums
@@ -809,7 +801,9 @@ and 97\% of the no-attack accuracy on CIFAR-10, FashionMNIST, and Edge-IIoTset
 respectively, versus 12--18\% for the worst static rule. Pooling all matched
 (dataset, $f$, seed) cells, CB-SAFE+ beats every baseline under a paired $t$-test
 with Holm correction: versus the mean by 48.3 points ($p{<}10^{-4}$), the median by
-37.7 ($p{=}3{\times}10^{-4}$), and Multi-Krum by 11.9 ($p{=}9{\times}10^{-3}$). The
+37.7 ($p{=}3{\times}10^{-4}$), Multi-Krum by 11.9 ($p{=}9{\times}10^{-3}$), and
+FedGT's actual BCJR decoder---over the three datasets where FedGT admits a
+configuration---by 23.1 ($p{=}5{\times}10^{-4}$). The
 Edge-IIoTset result is the sharpest: at $f{=}0.3$ CB-SAFE+ holds 61.5\% against a
 63.7\% clean baseline while mean, trimmed mean, and median all sit at 7.3\%.
 
@@ -820,7 +814,7 @@ Edge-IIoTset result is the sharpest: at $f{=}0.3$ CB-SAFE+ holds 61.5\% against 
 \centering
 \includegraphics[width=\textwidth]{fig_dynamics_signflip.pdf}
 \caption{Training dynamics under the sign-flip attack: test accuracy versus
-communication round for eight aggregation rules, across three datasets (rows) and
+communication round for eight aggregation rules, across four datasets (rows) and
 malicious fractions $f$ (columns). FedGT is its actual BCJR decoder~\cite{fedgt},
 which has no configuration for Edge-IIoTset and is therefore omitted from that row.
 Curves are the mean over 3 seeds (single seed for the EMNIST baselines); shaded
@@ -829,7 +823,8 @@ $W{=}5$ after which exclusions begin; dotted lines mark chance and the no-attack
 baseline. Coordinate-wise rules and the geometric median decay progressively to
 chance at $f{\ge}0.2$; CB-SAFE+ dips during warmup and then recovers and holds,
 whereas FedGT degrades and collapses toward chance at $f{=}0.3$ by over-excluding
-honest clients. CIFAR-10 is reported in Table~\ref{tab:signflip}.}
+honest clients. Final accuracies for all datasets and fractions are in
+Table~\ref{tab:signflip}.}
 \label{fig:dynamics}
 \end{figure*}
 
@@ -864,9 +859,10 @@ reputation, overlapping re-randomized groups, and a per-round COMP decode.
 Table~\ref{tab:ablation-variants} isolates each under the identical sign-flip
 protocol. The base temporal reputation (ov1) already restores learning at moderate
 contamination but degrades at $f{=}0.3$ (37.9\% on CIFAR-10); adding overlapping
-groups (ov4) lifts it to 48.8\%, and the full hybrid COMP decode reaches 50.0\%,
-matching FedGT. Each component contributes, and the gains concentrate in the
-high-$f$ regime where laundering is strongest. The trust-free variant, which uses
+groups (ov4) lifts it to 48.8\%, and the full hybrid COMP decode reaches 50.0\%---
+far above FedGT's actual BCJR decoder, which collapses to chance at this
+contamination (Table~\ref{tab:detect}). Each component contributes, and the gains
+concentrate in the high-$f$ regime where laundering is strongest. The trust-free variant, which uses
 \emph{no} root dataset, matches the others at $f{=}0.1$ but collapses beyond it:
 attacker identification without any trusted anchor is possible only in the
 low-contamination regime, a capability boundary we state rather than hide.
