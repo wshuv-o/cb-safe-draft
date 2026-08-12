@@ -208,11 +208,9 @@ small-population design.
 \begin{figure*}[tp]
 \centering
 \includegraphics[width=\textwidth]{fig_architecture.pdf}
-\caption{CB-SAFE, one training round end to end. A one-time HQC key setup establishes
-pairwise secrets; the confidentiality layer masks updates so they cancel within
-clusters of size $c$, and the server sees only the $k$ cluster sums; the CB-SAFE+
-stage flags clusters, accumulates per-client suspicion over re-randomized rounds,
-excludes attackers, and robustly aggregates the clean sums.}
+\caption{CB-SAFE, one training round end to end: one-time HQC key setup,
+within-cluster masked aggregation (the server sees only the $k$ cluster sums), and
+the CB-SAFE+ flag/exclude stage.}
 \label{fig:arch}
 \end{figure*}
 
@@ -415,11 +413,10 @@ arbitrary honest-update distributions.
   % resulting cluster mean mu = -h (accent): same magnitude, inverted direction
   \draw[->,accent] (0,0) -- (214:\R) node[below,font=\scriptsize] {$\boldsymbol{\mu}$};
 \end{tikzpicture}
-\caption{Laundering geometry (schematic; $-\gamma\mathbf{h}$ drawn with a scale
-break). Averaging $c{-}m$ honest updates $\mathbf{h}$ with $m$ amplified sign-flips
-$-\gamma\mathbf{h}$ gives cluster mean
-$\boldsymbol{\mu}=\tfrac{c-m(1+\gamma)}{c}\,\mathbf{h}$; at $\gamma^{\!*}{=}2c/m-1$
-it lands on the $|\mathbf{h}|$ circle (Proposition~\ref{prop:launder}).}
+\caption{Laundering geometry (schematic). Averaging $c{-}m$ honest updates
+$\mathbf{h}$ with $m$ sign-flips $-\gamma\mathbf{h}$ gives
+$\boldsymbol{\mu}=\tfrac{c-m(1+\gamma)}{c}\,\mathbf{h}$; at $\gamma^{\!*}{=}2c/m-1$ it
+matches $|\mathbf{h}|$ with opposite sign (Proposition~\ref{prop:launder}).}
 \label{fig:launder-geom}
 \end{figure}
 
@@ -620,9 +617,8 @@ honest exclusion and post-quantum security.
 \begin{figure*}[tp]
 \centering
 \includegraphics[width=\textwidth]{fig_convergence_allmethods_n500.pdf}
-\caption{Test accuracy vs communication round at $N{=}500$ (FashionMNIST, sign-flip
-$f{=}0.2$, 50 rounds), one panel per seed; the eight aggregation rules that admit a
-configuration at this scale (FedGT excluded, see text).}
+\caption{Test accuracy vs round at $N{=}500$ (FashionMNIST, sign-flip $f{=}0.2$), one
+panel per seed; eight rules (FedGT excluded, see text).}
 \label{fig:convergence-n500}
 \end{figure*}
 
@@ -650,9 +646,9 @@ clean cluster sums tracked $(1-f)^c$ closely: at $c{=}3$, observed $0.70/0.50/0.
 versus predicted $0.73/0.51/0.34$ for $f{=}0.1/0.2/0.3$.
 
 \begin{table}[t]
-\caption{Robustness of aggregation rules over cluster sums ($c{=}3$, $k{=}10$,
-seed 0): final test accuracy under sign-flip and attack success rate (ASR, lower is
-better) under the backdoor, at malicious fraction $f$. Best per column in bold.}
+\caption{Robustness over cluster sums ($c{=}3$, $k{=}10$, seed 0): final accuracy
+under sign-flip and backdoor ASR (lower better) vs malicious fraction $f$. Best in
+bold.}
 \label{tab:robust}
 \centering
 \footnotesize
@@ -699,10 +695,9 @@ Proposition~\ref{prop:launder}: laundering specifically defeats rules that trust
 for the attacker, whereas whole-vector selection resists longer.
 
 \begin{table}[t]
-\caption{Attacker identification on CIFAR-10 sign-flip ($N{=}30$, mean over 3
-seeds): attackers caught of those present ($\uparrow$) and honest false-positive
-exclusions ($\downarrow$; of 24/24/21 at $f{=}.1/.2/.3$). FedGT is its real BCJR
-decoder~\cite{fedgt}. Best per column in bold.}
+\caption{Attacker identification, CIFAR-10 sign-flip ($N{=}30$, 3 seeds): attackers
+caught ($\uparrow$) and honest false positives ($\downarrow$). FedGT is its real BCJR
+decoder~\cite{fedgt}. Best in bold.}
 \label{tab:detect}
 \centering
 \footnotesize
@@ -785,25 +780,19 @@ Edge-IIoTset result is the sharpest: at $f{=}0.3$ CB-SAFE+ holds 61.5\% against 
 \begin{figure*}[tp]
 \centering
 \includegraphics[width=\textwidth]{fig_dynamics_signflip.pdf}
-\caption{Training dynamics under the sign-flip attack: test accuracy versus
-communication round for eight aggregation rules, across four datasets (rows) and
-malicious fractions $f$ (columns). FedGT is its actual BCJR decoder~\cite{fedgt},
-which has no configuration for Edge-IIoTset and is therefore omitted from that row.
-Curves are the mean over 3 seeds (single seed for the EMNIST baselines); shaded
-bands are $\pm 1$ SD for CB-SAFE+ and FedGT. The dashed vertical marks the warmup
-$W{=}5$ after which exclusions begin; dotted lines mark chance and the no-attack
-baseline. Final accuracies for all datasets and fractions are in
-Table~\ref{tab:signflip}.}
+\caption{Training dynamics under sign-flip: test accuracy vs round, eight rules
+across four datasets (rows) $\times$ malicious fraction $f$ (columns). Mean over 3
+seeds; $\pm1$ SD bands for CB-SAFE+ and FedGT (real BCJR~\cite{fedgt}, no
+Edge-IIoTset config). Dashed line: warmup $W{=}5$.}
 \label{fig:dynamics}
 \end{figure*}
 
 \begin{figure*}[tp]
 \centering
 \includegraphics[width=\textwidth]{fig_suspicion.pdf}
-\caption{Temporal suspicion separation (CB-SAFE+ on CIFAR-10): population-mean
-flagged fraction $s_i^{\,r}/r$ of malicious versus honest clients over rounds, for
-each malicious fraction $f$ (mean over 3 seeds). Dashed line: predicted honest
-co-clustering rate $p_h{=}1-(1-f)^{c-1}$ (Eq.~\eqref{eq:ph}); warmup shaded.}
+\caption{Temporal suspicion (CB-SAFE+, CIFAR-10): mean flagged fraction
+$s_i^{\,r}/r$ for malicious vs honest clients, per fraction $f$ (3 seeds). Dashed:
+predicted honest rate $p_h{=}1-(1-f)^{c-1}$; warmup shaded.}
 \label{fig:suspicion}
 \end{figure*}
 

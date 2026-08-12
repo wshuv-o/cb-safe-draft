@@ -1,11 +1,9 @@
 \begin{table*}[t]
-\caption{Scaling with client population: test accuracy (\%) at $N{=}100$ (30 rounds)
-and $N{=}500$ (50 rounds) under sign-flip $f{=}0.2$ on FashionMNIST, mean of the
-final five rounds over three seeds. Detection block ($N{=}500$): attackers caught of
-100, honest false exclusions (FP) of 400, and the derived false-alarm
-($P_{\mathrm{FA}}$) and missed-detection ($P_{\mathrm{MD}}$) rates. Final column:
-per-client secure-aggregation cost vs $N$---$O(1)$ for CB-SAFE's fixed $c{=}3$
-clusters, $O(N)$ for an all-pairs instantiation. Best per column in bold.}
+\caption{Scaling with client population $N$: test accuracy (\%) at $N{=}100$/$500$
+under sign-flip $f{=}0.2$ (FashionMNIST, 3 seeds, last-five-round mean). Detection
+($N{=}500$): attackers caught, honest false exclusions, and derived
+$P_{\mathrm{FA}}$/$P_{\mathrm{MD}}$. Final column: per-client cost, $O(1)$ (clustered)
+vs $O(N)$ (all-pairs). Best in bold.}
 \label{tab:scale-n500}
 \centering
 \setlength{\tabcolsep}{4pt}
