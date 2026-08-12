@@ -680,6 +680,25 @@ rather than per-coordinate statistics, still reaches 42.7\% (16.9\% at $f{=}0.3$
 Robust rules that rely on magnitude order statistics are structurally weakened by
 the very mechanism that provides privacy; vector-selection rules retain power.
 
+\textbf{The collapse is a wide basin, not a knife-edge.} Since $\gamma{=}5$ is the
+exact laundering point $\gamma^{*}{=}2c/m{-}1$, one might ask whether the collapse is
+an artifact of that singular value. Sweeping $\gamma\in\{2,3,5,8,15\}$ at $f{=}0.2$
+(Fig.~\ref{fig:gamma-basin}) shows it is not: median and trimmed mean collapse to
+$10\%$ at \emph{every} $\gamma\ge\gamma^{*}$ and only partially degrade below it, and
+Multi-Krum---robust until $\gamma{=}8$---itself collapses at $\gamma{=}15$. CB-SAFE+
+holds $\sim$50--53\% throughout. Bulyan matches it here, its trim capacity not
+exceeded at $f{=}0.2$; that parity breaks at $f{=}0.3$ (Table~\ref{tab:signflip}),
+where identifying attackers rather than merely trimming them decides the outcome.
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=\columnwidth]{fig_gamma_basin.pdf}
+\caption{Sign-flip amplification sweep (CIFAR-10, $f{=}0.2$, 3 seeds): test accuracy
+vs $\gamma$. Coordinate-wise rules collapse for all $\gamma\ge\gamma^{*}{=}5$; dashed
+lines mark chance and the clean baseline.}
+\label{fig:gamma-basin}
+\end{figure}
+
 \textbf{The full baseline panel confirms the mechanism} (Fig.~\ref{fig:dynamics},
 Table~\ref{tab:signflip}). Averaged over three seeds, the eight rules separate into
 three regimes at $f{=}0.3$: the coordinate-wise rules (mean, trimmed mean, median)
