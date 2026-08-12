@@ -17,6 +17,20 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,calc,positioning}
 \usepackage[ruled,vlined]{algorithm2e}
+% Float placement: let full-width (double-column) figures use dedicated float
+% pages so they land near their reference instead of being flushed after the
+% bibliography. stfloats matches the official IEEE TIFS template.
+\usepackage{stfloats}
+\renewcommand{\topfraction}{0.92}
+\renewcommand{\bottomfraction}{0.85}
+\renewcommand{\textfraction}{0.06}
+\renewcommand{\floatpagefraction}{0.66}
+\renewcommand{\dbltopfraction}{0.92}
+\renewcommand{\dblfloatpagefraction}{0.66}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{4}
+\setcounter{dbltopnumber}{2}
 % IEEE-style blue hyperlinked citations/references (load hyperref last)
 \definecolor{linkblue}{RGB}{0,0,204}
 \usepackage[colorlinks=true,citecolor=linkblue,linkcolor=linkblue,urlcolor=linkblue,breaklinks=true]{hyperref}
@@ -190,7 +204,7 @@ small-population design.
 
 \section{The CB-SAFE Framework}
 
-\begin{figure*}[t]
+\begin{figure*}[tp]
 \centering
 \includegraphics[width=\textwidth]{fig_architecture.pdf}
 \caption{CB-SAFE, one training round end to end. A one-time code-based (HQC) key
@@ -382,7 +396,7 @@ exactly per cluster. We therefore read the four-dataset collapse as strong
 empirical validation \emph{near} that boundary, not as a guarantee of collapse for
 arbitrary honest-update distributions.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
 \centering
 \begin{tikzpicture}[>=Stealth,line width=0.5pt]
   \def\R{1.7}
@@ -606,7 +620,7 @@ honest exclusion and post-quantum security.
 
 \input{../results/tables/table_n500_scale.tex}
 
-\begin{figure*}[t]
+\begin{figure*}[tp]
 \centering
 \includegraphics[width=\textwidth]{fig_convergence_allmethods_n500.pdf}
 \caption{Test accuracy versus communication round at $N{=}500$ (FashionMNIST,
@@ -745,7 +759,7 @@ CB-SAFE+ for \emph{untargeted} model poisoning only; targeted trigger attacks un
 secure aggregation remain open, consistent with their difficulty even without
 privacy constraints.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
 \centering
 \includegraphics[width=\columnwidth]{fig_backdoor_asr.pdf}
 \caption{Backdoor attack success rate vs.\ malicious fraction. No sum-level rule
@@ -781,7 +795,7 @@ Edge-IIoTset result is the sharpest: at $f{=}0.3$ CB-SAFE+ holds 61.5\% against 
 \input{../results/tables/table1_signflip.tex}
 
 
-\begin{figure*}[t]
+\begin{figure*}[tp]
 \centering
 \includegraphics[width=\textwidth]{fig_dynamics_signflip.pdf}
 \caption{Training dynamics under the sign-flip attack: test accuracy versus
@@ -799,7 +813,7 @@ Table~\ref{tab:signflip}.}
 \label{fig:dynamics}
 \end{figure*}
 
-\begin{figure*}[t]
+\begin{figure*}[tp]
 \centering
 \includegraphics[width=\textwidth]{fig_suspicion.pdf}
 \caption{Temporal suspicion separation (CB-SAFE+ on CIFAR-10): population-mean
@@ -885,7 +899,7 @@ where the private median collapses to 10\% against 39--41\% without privacy,
 CB-SAFE+ recovers comparable accuracy \emph{while keeping the anonymity set},
 by paying in rounds (warmup) rather than in privacy.
 
-\begin{figure}[t]
+\begin{figure}[tbp]
 \centering
 \includegraphics[width=\columnwidth]{fig_cdial.pdf}
 \caption{The privacy--robustness dial, measured: median-rule accuracy under
