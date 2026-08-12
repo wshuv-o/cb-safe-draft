@@ -70,7 +70,7 @@ from long-lived encapsulated secrets, so the KEM affects only a one-time setup.
 Measured on a 291\,498-parameter model with 30 clients, per-round traffic is
 KEM-independent (2\,277~KiB per client), and the entire code-based premium is a
 one-time 15.2 vs.\ 3.8~KiB per client at NIST level~1 (49.4 vs.\ 7.7~KiB at level~5),
-under 0.03\% of the traffic of a single training round. CB-SAFE further reconciles
+$0.7\%$ of one round's traffic and under $0.03\%$ amortized over training. CB-SAFE further reconciles
 secure aggregation with Byzantine robustness by aggregating securely \emph{within}
 clusters of $c$ clients and applying robust rules (trimmed mean, median, Multi-Krum)
 \emph{across} the revealed cluster sums, and we quantify the resulting
@@ -81,9 +81,10 @@ which cluster averaging turns amplified sign-flip poisoning into plausible-magni
 inverted sums that defeat all coordinate-wise robust rules, and introduce CB-SAFE+:
 re-randomized clustering with root-anchored direction flags accumulates per-client
 suspicion across rounds (temporal group testing over private sums) and excludes
-attackers the server never observes individually, at zero additional leakage.
-Experiments across three datasets and two modalities (non-IID CIFAR-10 and
-FashionMNIST, and tabular Edge-IIoTset IoT intrusion detection) with
+attackers the server never observes individually, revealing no update content beyond
+the cluster sums CB-SAFE already exposes.
+Experiments across four datasets in two modalities (non-IID CIFAR-10,
+FashionMNIST, and EMNIST, and tabular Edge-IIoTset IoT intrusion detection) with
 label-flipping, sign-flipping, and backdoor attacks validate the framework: the
 laundering effect and CB-SAFE+'s recovery replicate on every dataset (CB-SAFE+
 beats every baseline under sign-flip, Holm-corrected $p{<}0.01$), and the
@@ -129,7 +130,7 @@ cluster-based robust aggregation on \emph{quantum hardware} \cite{cqsa2026}; no 
 framework provides both under a code-based, classical post-quantum assumption.
 
 This paper presents CB-SAFE (Code-Based Secure Aggregation for Federated
-lEarning), making four contributions:
+lEarning), making five contributions:
 \begin{enumerate}
 \item \textbf{A KEM-agnostic secure-aggregation protocol} (Definition~1) that
 formalizes Bonawitz-style double masking over any IND-CCA2 KEM, with per-round mask
@@ -152,11 +153,11 @@ re-randomized clustering plus direction flags against a small server root datase
 accumulate per-client suspicion (temporal group testing over privacy-preserving
 observations) and exclude malicious clients the server has never observed
 individually. The flags are post-processing of already-revealed cluster sums, so the
-defense adds \emph{no} leakage beyond CB-SAFE itself (Theorem~\ref{thm:priv}).
+defense adds \emph{no} update-content leakage beyond CB-SAFE itself (Theorem~\ref{thm:priv}).
 \item \textbf{An honest, measured cost analysis:} on a 291k-parameter model,
 per-round traffic is KEM-independent and the full code-based premium is a one-time
-15.2~KiB vs.\ 3.8~KiB per client (NIST level~1), i.e., under $0.03\%$ of one round's
-traffic; HQC's $\sim$200$\times$ slower operations contribute about 2\,s (one-time,
+15.2~KiB vs.\ 3.8~KiB per client (NIST level~1), i.e., $0.7\%$ of one round's
+traffic and under $0.03\%$ amortized over training; HQC's $\sim$200$\times$ slower operations contribute about 2\,s (one-time,
 30 clients) versus 0.02\,s for ML-KEM.
 \end{enumerate}
 
@@ -440,7 +441,8 @@ each cluster mean to the current model $\theta^r$, and flags every cluster whose
 g_\ell^{\,r} = \mathbb{1}\!\left[\, L(\theta^r + \mathbf{S}_\ell;\, \mathcal{D}_0) > L(\theta^r;\, \mathcal{D}_0)\,\right].
 \end{equation}
 Flags are computed from already-revealed cluster sums
-and server-local data, so they add no leakage (Theorem~\ref{thm:priv}). The probe is
+and server-local data, so they reveal no update content beyond those sums
+(Theorem~\ref{thm:priv}). The probe is
 the product of two measured failures. Anchor-free direction flags are
 sign-ambiguous: the poisoned cluster sums form their own coherent cloud at $-h$, and
 a Krum-based reference locks onto that cloud in a large fraction of rounds.
@@ -734,8 +736,8 @@ CB-SAFE+ hybrid  & \textbf{3/3} & \textbf{0.0} & \textbf{6/6} & \textbf{0.7} & \
 \textbf{CB-SAFE+ restores learning past the static breakdown}
 (Table~\ref{tab:robust}). With loss-probe
 flags and temporal suspicion, the defense identified all 3 of 3 attackers at
-$f{=}0.1$ (51.7\%, near the clean ceiling) and 8 of 9 sign-flip attackers
-with \emph{zero} honest false positives at $f{=}0.3$, recovering to 42.8\%
+$f{=}0.1$ (51.7\%, near the clean ceiling) and all 9 sign-flip attackers
+with \emph{zero} honest false positives at $f{=}0.3$ (seed~0; three-seed means in Table~\ref{tab:detect}), recovering to 42.8\%
 accuracy where every static coordinate-wise rule sat at 10\% and Multi-Krum at
 16.9\%, comparable to the 39--41\% the median achieves \emph{without any privacy}
 ($c{=}1$), i.e., the defense refunds the privacy dial's cost in rounds rather than
@@ -940,8 +942,7 @@ questions our results make concrete: targeted backdoors remain invisible to
 sum-level probes at every malicious fraction we tested, an actively malicious server
 is outside our threat model, and the temporal identification argument should extend
 to an adaptive attacker who modulates its poisoning to stay below the probe margin;
-quantifying that game is the natural next step. Multi-seed replication and a
-second dataset are in progress; the implementation and all measurement scripts are
+quantifying that game is the natural next step. The implementation and all measurement scripts are
 released open-source as, to our knowledge, the first code-based reference point for
 post-quantum secure aggregation in FL.
 
