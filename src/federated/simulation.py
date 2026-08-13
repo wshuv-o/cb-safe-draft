@@ -56,7 +56,9 @@ class Config:
     dataset: str = "cifar10"     # cifar10 | fmnist | emnist | edgeiiot
     n_classes: int = 10          # label space (set per dataset; used by label-flip)
     signflip_gamma: float = 5.0  # sign-flip scale (C1 sweeps this to find gamma*)
+    attack_duty: float = 1.0     # fraction of rounds a malicious client actually poisons; <1 duty-cycles to duck the exclusion threshold while keeping most attack power
     overlap: int = 1             # CB-SAFE+ re-randomized partitions/round (test budget)
+    temporal_overlap: bool = False  # spread the `overlap` groups across rounds (1 partition/round, rank-c privacy) instead of simultaneously (rank-solvable)
     participation: float = 1.0   # fraction of clients sampled per round (1.0 = full participation)
 
 
@@ -70,6 +72,15 @@ def pick_malicious(cfg: Config) -> set[int]:
     rng = np.random.default_rng(cfg.seed + 7)
     n_mal = int(round(cfg.f_malicious * cfg.n_clients))
     return set(rng.choice(cfg.n_clients, size=n_mal, replace=False).tolist())
+
+
+def poisons_this_round(cfg: Config, client: int, r: int) -> bool:
+    """Whether a malicious client actually poisons in round r. With attack_duty<1 it
+    stays honest in a (1-duty) fraction of rounds, so its flagged fraction hovers near
+    duty and it can duck below the exclusion threshold while keeping most attack power."""
+    if cfg.attack_duty >= 1.0:
+        return True
+    return float(np.random.default_rng([cfg.seed, client, r, 5000]).random()) < cfg.attack_duty
 
 
 def local_train(global_flat: np.ndarray, loader: DataLoader, cfg: Config,
@@ -196,8 +207,14 @@ def run(cfg: Config, client_dls: list[DataLoader], test_dl: DataLoader,
             k = max(cfg.cluster_size, min(k, len(active)))
             rng_r = np.random.default_rng(cfg.seed + 1000 + r)
             active = sorted(int(i) for i in rng_r.choice(active, size=k, replace=False))
+        def _poison(i: int) -> bool:
+            if i not in malicious:
+                return False
+            if cfg.attack == "signflip" and cfg.attack_duty < 1.0:
+                return poisons_this_round(cfg, i, r)
+            return True
         deltas = {
-            i: local_train(global_flat, client_dls[i], cfg, device, i in malicious)
+            i: local_train(global_flat, client_dls[i], cfg, device, _poison(i))
             for i in active
         }
         if fedgt is not None:
@@ -236,10 +253,16 @@ def run(cfg: Config, client_dls: list[DataLoader], test_dl: DataLoader,
             # independent partitions so each client gets `overlap` tests/round
             # (matching FedGT's overlapping-group test budget) -- clusters stay at
             # size cfg.cluster_size, so the anonymity set is unchanged.
-            clusters_r = []
-            for p in range(cfg.overlap):
-                clusters_r += make_clusters(active, cfg.cluster_size,
-                                            cfg.seed + 13 + r + p * 1009)
+            if cfg.temporal_overlap:
+                rep.comp_window = cfg.overlap           # o overlapping groups spread over rounds
+                rep.min_floor = 0.25                    # temporal suspicion peaks ~0.6 not ~0.9; lower the exclusion floor
+                rep.min_gap = 0.15
+                clusters_r = make_clusters(active, cfg.cluster_size, cfg.seed + 13 + r)
+            else:
+                clusters_r = []
+                for p in range(cfg.overlap):
+                    clusters_r += make_clusters(active, cfg.cluster_size,
+                                                cfg.seed + 13 + r + p * 1009)
             means = np.stack(
                 [np.mean(np.stack([deltas[i] for i in cl]), axis=0) for cl in clusters_r])
             probe = None
@@ -251,7 +274,8 @@ def run(cfg: Config, client_dls: list[DataLoader], test_dl: DataLoader,
             # trustfree=True -> probe=None, ref=None -> defend_round uses the C3
             # median-seeded consensus reference (no trusted data);
             # comp=True -> per-round COMP decode over the overlapping groups (hybrid)
-            delta_agg = defend_round(rep, means, clusters_r, r, probe=probe, comp=comp)
+            delta_agg = defend_round(rep, means, clusters_r, r, probe=probe, comp=comp,
+                                     temporal=cfg.temporal_overlap)
         elif cfg.aggregator == "fltrust":
             # FLTrust: trust-weighted aggregation of cluster means against the
             # server's own root-data update (needs server_dl; fixed clusters)

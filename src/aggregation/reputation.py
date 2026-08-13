@@ -58,6 +58,8 @@ class ReputationState:
     min_floor: float = 0.35  # a flagged group must sit above this to be excluded
     n_byzantine: int = 2     # Krum parameter for the reference
     n_clients: int = 0       # population size; >SCALE_N switches to scale-adaptive rules
+    comp_window: int = 1     # temporal COMP: rounds a client must be flagged in a row
+    recent: dict = field(default_factory=dict)     # client -> last comp_window flag bits
     flags: dict = field(default_factory=dict)     # client -> times in flagged cluster
     rounds: dict = field(default_factory=dict)    # client -> rounds participated
     excluded: set = field(default_factory=set)
@@ -113,6 +115,7 @@ def defend_round(
     ref: np.ndarray | None = None,
     probe=None,
     comp: bool = False,
+    temporal: bool = False,
 ) -> np.ndarray:
     """Score clusters, update suspicion, exclude, and return the round aggregate.
     `cluster_means` rows align with `clusters` (only non-excluded clusters passed).
@@ -168,7 +171,22 @@ def defend_round(
         flagged = [j for j, s in enumerate(scores) if s < 0.0]
     state.last_info = {"flagged": list(flagged), "scores": scores}
     flagset = set(flagged)
-    if comp:
+    if temporal:
+        # Privacy-safe COMP: one partition this round (server sees only c-sized cluster
+        # sums, rank c per round), and a client accrues suspicion only when it has been
+        # flagged in EVERY one of the last comp_window rounds -- the across-round analog
+        # of requiring all overlapping groups to be caught, without simultaneous
+        # memberships that would make the round's system solvable.
+        for j, cl in enumerate(clusters):
+            for i in cl:
+                state.rounds[i] = state.rounds.get(i, 0) + 1
+                hist = state.recent.setdefault(i, [])
+                hist.append(1 if j in flagset else 0)
+                if len(hist) > state.comp_window:
+                    del hist[0]
+                if len(hist) == state.comp_window and all(hist):
+                    state.flags[i] = state.flags.get(i, 0) + 1
+    elif comp:
         # HYBRID: per-round COMP decode over the overlapping groups. A client is
         # "suspected this round" iff EVERY group it belongs to is flagged (i.e. it
         # is in NO clean group) -- FedGT's one-shot elimination -- and we accumulate
