@@ -700,7 +700,7 @@ lines mark chance and the clean baseline.}
 \end{figure}
 
 \textbf{The full baseline panel confirms the mechanism} (Fig.~\ref{fig:dynamics},
-Table~\ref{tab:signflip}). Averaged over three seeds, the eight rules separate into
+Fig.~\ref{fig:acc-vs-f}, Table~\ref{tab:signflip}). Averaged over three seeds, the eight rules separate into
 three regimes at $f{=}0.3$: the coordinate-wise rules (mean, trimmed mean, median)
 are laundered to chance ($\approx$10\%) and the robust geometric median RFA
 \cite{rfa} degrades to $\sim$20\%, confirming that location- and magnitude-based
@@ -804,6 +804,18 @@ across four datasets (rows) $\times$ malicious fraction $f$ (columns). Mean over
 seeds; $\pm1$ SD bands for CB-SAFE+ and FedGT (real BCJR~\cite{fedgt}, no
 Edge-IIoTset config). Dashed line: warmup $W{=}5$.}
 \label{fig:dynamics}
+\end{figure*}
+
+\begin{figure*}[tp]
+\centering
+\includegraphics[width=\textwidth]{fig_acc_vs_f.pdf}
+\caption{Final test accuracy vs.\ malicious fraction $f$ under sign-flip (mean over 3
+seeds, 50 rounds; error bars $\pm$1 SD), one panel per dataset. The coordinate-wise
+rules (mean, trimmed mean, median) and the geometric median collapse to chance by
+$f{=}0.2$; Multi-Krum and Bulyan degrade then fall at $f{=}0.3$; only CB-SAFE+ tracks
+the clean baseline (dotted) across all four datasets. This is the endpoint summary of
+the round-by-round view in Fig.~\ref{fig:dynamics}.}
+\label{fig:acc-vs-f}
 \end{figure*}
 
 \begin{figure*}[tp]
