@@ -602,13 +602,13 @@ run without hand-designing new ones---a concrete scalability ceiling in the meth
 not a tuning choice. At this scale each client holds only $\sim$100 samples and
 attacker exclusion consumes the first $\sim$15--20 rounds, so a short 30-round
 budget truncates every method mid-recovery; extending to 50 rounds lets recovery
-complete and collapses the between-seed spread (\textcolor{red}{from $\pm$10 to $\pm$2},
+complete and collapses the between-seed spread (from $\pm$10 to $\pm$2,
 Fig.~\ref{fig:convergence-n500}). At the converged horizon CB-SAFE+ reaches
 \textcolor{red}{$66.4\%$} (last-five-round mean over three seeds), the coordinate-wise rules remain
 laundered near chance, and FLTrust's trust weighting, which recovers fastest early,
-plateaus $\sim$5 points lower (\textcolor{red}{$61.3\%$}) because soft down-weighting never fully
+plateaus $\sim$5 points lower ($61.3\%$) because soft down-weighting never fully
 removes the laundered mass. CB-SAFE+ reaches that accuracy while excluding only
-\textcolor{red}{$\sim$5} honest clients of 400. Among the methods that admit a configuration at this
+\textcolor{red}{$\sim$5} honest clients of 400 \textcolor{red}{(non-private ov4; privacy-safe re-run in progress)}. Among the methods that admit a configuration at this
 scale, CB-SAFE+ is the only one that pairs top-tier robustness with near-zero
 honest exclusion and post-quantum security.
 
@@ -784,15 +784,15 @@ CB-SAFE+ tracks the clean baseline. The round-by-round view
 (Fig.~\ref{fig:dynamics}) shows this is not an endpoint artifact: the static rules
 decay progressively while CB-SAFE+ dips during warmup and recovers as exclusions
 fire. At $f{=}0.3$ CB-SAFE+ retains $\sim$95\%, $\sim$99\%,
-and \textcolor{red}{$\sim$100\%} of the no-attack accuracy on CIFAR-10, FashionMNIST, and Edge-IIoTset
+and $\sim$99\% of the no-attack accuracy on CIFAR-10, FashionMNIST, and Edge-IIoTset
 respectively, versus 12--18\% for the worst static rule. Pooling all matched
 (dataset, $f$, seed) cells, CB-SAFE+ beats every baseline under a paired $t$-test
 with Holm correction: versus the mean by \textcolor{red}{48.3} points (\textcolor{red}{$p{<}10^{-4}$}), the median by
 \textcolor{red}{37.7} (\textcolor{red}{$p{=}3{\times}10^{-4}$}), Multi-Krum by \textcolor{red}{11.9} (\textcolor{red}{$p{=}9{\times}10^{-3}$}), and
 FedGT's actual BCJR decoder---over the three datasets where FedGT admits a
 configuration---by \textcolor{red}{23.1} (\textcolor{red}{$p{=}5{\times}10^{-4}$}). The
-Edge-IIoTset result is the sharpest: at $f{=}0.3$ CB-SAFE+ holds \textcolor{red}{61.5\%} against a
-\textcolor{red}{63.7\%} clean baseline while mean, trimmed mean, and median all sit at \textcolor{red}{7.3\%}.
+Edge-IIoTset result is the sharpest: at $f{=}0.3$ CB-SAFE+ holds 64.5\% against a
+$\sim$65\% clean baseline while mean, trimmed mean, and median all sit at 7.4\%.
 
 \input{../results/tables/table1_signflip.tex}
 

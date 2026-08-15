@@ -22,7 +22,7 @@ from src.federated.simulation import Config, run
 
 F = 0.2
 DS = "cifar10"
-ROUNDS = 30
+ROUNDS = 50
 SEEDS = [0, 1, 2]
 
 
@@ -90,8 +90,9 @@ def main():
         client_dls, test_dl, server_dl = cache[key]
         cfg = Config(n_clients=30, rounds=ROUNDS, aggregation="cluster", aggregator=j["agg"],
                      cluster_size=3, trim=2, attack="signflip", f_malicious=F, seed=j["seed"],
-                     dataset=DS, overlap=j["ov"], signflip_gamma=j["gamma"],
-                     attack_duty=j["duty"], n_classes=models.n_classes_of(DS))
+                     dataset=DS, overlap=j["ov"], temporal_overlap=(j["ov"] == 4),
+                     signflip_gamma=j["gamma"], attack_duty=j["duty"],
+                     n_classes=models.n_classes_of(DS))
         p = out_path(j)
         hb = os.environ.get("CBSAFE_HEARTBEAT")
         if hb:

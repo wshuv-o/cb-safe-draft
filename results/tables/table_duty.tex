@@ -1,16 +1,16 @@
 \begin{table}[t]\centering\footnotesize
 \caption{Duty-cycled attacker (CIFAR-10 sign-flip, $\gamma{=}5$, $f{=}0.2$; 3 seeds):
 a client poisons a fraction $\delta$ of rounds ($\delta{=}1$: always on); exclusion
-threshold $\tau{=}0.85$.}
+threshold $\tau{=}0.85$. \textcolor{red}{Values provisional (30-round; 50-round re-run in progress).}}
 \label{tab:duty}
 \setlength{\tabcolsep}{6pt}
 \begin{tabular}{@{}lcc@{}}\toprule
 Attacker duty $\delta$ & Test acc.\ (\%) & Attackers excl.\ (of 6)\\\midrule
-Clean (no attack) & $59.0$ & $-$\\
-$0.50$ & $53.7$\,{\scriptsize$\pm$0.1} & $4.0$\\
-$0.70$ & $52.5$\,{\scriptsize$\pm$1.0} & $6.0$\\
-$0.80$ & $52.2$\,{\scriptsize$\pm$1.4} & $5.3$\\
-$0.84$ & $51.3$\,{\scriptsize$\pm$2.2} & $6.0$\\
-$0.90$ & $49.9$\,{\scriptsize$\pm$3.5} & $4.7$\\
-$1.00$ (always-on) & $49.5$\,{\scriptsize$\pm$4.2} & $6.0$\\
+Clean (no attack) & \textcolor{red}{$59.0$} & $-$\\
+$0.50$ & \textcolor{red}{$53.7$\,{\scriptsize$\pm$0.1}} & \textcolor{red}{$4.0$}\\
+$0.70$ & \textcolor{red}{$52.5$\,{\scriptsize$\pm$1.0}} & \textcolor{red}{$6.0$}\\
+$0.80$ & \textcolor{red}{$52.2$\,{\scriptsize$\pm$1.4}} & \textcolor{red}{$5.3$}\\
+$0.84$ & \textcolor{red}{$51.3$\,{\scriptsize$\pm$2.2}} & \textcolor{red}{$6.0$}\\
+$0.90$ & \textcolor{red}{$49.9$\,{\scriptsize$\pm$3.5}} & \textcolor{red}{$4.7$}\\
+$1.00$ (always-on) & \textcolor{red}{$49.5$\,{\scriptsize$\pm$4.2}} & \textcolor{red}{$6.0$}\\
 \bottomrule\end{tabular}\end{table}
