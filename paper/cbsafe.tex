@@ -803,8 +803,8 @@ respectively, versus 12--18\% for the worst static rule. Pooling all matched
 (dataset, $f$, seed) cells, CB-SAFE+ beats every baseline under a paired $t$-test
 with Holm correction: versus the mean by 57.3 points ($p{<}10^{-15}$), the median by
 44.0 ($p{<}10^{-8}$), Multi-Krum by 18.6 ($p{<}10^{-3}$), and
-FedGT's actual BCJR decoder---over the three datasets where FedGT admits a
-configuration---by 21.0 ($p{<}10^{-3}$). The
+FedGT's actual BCJR decoder---across all four datasets at $N{=}30$---by
+18.8 ($p{<}10^{-3}$). The
 Edge-IIoTset result is the sharpest: at $f{=}0.3$ CB-SAFE+ holds 64.5\% against a
 $\sim$65\% clean baseline while mean, trimmed mean, and median all sit at 7.4\%.
 
@@ -816,8 +816,8 @@ $\sim$65\% clean baseline while mean, trimmed mean, and median all sit at 7.4\%.
 \includegraphics[width=\textwidth]{fig_dynamics_signflip.pdf}
 \caption{Training dynamics under sign-flip: test accuracy vs round, eight rules
 across four datasets (rows) $\times$ malicious fraction $f$ (columns). Mean over 3
-seeds; $\pm1$ SD bands for CB-SAFE+ and FedGT (real BCJR~\cite{fedgt}, no
-Edge-IIoTset config). Dashed line: warmup $W{=}5$.}
+seeds; $\pm1$ SD bands for CB-SAFE+ and FedGT (real BCJR~\cite{fedgt}).
+Dashed line: warmup $W{=}5$.}
 \label{fig:dynamics}
 \end{figure*}
 
