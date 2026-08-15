@@ -21,7 +21,8 @@ FIGS = os.path.join(R, "figs")
 
 # Datasets where CB-SAFE+ wins with a clear margin (CIFAR-10, a tie with FedGT,
 # stays in the tables but is omitted from this dynamics figure).
-ROWS = [("FashionMNIST", "fmnist", 10.0, 88.5),   # (name, subdir, chance%, clean baseline%)
+ROWS = [("CIFAR-10", "", 10.0, 59.0),             # (name, subdir, chance%, clean baseline%)
+        ("FashionMNIST", "fmnist", 10.0, 88.5),
         ("EMNIST", os.path.join("kaggle", "emnist"), 2.1, 86.0),
         ("Edge-IIoTset", os.path.join("kaggle", "edgeiiot"), 6.7, 63.7)]
 FS = [10, 20, 30]
@@ -33,7 +34,7 @@ W = 5                              # warmup / exclusions-begin round
 # FedGT curve uses its ACTUAL BCJR decoder (faithful reimplementation) at N=30;
 # it has no configuration for Edge-IIoTset (tabular loader) so it drops from that row.
 _FAITHFUL = os.path.join(R, "fedgt_faithful")
-_DS = {"fmnist": "fmnist", os.path.join("kaggle", "emnist"): "emnist"}
+_DS = {"": "cifar10", "fmnist": "fmnist", os.path.join("kaggle", "emnist"): "emnist"}
 
 
 def series(subdir, agg, f):
@@ -71,7 +72,7 @@ def series(subdir, agg, f):
     return rounds, M.mean(0), M.std(0)
 
 
-fig, axes = plt.subplots(3, 3, figsize=(st.COL_DOUBLE, 5.2), sharex="col")
+fig, axes = plt.subplots(4, 3, figsize=(st.COL_DOUBLE, 6.9), sharex="col")
 handles_labels = {}
 for r, (dsname, subdir, chance, base) in enumerate(ROWS):
     # shared y-range within the row
@@ -97,7 +98,7 @@ for r, (dsname, subdir, chance, base) in enumerate(ROWS):
         ax.set_xlim(1, None)
         if r == 0:
             ax.set_title(f"$f{{=}}{f}\\%$")
-        if r == 2:
+        if r == 3:
             ax.set_xlabel("communication round")
         if c == 0:
             ax.set_ylabel(f"{dsname}\ntest accuracy (\\%)")

@@ -1,0 +1,27 @@
+\begin{table}[t]
+\caption{Scaling to $N{=}500$ clients (FashionMNIST, sign-flip $f{=}0.2$, 50 rounds,
+Dirichlet $\alpha{=}0.5$). Test accuracy is the mean of the final five rounds over
+seeds $\{0,2,3\}$ ($\pm$1 SD); honest FP is the number of honest clients (of 400)
+wrongly excluded. At a converged horizon the two group-testing methods are
+statistically tied at the top while coordinate-wise rules collapse; only CB-SAFE+
+holds that accuracy without discarding honest clients, and is post-quantum secure.}
+\label{tab:scale-n500}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Rule & Acc.\ (\%) & Honest FP\,$\downarrow$ & PQC\\
+\midrule
+\textbf{CB-SAFE+ (ours)} & \textbf{66.4}\,$\pm$\,1.7 & 5 & \checkmark \\
+FedGT~\cite{fedgt} & 66.3\,$\pm$\,1.1 & 124 & -- \\
+FLTrust~\cite{fltrust} & 61.3\,$\pm$\,2.4 & -- & -- \\
+Median & \textit{running} & -- & -- \\
+Geo-median/RFA~\cite{rfa} & \textit{running} & -- & -- \\
+Multi-Krum & \textit{running} & -- & -- \\
+Bulyan~\cite{bulyan} & \textit{running} & -- & -- \\
+Trimmed mean & \textit{running} & -- & -- \\
+Mean & \textit{running} & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}

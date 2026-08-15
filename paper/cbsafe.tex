@@ -509,8 +509,8 @@ protocol (public keys, ciphertexts, shares, masked vectors), not modeled.
 \emph{Reproducibility:} Python 3.12, PyTorch 2.5.0 (CUDA 12.4), liboqs-python
 0.15.0, on a single NVIDIA RTX 2060 (6\,GB); one training round of 30 clients takes
 $\approx$21\,s. All runs use fixed seed 0 with deterministic partitioning and
-cluster assignment; CIFAR-10 and FashionMNIST results are averaged over three seeds
-(Edge-IIoTset over one), significance is by paired $t$-test with Holm correction,
+cluster assignment; results are averaged over three seeds at 50 rounds,
+significance is by paired $t$-test with Holm correction,
 and every experiment is reproducible from a per-run CSV and the released scripts.
 
 \section{Evaluation}\label{sec:eval}
@@ -602,13 +602,13 @@ run without hand-designing new ones---a concrete scalability ceiling in the meth
 not a tuning choice. At this scale each client holds only $\sim$100 samples and
 attacker exclusion consumes the first $\sim$15--20 rounds, so a short 30-round
 budget truncates every method mid-recovery; extending to 50 rounds lets recovery
-complete and collapses the between-seed spread (from $\pm$10 to $\pm$2,
+complete and collapses the between-seed spread (\textcolor{red}{from $\pm$10 to $\pm$2},
 Fig.~\ref{fig:convergence-n500}). At the converged horizon CB-SAFE+ reaches
-$66.4\%$ (last-five-round mean over three seeds), the coordinate-wise rules remain
+\textcolor{red}{$66.4\%$} (last-five-round mean over three seeds), the coordinate-wise rules remain
 laundered near chance, and FLTrust's trust weighting, which recovers fastest early,
-plateaus $\sim$5 points lower ($61.3\%$) because soft down-weighting never fully
+plateaus $\sim$5 points lower (\textcolor{red}{$61.3\%$}) because soft down-weighting never fully
 removes the laundered mass. CB-SAFE+ reaches that accuracy while excluding only
-$\sim$5 honest clients of 400. Among the methods that admit a configuration at this
+\textcolor{red}{$\sim$5} honest clients of 400. Among the methods that admit a configuration at this
 scale, CB-SAFE+ is the only one that pairs top-tier robustness with near-zero
 honest exclusion and post-quantum security.
 
@@ -646,9 +646,10 @@ clean cluster sums tracked $(1-f)^c$ closely: at $c{=}3$, observed $0.70/0.50/0.
 versus predicted $0.73/0.51/0.34$ for $f{=}0.1/0.2/0.3$.
 
 \begin{table}[t]
-\caption{Robustness over cluster sums ($c{=}3$, $k{=}10$, seed 0): final accuracy
-under sign-flip and backdoor ASR (lower better) vs malicious fraction $f$. Best in
-bold.}
+\caption{Robustness over cluster sums ($c{=}3$, $k{=}10$; 3 seeds, 50 rounds):
+last-five-round accuracy under sign-flip and backdoor ASR (lower better) vs malicious
+fraction $f$. Best in bold; \textcolor{red}{red} entries are provisional (trimmed is
+still re-running at 50 rounds).}
 \label{tab:robust}
 \centering
 \footnotesize
@@ -659,24 +660,24 @@ bold.}
 \cmidrule(lr){2-4}\cmidrule(l){5-7}
 Rule & $f{=}.1$ & $f{=}.2$ & $f{=}.3$ & $f{=}.1$ & $f{=}.2$ & $f{=}.3$\\
 \midrule
-Mean          & 29.6 & 10.0 & 10.0 & 87.3 & 94.4 & 96.7\\
-Trimmed mean  & 42.0 & 10.0 & 10.0 & 79.7 & 93.5 & 96.3\\
-Median        & 43.4 & 10.0 & 10.0 & \textbf{40.4} & 93.3 & 96.3\\
-Multi-Krum    & \textbf{52.9} & \textbf{42.7} & 16.9 & 86.4 & \textbf{92.4} & 97.2\\
-CB-SAFE+      & 51.7 & 37.6 & \textbf{42.8} & -- & 94.2 & \textbf{95.1}\\
+Mean          & 20.0 & 10.0 & 10.0 & 89.8 & 95.6 & 97.0\\
+Trimmed mean  & \textcolor{red}{45.4} & \textcolor{red}{10.0} & \textcolor{red}{10.0} & \textcolor{red}{74.7} & \textcolor{red}{94.4} & \textcolor{red}{96.1}\\
+Median        & 55.5 & 10.0 & 10.0 & 66.9 & 94.8 & 96.7\\
+Multi-Krum    & \textbf{60.5} & 45.3 & 21.4 & \textbf{63.7} & 94.8 & 97.0\\
+CB-SAFE+      & 60.5 & \textbf{57.5} & \textbf{57.4} & 88.1 & 95.1 & 97.0\\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \textbf{Sign-flip: laundering collapses coordinate-wise rules exactly at the
 predicted boundary} (Table~\ref{tab:robust}, Fig.~\ref{fig:dynamics}). At $f{=}0.1$ ($\approx$3 dirty
-clusters, within trim capacity) the static rules work: trimmed mean 42.0\%, median
-43.4\%, Multi-Krum 52.9\%, versus 29.6\% for the undefended mean and 59\% clean
+clusters, within trim capacity) the static rules work: trimmed mean \textcolor{red}{45.4\%}, median
+55.5\%, Multi-Krum 60.5\%, versus 20.0\% for the undefended mean and $\sim$60\% clean
 baseline. At $f{=}0.2$ ($\approx$5 dirty clusters) every coordinate-wise rule is
 pinned at exactly 10.0\% (random guessing), not because the model diverges but
 because the laundered $\pm h$ population drives the aggregate to zero
 (Proposition~\ref{prop:launder}), while Multi-Krum, which selects whole vectors
-rather than per-coordinate statistics, still reaches 42.7\% (16.9\% at $f{=}0.3$).
+rather than per-coordinate statistics, still reaches 45.3\% (21.4\% at $f{=}0.3$).
 Robust rules that rely on magnitude order statistics are structurally weakened by
 the very mechanism that provides privacy; vector-selection rules retain power.
 
@@ -702,13 +703,14 @@ lines mark chance and the clean baseline.}
 \textbf{The full baseline panel confirms the mechanism} (Fig.~\ref{fig:dynamics},
 Table~\ref{tab:signflip}). Averaged over three seeds, the eight rules separate into
 three regimes at $f{=}0.3$: the coordinate-wise rules (mean, trimmed mean, median)
-and the robust geometric median RFA \cite{rfa} are laundered to chance
-($\approx$10\%), confirming that location- and magnitude-based aggregation fails
-regardless of sophistication; the vector-selection family degrades but falls
-(Multi-Krum 20\%, Bulyan \cite{bulyan} 31\%); and only CB-SAFE+ holds near the
-clean baseline at 50.0\%, whereas FedGT's actual BCJR decoder \cite{fedgt}, run per
-round, collapses to chance ($10.0\%$) at this contamination by over-excluding honest
-clients (Table~\ref{tab:detect}). That RFA collapses while Bulyan merely degrades sharpens
+are laundered to chance ($\approx$10\%) and the robust geometric median RFA
+\cite{rfa} degrades to $\sim$20\%, confirming that location- and magnitude-based
+aggregation fails regardless of sophistication; the vector-selection family degrades
+but falls (Multi-Krum 21\%, Bulyan \cite{bulyan} 35\%); and only CB-SAFE+ holds near the
+clean baseline at 57.4\%, whereas FedGT's actual BCJR decoder \cite{fedgt}, run per
+round, degrades to 34\% on CIFAR-10 (and collapses to near-chance on FashionMNIST and
+EMNIST) at this contamination by over-excluding honest clients
+(Table~\ref{tab:detect}). That RFA collapses while Bulyan merely degrades sharpens
 Proposition~\ref{prop:launder}: laundering specifically defeats rules that trust the
 \emph{aggregate} direction or magnitude, precisely what cluster averaging preserves
 for the attacker, whereas whole-vector selection resists longer.
@@ -727,25 +729,23 @@ decoder~\cite{fedgt}. Best in bold.}
 \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(l){6-7}
 Method & caught$\uparrow$ & FP$\downarrow$ & caught$\uparrow$ & FP$\downarrow$ & caught$\uparrow$ & FP$\downarrow$\\
 \midrule
-FedGT~\cite{fedgt}  & 2.7/3 & 13.0 & 5.7/6 & 14.7 & 7.7/9 & 15.7\\
-CB-SAFE+ (ov1)   & 3/3 & 0.3 & 3/6 & 0.7 & 4/9 & 1.3\\
-CB-SAFE+ hybrid  & \textbf{3/3} & \textbf{0.0} & \textbf{6/6} & \textbf{0.7} & \textbf{9/9} & \textbf{0.3}\\
+FedGT~\cite{fedgt}  & 2.7/3 & 13.0 & 5.3/6 & 17.7 & 7.7/9 & 11.0\\
+CB-SAFE+ (ov1)   & 3/3 & 0.7 & 4/6 & 0.7 & 6/9 & 1.3\\
+CB-SAFE+ hybrid  & \textbf{3/3} & \textbf{0.3} & \textbf{6/6} & \textbf{0.3} & \textbf{9/9} & \textbf{0.0}\\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \textbf{CB-SAFE+ restores learning past the static breakdown}
 (Table~\ref{tab:robust}). With loss-probe
-flags and temporal suspicion, the defense identified all 3 of 3 attackers at
-$f{=}0.1$ (51.7\%, near the clean ceiling) and all 9 sign-flip attackers
-with \emph{zero} honest false positives at $f{=}0.3$ (seed~0; three-seed means in Table~\ref{tab:detect}), recovering to 42.8\%
+flags and temporal suspicion, the defense identifies all 3 of 3 attackers at
+$f{=}0.1$ (60.5\%, at the clean ceiling) and all 9 sign-flip attackers
+with \emph{zero} honest false positives at $f{=}0.3$ (three-seed means in Table~\ref{tab:detect}), recovering to 57.4\%
 accuracy where every static coordinate-wise rule sat at 10\% and Multi-Krum at
-16.9\%, comparable to the 39--41\% the median achieves \emph{without any privacy}
+21.4\%---exceeding even the 39--41\% the median achieves \emph{without any privacy}
 ($c{=}1$), i.e., the defense refunds the privacy dial's cost in rounds rather than
-anonymity. At $f{=}0.2$ per-round flag filtering alone recovers 37.6\% (exclusions
-are rare because $m{=}1$ laundered sums raise root loss only mildly); Multi-Krum's
-44\% remains stronger in this moderate regime, so the defense's advantage grows
-with attack severity and the two are complementary rather than ranked.
+anonymity. At $f{=}0.2$ it holds 57.5\% while Multi-Krum reaches only 45.3\%, so the
+defense's advantage over vector-selection rules grows with attack severity.
 Under label flipping (a weak attack in this regime: all rules land within
 44--52\%) the probe flags only the worst clusters and excludes conservatively (zero
 false positives at $f{=}0.2$), matching the best static rule.
@@ -756,7 +756,8 @@ across mean, trimmed mean, Multi-Krum, \emph{and} CB-SAFE+
 (Fig.~\ref{fig:backdoor}): backdoored cluster sums \emph{reduce} clean root loss
 and align with the honest direction, so they are invisible to loss- and
 direction-based tests alike. The one partial exception is the coordinate-wise
-median at $f{=}0.1$, which suppresses ASR to 40\%: order statistics can filter the
+median at $f{=}0.1$, which suppresses ASR to 67\% on CIFAR-10 (and to 42\% on
+FashionMNIST): order statistics can filter the
 trigger direction's coordinates when contamination is sparse. We therefore claim
 CB-SAFE+ for \emph{untargeted} model poisoning only; targeted trigger attacks under
 secure aggregation remain open, consistent with their difficulty even without
@@ -782,16 +783,16 @@ collapses to chance at $f{\ge}0.2$ (10.0\% on the 10-class image sets, 7.3\% on
 CB-SAFE+ tracks the clean baseline. The round-by-round view
 (Fig.~\ref{fig:dynamics}) shows this is not an endpoint artifact: the static rules
 decay progressively while CB-SAFE+ dips during warmup and recovers as exclusions
-fire. At $f{=}0.3$ CB-SAFE+ retains 84\%, high-$80$s,
-and 97\% of the no-attack accuracy on CIFAR-10, FashionMNIST, and Edge-IIoTset
+fire. At $f{=}0.3$ CB-SAFE+ retains $\sim$95\%, $\sim$99\%,
+and \textcolor{red}{$\sim$100\%} of the no-attack accuracy on CIFAR-10, FashionMNIST, and Edge-IIoTset
 respectively, versus 12--18\% for the worst static rule. Pooling all matched
 (dataset, $f$, seed) cells, CB-SAFE+ beats every baseline under a paired $t$-test
-with Holm correction: versus the mean by 48.3 points ($p{<}10^{-4}$), the median by
-37.7 ($p{=}3{\times}10^{-4}$), Multi-Krum by 11.9 ($p{=}9{\times}10^{-3}$), and
+with Holm correction: versus the mean by \textcolor{red}{48.3} points (\textcolor{red}{$p{<}10^{-4}$}), the median by
+\textcolor{red}{37.7} (\textcolor{red}{$p{=}3{\times}10^{-4}$}), Multi-Krum by \textcolor{red}{11.9} (\textcolor{red}{$p{=}9{\times}10^{-3}$}), and
 FedGT's actual BCJR decoder---over the three datasets where FedGT admits a
-configuration---by 23.1 ($p{=}5{\times}10^{-4}$). The
-Edge-IIoTset result is the sharpest: at $f{=}0.3$ CB-SAFE+ holds 61.5\% against a
-63.7\% clean baseline while mean, trimmed mean, and median all sit at 7.3\%.
+configuration---by \textcolor{red}{23.1} (\textcolor{red}{$p{=}5{\times}10^{-4}$}). The
+Edge-IIoTset result is the sharpest: at $f{=}0.3$ CB-SAFE+ holds \textcolor{red}{61.5\%} against a
+\textcolor{red}{63.7\%} clean baseline while mean, trimmed mean, and median all sit at \textcolor{red}{7.3\%}.
 
 \input{../results/tables/table1_signflip.tex}
 
@@ -818,15 +819,14 @@ predicted honest rate $p_h{=}1-(1-f)^{c-1}$; warmup shaded.}
 \subsection{Secondary Attack: Label Flipping}
 Label flipping is a far milder attack than sign-flip, and it doubles as a control.
 Table~\ref{tab:labelflip} shows that \emph{no} coordinate-wise rule collapses: the
-undefended mean retains 47--63\% at $f{=}0.3$, versus 10\% under sign-flip. That
+undefended mean retains 53--64\% at $f{=}0.3$, versus 10\% under sign-flip. That
 contrast isolates the laundering mechanism (Proposition~\ref{prop:launder}) as the
 cause of the sign-flip failures, rather than any generic fragility of the setup.
-CB-SAFE+ stays at or above every baseline, and on FashionMNIST it holds 86\% at
-$f{=}0.3$ where the mean falls to 63\%. FedGT's actual BCJR decoder survives this
+CB-SAFE+ stays at or above every baseline, and on FashionMNIST it holds 87\% at
+$f{=}0.3$ where the mean falls to 59\%. FedGT's actual BCJR decoder survives this
 mild attack---unlike its sign-flip collapse---but trails CB-SAFE+ on CIFAR-10
-($\sim$45--48\% vs $\sim$51--54\%) and is far noisier between seeds ($\pm6.8$ vs
-$\pm0.2$), so even where its accuracy signal is informative it is the less stable
-identifier.
+($\sim$50--56\% vs $\sim$56--61\%) and is noisier between seeds, so even where its
+accuracy signal is informative it is the less stable identifier.
 
 \input{../results/tables/table3_labelflip.tex}
 

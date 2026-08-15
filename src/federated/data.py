@@ -31,6 +31,34 @@ FMNIST_TF = transforms.Compose(
     [transforms.ToTensor(), transforms.Normalize((0.2860,), (0.3530,))])
 
 
+class _FastDS(torch.utils.data.Dataset):
+    """Dataset whose samples are already transformed and held as plain tensors, so
+    __getitem__ is a tensor index rather than a per-sample PIL decode+transform.
+    Exposes `.targets` (in original order) for the Dirichlet partitioner."""
+
+    def __init__(self, X: torch.Tensor, targets: torch.Tensor):
+        self.X = X
+        self.targets = targets
+
+    def __len__(self) -> int:
+        return self.X.shape[0]
+
+    def __getitem__(self, i):
+        return self.X[i], self.targets[i]
+
+
+def _materialize(ds) -> "_FastDS":
+    """Run `ds`'s (slow, PIL-based) transform ONCE and cache the result as tensors.
+    Produces bit-identical samples to `ds` in the same index order, so downstream
+    partitions/shuffles/batches are unchanged -- only far faster to iterate."""
+    loader = DataLoader(ds, batch_size=4096, shuffle=False, num_workers=0)
+    xs, ys = [], []
+    for x, y in loader:
+        xs.append(x)
+        ys.append(y)
+    return _FastDS(torch.cat(xs), torch.cat(ys))
+
+
 def load_cifar10() -> tuple[datasets.CIFAR10, datasets.CIFAR10]:
     train = datasets.CIFAR10(DATA_ROOT, train=True, download=True, transform=TRAIN_TF)
     test = datasets.CIFAR10(DATA_ROOT, train=False, download=True, transform=TEST_TF)
@@ -38,16 +66,17 @@ def load_cifar10() -> tuple[datasets.CIFAR10, datasets.CIFAR10]:
 
 
 def load_dataset(name: str):
-    """Return (train, test) for a supported dataset name."""
+    """Return (train, test) for a supported dataset name, pre-materialized to tensors
+    (transform applied once) so per-round iteration is a tensor index, not a per-sample
+    PIL decode. Samples are bit-identical to the raw torchvision datasets."""
     if name == "cifar10":
-        return load_cifar10()
-    if name == "fmnist":
+        train, test = load_cifar10()
+    elif name == "fmnist":
         train = datasets.FashionMNIST(FMNIST_ROOT, train=True, download=True,
                                       transform=FMNIST_TF)
         test = datasets.FashionMNIST(FMNIST_ROOT, train=False, download=True,
                                      transform=FMNIST_TF)
-        return train, test
-    if name == "emnist":
+    elif name == "emnist":
         # EMNIST-balanced (47 classes). Data root on D: (C: is out of space).
         tf = transforms.Compose([transforms.ToTensor(),
                                  transforms.Normalize((0.1751,), (0.3332,))])
@@ -55,8 +84,9 @@ def load_dataset(name: str):
                                 download=True, transform=tf)
         test = datasets.EMNIST(DATA_ROOT, split="balanced", train=False,
                                download=True, transform=tf)
-        return train, test
-    raise ValueError(f"unknown dataset {name!r}")
+    else:
+        raise ValueError(f"unknown dataset {name!r}")
+    return _materialize(train), _materialize(test)
 
 
 def dirichlet_partition(labels: np.ndarray, n_clients: int, alpha: float, seed: int,

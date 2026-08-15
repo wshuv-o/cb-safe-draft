@@ -92,9 +92,13 @@ def main():
     ap.add_argument("--shard", type=int, default=0)
     ap.add_argument("--start", type=int, default=0)          # job-index slice (for splitting across machines)
     ap.add_argument("--end", type=int, default=10 ** 9)
+    ap.add_argument("--datasets", type=str, default="")      # comma-sep filter, e.g. "fmnist,emnist" -> run those first
     args = ap.parse_args()
 
     jobs = job_list()[args.start:args.end]
+    if args.datasets:
+        keep = set(args.datasets.split(","))
+        jobs = [j for j in jobs if j["ds"] in keep]
     mine = [j for i, j in enumerate(jobs) if i % args.workers == args.shard]
     todo = [j for j in mine if not done(out_path(j))]
     print(f"shard {args.shard}/{args.workers}: {len(todo)} of {len(mine)} pending", flush=True)

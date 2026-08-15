@@ -16,10 +16,21 @@ TBL = os.path.join(R, "tables")
 os.makedirs(TBL, exist_ok=True)
 DSROOT = {"CIFAR-10": "", "FashionMNIST": "fmnist",
           "EMNIST": "kaggle/emnist", "Edge-IIoTset": "kaggle/edgeiiot"}
+# dsdir -> dataset name used by the faithful-FedGT filenames
+DSNAME = {"": "cifar10", "fmnist": "fmnist", "kaggle/emnist": "emnist",
+          "kaggle/edgeiiot": "edgeiiot"}
 FS = [0.1, 0.2, 0.3]
+SEEDS_FINAL = 3          # a cell is "final" only with this many seeds at >=50 rounds
 
 
 def runs(dsdir, agg, attack, f):
+    # FedGT: read the faithful (BCJR) results, which live in results/fedgt_faithful/
+    # under a different naming (faithful_fedgt_{ds}_{attack}_f{XX}_N30_s{seed}.csv).
+    if agg == "fedgt":
+        dsn = DSNAME.get(dsdir)
+        pat = os.path.join(R, "fedgt_faithful",
+                           f"faithful_fedgt_{dsn}_{attack}_f{int(f*100):02d}_N30_s*.csv")
+        return [p for p in glob.glob(pat) if "oneshot" not in p]
     root = os.path.join(R, dsdir) if dsdir else R
     out = []
     for p in glob.glob(os.path.join(root, f"robust_{attack}_{agg}_f{int(f*100):02d}_c3_s*.csv")):
@@ -31,22 +42,34 @@ def runs(dsdir, agg, attack, f):
 
 def val(paths, asr=False):
     vs = []
+    rounds_ok = True
     for p in paths:
-        d = pd.read_csv(p).tail(5)
+        full = pd.read_csv(p)
+        if len(full) < 50:          # stale (e.g. old 30-round) or truncated run
+            rounds_ok = False
+        d = full.tail(5)
         col = "asr" if asr else "acc"
         if col in d.columns:
             vs.append(d[col].mean() * 100)
     if not vs:
         return None
-    return (np.mean(vs), np.std(vs), len(vs))
+    final = (len(vs) >= SEEDS_FINAL and rounds_ok)   # complete 3-seed, 50-round data
+    return (np.mean(vs), np.std(vs), len(vs), final)
+
+
+def _red(txt):
+    return f"\\textcolor{{red}}{{{txt}}}"
 
 
 def fmt(v, bold=False):
     if v is None:
-        return "$-$"          # pending: number not computed yet
-    m, s, n = v
+        return _red("$-$")            # PROVISIONAL: experiment not run yet
+    m, s, n = v[0], v[1], v[2]
+    final = v[3] if len(v) > 3 else True
     txt = f"{m:.1f}\\,{{\\scriptsize$\\pm${s:.1f}}}" if n > 1 else f"{m:.1f}"
-    return f"\\textbf{{{txt}}}" if bold else txt
+    if bold:
+        txt = f"\\textbf{{{txt}}}"
+    return txt if final else _red(txt)   # red = partial seeds / <50 rounds -> update later
 
 
 def ident(dsdir, agg, f):
@@ -106,10 +129,10 @@ main_methods = [("mean", "FedAvg (mean)"), ("trimmed", "Trimmed mean"), ("median
                 ("fltrust", "FLTrust"), ("fedgt", "FedGT [TIFS'25]"),
                 ("hybrid_ov4", "\\textbf{CB-SAFE+ (ours)}")]
 main_cap = (r"Test accuracy (\%) under the sign-flip (laundering) attack across four datasets and "
-            r"malicious fractions $f$ (mean\,$\pm$\,std over 3 seeds for CIFAR-10/FashionMNIST/"
-            r"Edge-IIoTset, and for CB-SAFE+ and FedGT on EMNIST; other EMNIST baselines are single "
-            r"seed). Higher is better; best per column in bold. A dash ($-$) marks a configuration "
-            r"not evaluated. CB-SAFE+ variants are ablated in Table~\ref{tab:ablation-variants}.")
+            r"malicious fractions $f$ (mean\,$\pm$\,std over 3 seeds, 50 rounds). "
+            r"Higher is better; best per column in bold. Red entries are provisional (runs still "
+            r"completing). A dash ($-$) marks a configuration not yet evaluated. "
+            r"CB-SAFE+ variants are ablated in Table~\ref{tab:ablation-variants}.")
 prev = build_signflip_table(main_methods, main_cap, "tab:signflip", "table1_signflip.tex")
 print("=== TABLE I: sign-flip robustness, main (preview, acc%) ===")
 print("\n".join(prev))
@@ -129,11 +152,12 @@ print("\n".join(prevA))
 
 # TABLE (secondary): label-flip accuracy, same roster as the main table.
 lf_cap = (r"Test accuracy (\%) under the label-flip attack across four datasets "
-          r"and malicious fractions $f$ (single seed, except CB-SAFE+ and FedGT on EMNIST, "
-          r"which are mean\,$\pm$\,std over 3 seeds). Label flipping is a mild attack: unlike sign-flip "
+          r"and malicious fractions $f$ (mean\,$\pm$\,std over 3 seeds, 50 rounds). "
+          r"Label flipping is a mild attack: unlike sign-flip "
           r"(Table~\ref{tab:signflip}), coordinate-wise rules do \emph{not} collapse, which "
           r"isolates laundering as the mechanism behind the sign-flip failures. Higher is better; "
-          r"best per column in bold. A dash ($-$) marks a configuration not evaluated.")
+          r"best per column in bold. Red entries are provisional. A dash ($-$) marks a configuration "
+          r"not evaluated.")
 prevLF = build_signflip_table(main_methods, lf_cap, "tab:labelflip", "table3_labelflip.tex",
                               attack="labelflip")
 print("\n=== TABLE (secondary): label-flip (preview, acc%) ===")
