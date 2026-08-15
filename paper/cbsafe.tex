@@ -203,6 +203,16 @@ temporal group-testing defense (CB-SAFE+) that matches FedGT's attacker
 identification at far lower false-positive cost, and scales past FedGT's fixed
 small-population design.
 
+\input{../results/tables/table_related.tex}
+
+Table~\ref{tab:related} summarizes this landscape across six axes. Existing
+post-quantum FL is lattice-based and, with one recent exception \cite{byzpqfl2026},
+not Byzantine-robust; classical robust-aggregation and detection methods are neither
+post-quantum nor compatible with secure aggregation; and FedGT---the closest design---is
+neither post-quantum nor scalable beyond its fixed $n{\le}31$ code. CB-SAFE+ is, to our
+knowledge, the only framework that is simultaneously code-based post-quantum,
+secure-aggregating, Byzantine-robust, identifies malicious clients, and scales.
+
 \section{The CB-SAFE Framework}
 
 \begin{figure*}[tp]

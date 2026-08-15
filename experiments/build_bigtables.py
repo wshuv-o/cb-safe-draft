@@ -124,9 +124,10 @@ def build_signflip_table(methods, caption, label, outfile, attack="signflip"):
 
 
 # TABLE I (main): baselines + FedGT + our flagship (hybrid) only.
-main_methods = [("mean", "FedAvg (mean)"), ("trimmed", "Trimmed mean"), ("median", "Median"),
-                ("krum", "Multi-Krum"), ("bulyan", "Bulyan"), ("geomedian", "Geo-median / RFA"),
-                ("fltrust", "FLTrust"), ("fedgt", "FedGT [TIFS'25]"),
+main_methods = [("mean", "FedAvg (mean)~\\cite{mcmahan2017}"), ("trimmed", "Trimmed mean~\\cite{yin2018}"),
+                ("median", "Median~\\cite{yin2018}"), ("krum", "Multi-Krum~\\cite{blanchard2017}"),
+                ("bulyan", "Bulyan~\\cite{bulyan}"), ("geomedian", "Geo-median / RFA~\\cite{rfa}"),
+                ("fltrust", "FLTrust~\\cite{fltrust}"), ("fedgt", "FedGT~\\cite{fedgt}"),
                 ("hybrid_ov4", "\\textbf{CB-SAFE+ (ours)}")]
 main_cap = (r"Test accuracy (\%) under the sign-flip (laundering) attack across four datasets and "
             r"malicious fractions $f$ (mean\,$\pm$\,std over 3 seeds, 50 rounds). "

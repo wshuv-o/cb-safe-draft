@@ -1,0 +1,28 @@
+\begin{table*}[t]\centering\footnotesize
+\caption{CB-SAFE+ versus representative and recent (2024--2026) federated-learning
+defenses. \checkmark\ = supported, $\times$ = not. \emph{Code-based} = post-quantum
+confidentiality from a code-based KEM (HQC) rather than a lattice/other assumption.
+\emph{Identifies} = explicit per-client identification and exclusion of malicious
+clients (beyond merely robust aggregation). \emph{Scales} = no hard client-count cap
+in the published design ($N{>}31$; FedGT's parity-check code is fixed for $n{\le}31$).
+To our knowledge CB-SAFE+ is the only framework that combines a code-based post-quantum
+KEM with secure aggregation, Byzantine robustness, malicious-client identification, and
+scaling.}
+\label{tab:related}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}lcccccc@{}}\toprule
+Method & Post-quantum & Code-based & Secure agg. & Byz.-robust & Identifies & Scales ($N{>}31$)\\\midrule
+Secure aggregation~\cite{bonawitz2017}                 & $\times$   & $\times$   & \checkmark & $\times$   & $\times$   & \checkmark\\
+Scalable secure agg.~\cite{bell2020}                   & $\times$   & $\times$   & \checkmark & $\times$   & $\times$   & \checkmark\\
+Krum / Bulyan / median~\cite{blanchard2017,yin2018,bulyan} & $\times$ & $\times$   & $\times$   & \checkmark & $\times$   & \checkmark\\
+Geo-median / RFA~\cite{rfa}                             & $\times$   & $\times$   & $\times$   & \checkmark & $\times$   & \checkmark\\
+FLTrust~\cite{fltrust}                                  & $\times$   & $\times$   & $\times$   & \checkmark & $\times$   & \checkmark\\
+FLDetector~\cite{fldetector2022}                       & $\times$   & $\times$   & $\times$   & \checkmark & \checkmark & \checkmark\\
+FedGT~\cite{fedgt}                                      & $\times$   & $\times$   & \checkmark & \checkmark & \checkmark & $\times$\\
+PQSF~\cite{pqsf2024}                                    & \checkmark & $\times$   & \checkmark & $\times$   & $\times$   & \checkmark\\
+PQ cross-silo FL~\cite{qinxu2025}                       & \checkmark & $\times$   & \checkmark & $\times$   & $\times$   & \checkmark\\
+PQ fog--edge FL~\cite{singh2025pqfog}                   & \checkmark & $\times$   & \checkmark & $\times$   & $\times$   & \checkmark\\
+Byzantine PQ-FL~\cite{byzpqfl2026}                      & \checkmark & $\times$   & \checkmark & \checkmark & $\times$   & \checkmark\\
+CQSA~\cite{cqsa2026}                                    & \checkmark & $\times$   & \checkmark & \checkmark & $\times$   & \checkmark\\
+\textbf{CB-SAFE+ (ours)}                                & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark\\
+\bottomrule\end{tabular}\end{table*}
