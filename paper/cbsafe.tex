@@ -183,11 +183,16 @@ and backdoor \cite{bagdasaryan2020,wangtails2020} variants, and their defenses a
 large literature: robust aggregation rules such as Multi-Krum \cite{blanchard2017},
 coordinate-wise trimmed mean and median \cite{yin2018}, Bulyan \cite{bulyan}, and the
 geometric-median aggregator RFA \cite{rfa}; trust-bootstrapped filtering
-(FLTrust \cite{fltrust}, Zeno \cite{zeno}); malicious-client detection
-(FLDetector \cite{fldetector2022}); and backdoor-specific defenses
-(FLAME \cite{flame2022}). These operate on \emph{individual} client updates,
-which secure aggregation deliberately hides, creating the privacy--robustness
-tension we address.
+(FLTrust \cite{fltrust}, Zeno \cite{zeno}); malicious-client detection, including
+recent 2025--26 methods (FLDetector \cite{fldetector2022}, FLAegis \cite{flaegis2025},
+SafeFL \cite{safefl2025}, and loss-trend monitoring \cite{flltd2026}, whose
+temporal-loss signal parallels our root-loss probe); and backdoor-specific defenses
+(FLAME \cite{flame2022}). These detectors inspect \emph{individual} client updates,
+which secure aggregation deliberately hides. Privacy-preserving robust aggregators
+narrow that gap (PriRoAgg \cite{priroagg2024}, Giskard \cite{giskard2026}), but obtain
+confidentiality from lattice/MPC rather than a post-quantum code-based KEM and do not
+identify individual attackers. This is the privacy--robustness--post-quantum tension we
+address.
 
 \textbf{Cluster-based robust aggregation.} Reconciling Byzantine resilience
 with secure aggregation is an established goal: BREA does so through
@@ -1146,6 +1151,20 @@ Access}, vol.\ 10, pp.\ 40281--40306, 2022.
 \bibitem{hsu2019} T.-M.\ H.\ Hsu, H.\ Qi, and M.\ Brown, ``Measuring the effects
 of non-identical data distribution for federated visual classification,''
 arXiv:1909.06335, 2019.
+\bibitem{priroagg2024} S.\ Hou, S.\ Li, T.\ Jahani-Nezhad, and G.\ Caire, ``PriRoAgg:
+Achieving robust model aggregation with minimum privacy leakage for federated
+learning,'' \emph{IEEE Trans.\ Inf.\ Forensics Security}, 2024.
+\bibitem{giskard2026} O.\ Touat, C.\ Sabater, M.\ Maouche, and S.\ Ben~Mokhtar,
+``Giskard: Byzantine robust and confidential aggregation for large-scale decentralized
+learning,'' arXiv:2606.19129, 2026.
+\bibitem{flaegis2025} E.\ M\'armol~Campos, A.\ Gonz\'alez~Vidal, J.\ L.\
+Hern\'andez~Ramos, and A.\ Skarmeta, ``FLAegis: A two-layer defense framework for
+federated learning against poisoning attacks,'' arXiv:2508.18737, 2025.
+\bibitem{safefl2025} Z.\ Dou, J.\ Wang, W.\ Sun, Z.\ Liu, and M.\ Fang, ``Toward
+malicious clients detection in federated learning,'' arXiv:2505.09110, 2025.
+\bibitem{flltd2026} D.\ K.\ Bhaskar, B.\ Minimol, and V.\ P.\ Binu, ``Robust federated
+learning for malicious clients using loss trend deviation detection,''
+arXiv:2601.20915, 2026.
 \end{thebibliography}
 
 \end{document}
