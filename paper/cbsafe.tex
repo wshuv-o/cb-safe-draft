@@ -604,11 +604,11 @@ attacker exclusion consumes the first $\sim$15--20 rounds, so a short 30-round
 budget truncates every method mid-recovery; extending to 50 rounds lets recovery
 complete and collapses the between-seed spread (from $\pm$10 to $\pm$2,
 Fig.~\ref{fig:convergence-n500}). At the converged horizon CB-SAFE+ reaches
-\textcolor{red}{$66.4\%$} (last-five-round mean over three seeds), the coordinate-wise rules remain
+$65.7\%$ (last-five-round mean over three seeds), the coordinate-wise rules remain
 laundered near chance, and FLTrust's trust weighting, which recovers fastest early,
-plateaus $\sim$5 points lower ($61.3\%$) because soft down-weighting never fully
+plateaus $\sim$4 points lower ($61.3\%$) because soft down-weighting never fully
 removes the laundered mass. CB-SAFE+ reaches that accuracy while excluding only
-\textcolor{red}{$\sim$5} honest clients of 400 \textcolor{red}{(non-private ov4; privacy-safe re-run in progress)}. Among the methods that admit a configuration at this
+$11$ honest clients of 400 (2.75\%). Among the methods that admit a configuration at this
 scale, CB-SAFE+ is the only one that pairs top-tier robustness with near-zero
 honest exclusion and post-quantum security.
 
@@ -648,8 +648,7 @@ versus predicted $0.73/0.51/0.34$ for $f{=}0.1/0.2/0.3$.
 \begin{table}[t]
 \caption{Robustness over cluster sums ($c{=}3$, $k{=}10$; 3 seeds, 50 rounds):
 last-five-round accuracy under sign-flip and backdoor ASR (lower better) vs malicious
-fraction $f$. Best in bold; \textcolor{red}{red} entries are provisional (trimmed is
-still re-running at 50 rounds).}
+fraction $f$. Best in bold.}
 \label{tab:robust}
 \centering
 \footnotesize
@@ -661,7 +660,7 @@ still re-running at 50 rounds).}
 Rule & $f{=}.1$ & $f{=}.2$ & $f{=}.3$ & $f{=}.1$ & $f{=}.2$ & $f{=}.3$\\
 \midrule
 Mean          & 20.0 & 10.0 & 10.0 & 89.8 & 95.6 & 97.0\\
-Trimmed mean  & \textcolor{red}{45.4} & \textcolor{red}{10.0} & \textcolor{red}{10.0} & \textcolor{red}{74.7} & \textcolor{red}{94.4} & \textcolor{red}{96.1}\\
+Trimmed mean  & 51.7 & 10.0 & 10.0 & 85.7 & 95.1 & 96.7\\
 Median        & 55.5 & 10.0 & 10.0 & 66.9 & 94.8 & 96.7\\
 Multi-Krum    & \textbf{60.5} & 45.3 & 21.4 & \textbf{63.7} & 94.8 & 97.0\\
 CB-SAFE+      & 60.5 & \textbf{57.5} & \textbf{57.4} & 88.1 & 95.1 & 97.0\\
@@ -671,7 +670,7 @@ CB-SAFE+      & 60.5 & \textbf{57.5} & \textbf{57.4} & 88.1 & 95.1 & 97.0\\
 
 \textbf{Sign-flip: laundering collapses coordinate-wise rules exactly at the
 predicted boundary} (Table~\ref{tab:robust}, Fig.~\ref{fig:dynamics}). At $f{=}0.1$ ($\approx$3 dirty
-clusters, within trim capacity) the static rules work: trimmed mean \textcolor{red}{45.4\%}, median
+clusters, within trim capacity) the static rules work: trimmed mean 51.7\%, median
 55.5\%, Multi-Krum 60.5\%, versus 20.0\% for the undefended mean and $\sim$60\% clean
 baseline. At $f{=}0.2$ ($\approx$5 dirty clusters) every coordinate-wise rule is
 pinned at exactly 10.0\% (random guessing), not because the model diverges but
@@ -787,10 +786,10 @@ fire. At $f{=}0.3$ CB-SAFE+ retains $\sim$95\%, $\sim$99\%,
 and $\sim$99\% of the no-attack accuracy on CIFAR-10, FashionMNIST, and Edge-IIoTset
 respectively, versus 12--18\% for the worst static rule. Pooling all matched
 (dataset, $f$, seed) cells, CB-SAFE+ beats every baseline under a paired $t$-test
-with Holm correction: versus the mean by \textcolor{red}{48.3} points (\textcolor{red}{$p{<}10^{-4}$}), the median by
-\textcolor{red}{37.7} (\textcolor{red}{$p{=}3{\times}10^{-4}$}), Multi-Krum by \textcolor{red}{11.9} (\textcolor{red}{$p{=}9{\times}10^{-3}$}), and
+with Holm correction: versus the mean by 57.3 points ($p{<}10^{-15}$), the median by
+44.0 ($p{<}10^{-8}$), Multi-Krum by 18.6 ($p{<}10^{-3}$), and
 FedGT's actual BCJR decoder---over the three datasets where FedGT admits a
-configuration---by \textcolor{red}{23.1} (\textcolor{red}{$p{=}5{\times}10^{-4}$}). The
+configuration---by 21.0 ($p{<}10^{-3}$). The
 Edge-IIoTset result is the sharpest: at $f{=}0.3$ CB-SAFE+ holds 64.5\% against a
 $\sim$65\% clean baseline while mean, trimmed mean, and median all sit at 7.4\%.
 

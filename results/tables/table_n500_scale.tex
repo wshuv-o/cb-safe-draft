@@ -2,10 +2,10 @@
 \caption{Scaling to $N{=}500$ clients (FashionMNIST, sign-flip $f{=}0.2$, 50 rounds,
 Dirichlet $\alpha{=}0.5$). Test accuracy is the mean of the final five rounds over
 seeds $\{0,2,3\}$ ($\pm$1 SD); honest FP is the number of honest clients (of 400)
-wrongly excluded. At a converged horizon the two group-testing methods are
-statistically tied at the top while coordinate-wise rules collapse; only CB-SAFE+
-holds that accuracy without discarding honest clients, and is post-quantum secure.
-\textcolor{red}{CB-SAFE+ row provisional: non-private ov4; privacy-safe temporal re-run in progress.}}
+wrongly excluded. FedGT has no configuration at this scale---its parity-check design
+is hardcoded for $n{\le}31$~\cite{fedgt}, a concrete scalability ceiling. Only CB-SAFE+
+holds near-clean accuracy while coordinate-wise rules collapse, without discarding
+honest clients and with post-quantum security.}
 \label{tab:scale-n500}
 \centering
 \footnotesize
@@ -14,8 +14,8 @@ holds that accuracy without discarding honest clients, and is post-quantum secur
 \toprule
 Rule & Acc.\ (\%) & Honest FP\,$\downarrow$ & PQC\\
 \midrule
-\textbf{CB-SAFE+ (ours)} & \textcolor{red}{\textbf{66.4}\,$\pm$\,1.7} & \textcolor{red}{5} & \checkmark \\
-FedGT~\cite{fedgt} & 66.3\,$\pm$\,1.1 & 124 & -- \\
+\textbf{CB-SAFE+ (ours)} & \textbf{65.7}\,$\pm$\,2.3 & 11 & \checkmark \\
+FedGT~\cite{fedgt} & $-$ (no config, $n{\le}31$) & -- & -- \\
 FLTrust~\cite{fltrust} & 61.3\,$\pm$\,2.4 & -- & -- \\
 Median & 25.1\,$\pm$\,7.5 & -- & -- \\
 Geo-median/RFA~\cite{rfa} & 28.9\,$\pm$\,9.9 & -- & -- \\

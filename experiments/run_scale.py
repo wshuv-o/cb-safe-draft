@@ -77,7 +77,8 @@ def main():
         client_dls, test_dl, server_dl = prepared[N]
         cfg = Config(n_clients=N, rounds=args.rounds, aggregation="cluster", aggregator=agg,
                      cluster_size=3, attack=args.attack, f_malicious=args.f, seed=args.seed,
-                     dataset=args.dataset, overlap=ov, participation=args.participation,
+                     dataset=args.dataset, overlap=ov, temporal_overlap=(ov == 4),
+                     participation=args.participation,
                      n_classes=models.n_classes_of(args.dataset))
         print(f"[{i+1}/{len(jobs)}] run {name}", flush=True)
         try:

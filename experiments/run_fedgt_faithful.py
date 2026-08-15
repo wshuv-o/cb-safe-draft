@@ -41,8 +41,14 @@ def group_recall(flat, loader, dataset, n_classes):
 
 
 def prep(seed, ds, n=30, root=200):
-    train, test = data.load_dataset(ds)
-    parts = data.dirichlet_partition(np.array(train.targets), n, 0.5, seed)
+    if ds == "edgeiiot":
+        from src.federated import kaggle_datasets as kd
+        csvp = kd.find_edgeiiot_csv(os.environ.get("EDGEIIOT_ROOT", "/kaggle/input"))
+        train, test, lab = kd.load_edgeiiot(csvp, seed=seed)
+        parts = data.dirichlet_partition(lab, n, 0.5, seed)
+    else:
+        train, test = data.load_dataset(ds)
+        parts = data.dirichlet_partition(np.array(train.targets), n, 0.5, seed)
     rng = np.random.default_rng(seed + 99)
     ridx = set(rng.choice(len(train), size=root, replace=False).tolist())
     parts = [np.array([i for i in p if i not in ridx]) for p in parts]

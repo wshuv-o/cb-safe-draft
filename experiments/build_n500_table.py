@@ -33,12 +33,15 @@ def load(stem, seed):
 
 
 def stats(stem):
-    """last-5-round mean accuracy over seeds, and mean final honest-FP."""
+    """Mean of the last five of the FIRST 50 rounds over seeds, and mean honest-FP at
+    round 50. Capped at 50 rounds so longer CB-SAFE+ runs compare fairly against the
+    50-round baselines."""
     accs, fps = [], []
     for s in SEEDS:
         r = load(stem, s)
         if r is None or len(r) < 50:
             return None
+        r = r[:50]
         accs.append(np.mean([float(x["acc"]) for x in r[-5:]]))
         fps.append(int(r[-1].get("excluded_honest", 0)))
     a = np.array(accs) * 100
@@ -49,12 +52,18 @@ rows_tex = []
 best_acc = -1
 computed = {}
 for stem, name, ident, pqc in ROWS:
+    if stem == "fedgt":          # faithful FedGT is hardcoded n=30 -> no config at N=500
+        computed[stem] = None
+        continue
     st = stats(stem)
     computed[stem] = st
     if st and st[0] > best_acc:
         best_acc = st[0]
 
 for stem, name, ident, pqc in ROWS:
+    if stem == "fedgt":
+        rows_tex.append(f"{name} & $-$ (no config, $n{{\\le}}31$) & -- & -- \\\\")
+        continue
     st = computed[stem]
     if st is None:
         rows_tex.append(f"{name} & \\textit{{running}} & -- & -- \\\\")
@@ -71,9 +80,10 @@ table = r"""\begin{table}[t]
 \caption{Scaling to $N{=}500$ clients (FashionMNIST, sign-flip $f{=}0.2$, 50 rounds,
 Dirichlet $\alpha{=}0.5$). Test accuracy is the mean of the final five rounds over
 seeds $\{0,2,3\}$ ($\pm$1 SD); honest FP is the number of honest clients (of 400)
-wrongly excluded. At a converged horizon the two group-testing methods are
-statistically tied at the top while coordinate-wise rules collapse; only CB-SAFE+
-holds that accuracy without discarding honest clients, and is post-quantum secure.}
+wrongly excluded. FedGT has no configuration at this scale---its parity-check design
+is hardcoded for $n{\le}31$~\cite{fedgt}, a concrete scalability ceiling. Only CB-SAFE+
+holds near-clean accuracy while coordinate-wise rules collapse, without discarding
+honest clients and with post-quantum security.}
 \label{tab:scale-n500}
 \centering
 \footnotesize
