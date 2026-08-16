@@ -27,6 +27,12 @@ results/**/checkpoints/
 results/hb_*.txt
 results/figs/_shot_*.png
 
+# Derived page/slide PNG renders (not source)
+paper/full_png/
+paper/method_png/
+paper/slides_png/
+paper/slide*.png
+
 # Env
 .venv/
 .env
