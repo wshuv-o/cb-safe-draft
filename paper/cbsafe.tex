@@ -660,31 +660,8 @@ unmasking, negligible against the $\sim$21\,s of local training per round.
 clean cluster sums tracked $(1-f)^c$ closely: at $c{=}3$, observed $0.70/0.50/0.40$
 versus predicted $0.73/0.51/0.34$ for $f{=}0.1/0.2/0.3$.
 
-\begin{table}[t]
-\caption{Robustness over cluster sums ($c{=}3$, $k{=}10$; 3 seeds, 50 rounds):
-last-five-round accuracy under sign-flip and backdoor ASR (lower better) vs malicious
-fraction $f$. Best in bold.}
-\label{tab:robust}
-\centering
-\footnotesize
-\setlength{\tabcolsep}{3.2pt}
-\begin{tabular}{@{}lrrrrrr@{}}
-\toprule
-& \multicolumn{3}{c}{Sign-flip acc.\ (\%)} & \multicolumn{3}{c}{Backdoor ASR (\%)}\\
-\cmidrule(lr){2-4}\cmidrule(l){5-7}
-Rule & $f{=}.1$ & $f{=}.2$ & $f{=}.3$ & $f{=}.1$ & $f{=}.2$ & $f{=}.3$\\
-\midrule
-Mean          & 20.0 & 10.0 & 10.0 & 89.8 & 95.6 & 97.0\\
-Trimmed mean  & 51.7 & 10.0 & 10.0 & 85.7 & 95.1 & 96.7\\
-Median        & 55.5 & 10.0 & 10.0 & 66.9 & 94.8 & 96.7\\
-Multi-Krum    & \textbf{60.5} & 45.3 & 21.4 & \textbf{63.7} & 94.8 & 97.0\\
-CB-SAFE+      & 60.5 & \textbf{57.5} & \textbf{57.4} & 88.1 & 95.1 & 97.0\\
-\bottomrule
-\end{tabular}
-\end{table}
-
 \textbf{Sign-flip: laundering collapses coordinate-wise rules exactly at the
-predicted boundary} (Table~\ref{tab:robust}, Fig.~\ref{fig:dynamics}). At $f{=}0.1$ ($\approx$3 dirty
+predicted boundary} (Table~\ref{tab:signflip}, Fig.~\ref{fig:dynamics}). At $f{=}0.1$ ($\approx$3 dirty
 clusters, within trim capacity) the static rules work: trimmed mean 51.7\%, median
 55.5\%, Multi-Krum 60.5\%, versus 20.0\% for the undefended mean and $\sim$60\% clean
 baseline. At $f{=}0.2$ ($\approx$5 dirty clusters) every coordinate-wise rule is
@@ -751,7 +728,7 @@ CB-SAFE+ hybrid  & \textbf{3/3} & \textbf{0.3} & \textbf{6/6} & \textbf{0.3} & \
 \end{table}
 
 \textbf{CB-SAFE+ restores learning past the static breakdown}
-(Table~\ref{tab:robust}). With loss-probe
+(Table~\ref{tab:signflip}). With loss-probe
 flags and temporal suspicion, the defense identifies all 3 of 3 attackers at
 $f{=}0.1$ (60.5\%, at the clean ceiling) and all 9 sign-flip attackers
 with \emph{zero} honest false positives at $f{=}0.3$ (three-seed means in Table~\ref{tab:detect}), recovering to 57.4\%
@@ -811,15 +788,6 @@ $\sim$65\% clean baseline while mean, trimmed mean, and median all sit at 7.4\%.
 \input{../results/tables/table1_signflip.tex}
 
 
-\begin{figure*}[tp]
-\centering
-\includegraphics[width=\textwidth]{fig_dynamics_signflip.pdf}
-\caption{Training dynamics under sign-flip: test accuracy vs round, eight rules
-across four datasets (rows) $\times$ malicious fraction $f$ (columns). Mean over 3
-seeds; $\pm1$ SD bands for CB-SAFE+ and FedGT (real BCJR~\cite{fedgt}).
-Dashed line: warmup $W{=}5$.}
-\label{fig:dynamics}
-\end{figure*}
 
 \begin{figure*}[tp]
 \centering
@@ -933,13 +901,6 @@ where the private median collapses to 10\% against 39--41\% without privacy,
 CB-SAFE+ recovers comparable accuracy \emph{while keeping the anonymity set},
 by paying in rounds (warmup) rather than in privacy.
 
-\begin{figure}[tbp]
-\centering
-\includegraphics[width=\columnwidth]{fig_cdial.pdf}
-\caption{Privacy--robustness dial: median-rule accuracy under sign-flip for
-$c\in\{1,3,5\}$ (CIFAR-10).}
-\label{fig:cdial}
-\end{figure}
 
 
 \section{Security Discussion and Limitations}
@@ -1014,6 +975,32 @@ liboqs-python~0.15.0 on a single NVIDIA RTX~2060 (6\,GB). CIFAR-10, FashionMNIST
 and Edge-IIoTset results are averaged over three seeds and EMNIST over one;
 significance is assessed by a paired $t$-test with Holm correction. Every run emits
 a per-round CSV and is reproducible from the released scripts.
+
+\appendices
+\section{Supplementary Figures}
+\label{app:figs}
+Figures~\ref{fig:dynamics} and~\ref{fig:cdial} supplement the main results: the
+round-by-round training dynamics behind the endpoint summary of
+Fig.~\ref{fig:acc-vs-f}, and the privacy--robustness dial referenced in the
+ablation discussion.
+
+\begin{figure*}[tp]
+\centering
+\includegraphics[width=\textwidth]{fig_dynamics_signflip.pdf}
+\caption{Training dynamics under sign-flip: test accuracy vs round, eight rules
+across four datasets (rows) $\times$ malicious fraction $f$ (columns). Mean over 3
+seeds; $\pm1$ SD bands for CB-SAFE+ and FedGT (real BCJR~\cite{fedgt}).
+Dashed line: warmup $W{=}5$.}
+\label{fig:dynamics}
+\end{figure*}
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=\columnwidth]{fig_cdial.pdf}
+\caption{Privacy--robustness dial: median-rule accuracy under sign-flip for
+$c\in\{1,3,5\}$ (CIFAR-10).}
+\label{fig:cdial}
+\end{figure}
 
 \begin{thebibliography}{9}
 \bibitem{bonawitz2017} K.\ Bonawitz \emph{et al.}, ``Practical secure aggregation
