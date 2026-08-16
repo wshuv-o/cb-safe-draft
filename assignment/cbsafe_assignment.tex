@@ -6,8 +6,6 @@
 \usepackage{booktabs}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
-\usepackage{tikz}
-\usetikzlibrary{arrows.meta,positioning,calc}
 \usepackage{url}
 \graphicspath{{./}}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
@@ -250,32 +248,10 @@ client. Algorithm~\ref{alg:round} summarizes the server-side round.
 
 \begin{figure*}[t]
 \centering
-\begin{tikzpicture}[
-  >={Latex[length=2.2mm]},
-  block/.style={draw, rounded corners, align=center, minimum height=1.25cm,
-                text width=2.7cm, inner sep=3pt, font=\footnotesize},
-  setup/.style={block, fill=orange!12},
-  core/.style={block, fill=blue!8},
-  det/.style={block, fill=green!12},
-  node distance=0.7cm]
-\node[setup] (kem) {\textbf{1. One-time}\\\textbf{HQC key setup}\\code-based KEM};
-\node[core, right=of kem] (train) {\textbf{2. Local training}\\\textbf{+ masking}\\per client};
-\node[core, right=of train] (clus) {\textbf{3. Cluster secure}\\\textbf{aggregation} ($c$)\\server sees $k$ cluster sums};
-\node[core, right=of clus] (rob) {\textbf{4. Robust}\\\textbf{aggregation}\\across cluster sums};
-\node[det, right=of rob] (det) {\textbf{5. CB-SAFE+}\\temporal group testing\\exclude attackers};
-\draw[->] (kem)--(train);
-\draw[->] (train)--(clus);
-\draw[->] (clus)--(rob);
-\draw[->] (rob)--(det);
-\draw[->] (det.south) -- ++(0,-0.6)
-  -| node[pos=0.25, below, font=\scriptsize] {next round: re-randomized clustering} (train.south);
-\end{tikzpicture}
-\caption{CB-SAFE pipeline (one round). After a one-time code-based (HQC) key setup,
-clients train locally and mask their updates; secure aggregation \emph{within} clusters
-of size $c$ exposes only $k$ cluster sums to the server; a robust rule aggregates
-\emph{across} those sums to update the global model; and CB-SAFE+ accumulates
-per-client suspicion by temporal group testing to exclude attackers before the next,
-re-randomized round.}
+\includegraphics[width=\textwidth]{fig_architecture.pdf}
+\caption{CB-SAFE end-to-end pipeline: one-time code-based (HQC) key setup, per-round
+masked cluster aggregation, robust aggregation across cluster sums, and CB-SAFE+
+temporal group-testing exclusion.}
 \label{fig:arch}
 \end{figure*}
 
