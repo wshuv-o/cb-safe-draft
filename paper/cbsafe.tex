@@ -972,7 +972,7 @@ gap rule) after a warmup of $W{=}5$ rounds. KEMs span HQC-128/192/256 and
 ML-KEM-512/768/1024 at matched NIST levels; masks are ChaCha20 keystreams with
 HKDF-SHA256 per-round seeds. Runs use Python~3.12, PyTorch~2.5.0 (CUDA~12.4),
 liboqs-python~0.15.0 on a single NVIDIA RTX~2060 (6\,GB). CIFAR-10, FashionMNIST,
-and Edge-IIoTset results are averaged over three seeds and EMNIST over one;
+EMNIST, and Edge-IIoTset results are all averaged over three seeds;
 significance is assessed by a paired $t$-test with Holm correction. Every run emits
 a per-round CSV and is reproducible from the released scripts.
 
