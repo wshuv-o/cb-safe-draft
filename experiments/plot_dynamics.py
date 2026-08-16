@@ -1,7 +1,7 @@
-"""Figure A: training dynamics under sign-flip. 3 datasets (rows) x 3 malicious
-fractions (cols), accuracy vs communication round, 8 aggregation rules. Mean over
-seeds; +-1 SD band for CB-SAFE+ and FedGT only. Shared y-range within a row.
-Imports tifs_style (no local rcParams). See FIGURE_PLAN.md Figure A."""
+"""Figure A: training dynamics under sign-flip. 4 datasets (cols) x 3 malicious
+fractions (rows), accuracy vs communication round, 8 aggregation rules. Mean over
+seeds; +-1 SD band for CB-SAFE+ and FedGT only. Shared y-range within a column
+(dataset). Imports tifs_style (no local rcParams). See FIGURE_PLAN.md Figure A."""
 
 import _bootstrap  # noqa: F401
 
@@ -72,13 +72,13 @@ def series(subdir, agg, f):
     return rounds, M.mean(0), M.std(0)
 
 
-fig, axes = plt.subplots(4, 3, figsize=(st.COL_DOUBLE, 6.9), sharex="col")
+fig, axes = plt.subplots(3, 4, figsize=(st.COL_DOUBLE, 5.0), sharex=True)
 handles_labels = {}
-for r, (dsname, subdir, chance, base) in enumerate(ROWS):
-    # shared y-range within the row
+for c, (dsname, subdir, chance, base) in enumerate(ROWS):   # datasets -> columns
+    # shared y-range within the column (per dataset)
     ymin = min(chance - 3, 5)
     ymax = base + 5
-    for c, f in enumerate(FS):
+    for r, f in enumerate(FS):                              # fractions -> rows
         ax = axes[r][c]
         ax.axhline(chance, color="#bdbdbd", ls=(0, (1, 2)), lw=0.7, zorder=1)
         ax.axhline(base, color="#bdbdbd", ls=(0, (1, 2)), lw=0.7, zorder=1)
@@ -97,15 +97,15 @@ for r, (dsname, subdir, chance, base) in enumerate(ROWS):
         ax.set_ylim(ymin, ymax)
         ax.set_xlim(1, None)
         if r == 0:
-            ax.set_title(f"$f{{=}}{f}\\%$")
-        if r == 3:
+            ax.set_title(dsname)
+        if r == len(FS) - 1:
             ax.set_xlabel("communication round")
         if c == 0:
-            ax.set_ylabel(f"{dsname}\ntest accuracy (\\%)")
-    # annotate "exclusions begin" once, top-left panel
-    axes[0][0].annotate("exclusions begin", xy=(W, axes[0][0].get_ylim()[0] + 6),
-                        xytext=(W + 1.5, axes[0][0].get_ylim()[0] + 3),
-                        fontsize=6, color="#6b6b6b")
+            ax.set_ylabel(f"$f{{=}}{f}\\%$\ntest accuracy (\\%)")
+# annotate "exclusions begin" once, top-left panel
+axes[0][0].annotate("exclusions begin", xy=(W, axes[0][0].get_ylim()[0] + 6),
+                    xytext=(W + 1.5, axes[0][0].get_ylim()[0] + 3),
+                    fontsize=6, color="#6b6b6b")
 
 # one shared legend above the grid, 4 columns
 labels = ["Mean (no robustness)", "Trimmed mean", "Median", "Multi-Krum",
