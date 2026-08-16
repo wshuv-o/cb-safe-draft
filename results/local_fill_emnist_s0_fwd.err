@@ -1,2 +1,0 @@
-D:\ISM_Quantum\experiments\run_local_fill.py:52: DeprecationWarning: __array__ implementation doesn't accept a copy keyword, so passing copy=False failed. __array__ must implement 'dtype' and 'copy' keyword arguments. To learn more, see the migration guide https://numpy.org/devdocs/numpy_2_0_migration_guide.html#adapting-to-changes-in-the-copy-keyword
-  parts = data.dirichlet_partition(np.array(train.targets), 30, 0.5, seed)

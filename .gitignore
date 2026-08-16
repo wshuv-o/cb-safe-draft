@@ -22,6 +22,11 @@ results/**/*.log
 results/**/*.pt
 results/**/checkpoints/
 
+# Run logs, heartbeats, and scratch (not source)
+*.err
+results/hb_*.txt
+results/figs/_shot_*.png
+
 # Env
 .venv/
 .env
