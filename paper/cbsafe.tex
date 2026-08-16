@@ -788,6 +788,15 @@ $\sim$65\% clean baseline while mean, trimmed mean, and median all sit at 7.4\%.
 \input{../results/tables/table1_signflip.tex}
 
 
+\begin{figure*}[tp]
+\centering
+\includegraphics[width=\textwidth]{fig_dynamics_signflip.pdf}
+\caption{Training dynamics under sign-flip: test accuracy vs round, eight rules
+across four datasets (rows) $\times$ malicious fraction $f$ (columns). Mean over 3
+seeds; $\pm1$ SD bands for CB-SAFE+ and FedGT (real BCJR~\cite{fedgt}).
+Dashed line: warmup $W{=}5$.}
+\label{fig:dynamics}
+\end{figure*}
 
 \begin{figure*}[tp]
 \centering
@@ -976,23 +985,9 @@ EMNIST, and Edge-IIoTset results are all averaged over three seeds;
 significance is assessed by a paired $t$-test with Holm correction. Every run emits
 a per-round CSV and is reproducible from the released scripts.
 
-\appendices
-\section{Supplementary Figures}
-\label{app:figs}
-Figures~\ref{fig:dynamics} and~\ref{fig:cdial} supplement the main results: the
-round-by-round training dynamics behind the endpoint summary of
-Fig.~\ref{fig:acc-vs-f}, and the privacy--robustness dial referenced in the
+\section{Supplementary Figure}\label{app:figs}
+Figure~\ref{fig:cdial} shows the privacy--robustness dial referenced in the
 ablation discussion.
-
-\begin{figure*}[tp]
-\centering
-\includegraphics[width=\textwidth]{fig_dynamics_signflip.pdf}
-\caption{Training dynamics under sign-flip: test accuracy vs round, eight rules
-across four datasets (rows) $\times$ malicious fraction $f$ (columns). Mean over 3
-seeds; $\pm1$ SD bands for CB-SAFE+ and FedGT (real BCJR~\cite{fedgt}).
-Dashed line: warmup $W{=}5$.}
-\label{fig:dynamics}
-\end{figure*}
 
 \begin{figure}[tbp]
 \centering
