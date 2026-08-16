@@ -898,11 +898,11 @@ $o{=}4$ & 54 & 51 & 49\\
 \end{table}
 
 Fixing the rule (median) and sweeping cluster size traces the dial empirically
-(Table~\ref{tab:ablation}a, Fig.~\ref{fig:cdial}). Without privacy ($c{=}1$), the median degrades gently from
+(Table~\ref{tab:ablation}a). Without privacy ($c{=}1$), the median degrades gently from
 50\% to 39\% as $f$ grows to $0.3$, i.e., classical robust aggregation. At $c{=}3$ the
 same rule holds to $f{=}0.1$ (43.4\%) and collapses beyond; at $c{=}5$ degradation
 begins already at $f{=}0.1$ (33.7\%): the breakdown frontier shifts left exactly as
-$(1-f)^c$ predicts (Fig.~\ref{fig:cdial}). Two further observations sharpen the
+$(1-f)^c$ predicts. Two further observations sharpen the
 picture. First, at $f{=}0.05$ privacy is \emph{free}: $c{=}3$ and $c{=}5$ match or
 slightly exceed $c{=}1$ (52.2\% vs.\ 50.2\%), because cluster averaging denoises
 before the median. Second, the dial's cost is refundable: at $c{=}3$, $f{=}0.3$,
@@ -984,18 +984,6 @@ liboqs-python~0.15.0 on a single NVIDIA RTX~2060 (6\,GB). CIFAR-10, FashionMNIST
 EMNIST, and Edge-IIoTset results are all averaged over three seeds;
 significance is assessed by a paired $t$-test with Holm correction. Every run emits
 a per-round CSV and is reproducible from the released scripts.
-
-\section{Supplementary Figure}\label{app:figs}
-Figure~\ref{fig:cdial} shows the privacy--robustness dial referenced in the
-ablation discussion.
-
-\begin{figure}[tbp]
-\centering
-\includegraphics[width=\columnwidth]{fig_cdial.pdf}
-\caption{Privacy--robustness dial: median-rule accuracy under sign-flip for
-$c\in\{1,3,5\}$ (CIFAR-10).}
-\label{fig:cdial}
-\end{figure}
 
 \begin{thebibliography}{9}
 \bibitem{bonawitz2017} K.\ Bonawitz \emph{et al.}, ``Practical secure aggregation
