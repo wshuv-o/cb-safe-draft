@@ -846,36 +846,8 @@ low-contamination regime, a capability boundary we state rather than hide.
 
 \subsection{The Privacy--Robustness Dial, Measured}
 
-\begin{table}[t]
-\caption{Ablations on CIFAR-10 sign-flip (final accuracy, \%). (a) The cluster-size
-dial (median rule). (b) Overlap degree $o$ (CB-SAFE+ reputation).}
-\label{tab:ablation}
-\centering
-\footnotesize
-\setlength{\tabcolsep}{5pt}
-(a) cluster size $c$ (rule: median)\\[2pt]
-\begin{tabular}{@{}lcccc@{}}
-\toprule
- & $f{=}.05$ & $f{=}.1$ & $f{=}.2$ & $f{=}.3$\\
-\midrule
-$c{=}1$ (no privacy) & 51 & 49 & 45 & 40\\
-$c{=}3$              & 53 & 49 & 10 & 10\\
-$c{=}5$              & 52 & 40 & 10 & 10\\
-\bottomrule
-\end{tabular}\\[5pt]
-(b) overlap degree $o$ (rule: CB-SAFE+ reputation)\\[2pt]
-\begin{tabular}{@{}lccc@{}}
-\toprule
- & $f{=}.1$ & $f{=}.2$ & $f{=}.3$\\
-\midrule
-$o{=}1$ & 54 & 48 & 39\\
-$o{=}4$ & 54 & 51 & 49\\
-\bottomrule
-\end{tabular}
-\end{table}
-
 Fixing the rule (median) and sweeping cluster size traces the dial empirically
-(Table~\ref{tab:ablation}a). Without privacy ($c{=}1$), the median degrades gently from
+(CIFAR-10 sign-flip, final accuracy). Without privacy ($c{=}1$), the median degrades gently from
 50\% to 39\% as $f$ grows to $0.3$, i.e., classical robust aggregation. At $c{=}3$ the
 same rule holds to $f{=}0.1$ (43.4\%) and collapses beyond; at $c{=}5$ degradation
 begins already at $f{=}0.1$ (33.7\%): the breakdown frontier shifts left exactly as
@@ -885,7 +857,9 @@ slightly exceed $c{=}1$ (52.2\% vs.\ 50.2\%), because cluster averaging denoises
 before the median. Second, the dial's cost is refundable: at $c{=}3$, $f{=}0.3$,
 where the private median collapses to 10\% against 39--41\% without privacy,
 CB-SAFE+ recovers comparable accuracy \emph{while keeping the anonymity set},
-by paying in rounds (warmup) rather than in privacy.
+by paying in rounds (warmup) rather than in privacy. Overlapping groups add further
+margin: the reputation rule at overlap $o{=}4$ holds $54/51/49\%$ across
+$f{=}0.1/0.2/0.3$ versus $54/48/39\%$ at $o{=}1$.
 
 
 
