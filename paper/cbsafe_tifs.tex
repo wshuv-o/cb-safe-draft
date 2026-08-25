@@ -1,0 +1,1094 @@
+\pdfminorversion=7  % match the drawio v1.7 architecture figure (silences PDF-inclusion warning)
+%==============================================================================
+% CB-SAFE: full paper (IEEEtran journal / IEEE Transactions, TIFS-style). Compile:
+%   pdflatex cbsafe && pdflatex cbsafe
+% References are inline (thebibliography); no bibtex pass required.
+% Figures are produced by experiments/plots.py into results/figs/.
+%==============================================================================
+\documentclass[lettersize,journal]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{rotating}
+\usepackage{graphicx}
+\usepackage[T1]{fontenc}
+\usepackage{array}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc,positioning}
+\usepackage[ruled,vlined]{algorithm2e}
+% Float placement: let full-width (double-column) figures use dedicated float
+% pages so they land near their reference instead of being flushed after the
+% bibliography. stfloats matches the official IEEE TIFS template.
+\usepackage{stfloats}
+\renewcommand{\topfraction}{0.92}
+\renewcommand{\bottomfraction}{0.85}
+\renewcommand{\textfraction}{0.06}
+\renewcommand{\floatpagefraction}{0.66}
+\renewcommand{\dbltopfraction}{0.92}
+\renewcommand{\dblfloatpagefraction}{0.66}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{4}
+\setcounter{dbltopnumber}{2}
+% IEEE-style blue hyperlinked citations/references (load hyperref last)
+\definecolor{linkblue}{RGB}{0,0,204}
+\usepackage[colorlinks=true,citecolor=linkblue,linkcolor=linkblue,urlcolor=linkblue,breaklinks=true]{hyperref}
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+% figure accent: one color used sparingly on top of black
+\definecolor{accent}{RGB}{176,0,32}
+\graphicspath{{../results/figs/}}
+
+\begin{document}
+
+\title{CB-SAFE: Code-Based Post-Quantum Secure Aggregation for Byzantine-Robust Federated Learning}
+
+\author{Md~Wahiduzzaman~Suva and Esm-e~Moula~Chowdhury~Abha%
+\thanks{M.~W.~Suva (ID 26-94088-2) and E.~M.~C.~Abha (ID 26-94089-2) are with the
+Department of Computer Science, American International University-Bangladesh,
+Dhaka, Bangladesh (e-mail: wshuvo360@gmail.com).}%
+\thanks{Manuscript prepared August 2026. Source code and artifacts are available at
+the project repository.}}
+
+\markboth{IEEE Transactions on Information Forensics and Security,~Vol.~XX, No.~X, 2026}%
+{Suva \MakeLowercase{\textit{et al.}}: CB-SAFE: Code-Based Post-Quantum Secure Aggregation for Byzantine-Robust Federated Learning}
+
+\maketitle
+
+\begin{abstract}
+Secure aggregation protects federated learning (FL) updates by revealing only their
+sum, but its key establishment breaks under a quantum adversary, and post-quantum FL
+today derives confidentiality almost exclusively from lattice assumptions, a single
+point of cryptanalytic failure. We present CB-SAFE, to our knowledge the first FL
+secure-aggregation framework whose post-quantum confidentiality is established by a
+code-based KEM (HQC, selected by NIST in March 2025 to diversify away from lattices)
+rather than a lattice KEM. CB-SAFE treats the KEM as a pluggable module: the same
+double-masking protocol runs over HQC or ML-KEM, and per-round mask seeds are derived
+from long-lived encapsulated secrets, so the KEM affects only a one-time setup.
+Measured on a 291\,498-parameter model with 30 clients, per-round traffic is
+KEM-independent (2\,277~KiB per client), and the entire code-based premium is a
+one-time 15.2 vs.\ 3.8~KiB per client at NIST level~1 (49.4 vs.\ 7.7~KiB at level~5),
+$0.7\%$ of one round's traffic and under $0.03\%$ amortized over training. CB-SAFE further reconciles
+secure aggregation with Byzantine robustness by aggregating securely \emph{within}
+clusters of $c$ clients and applying robust rules (trimmed mean, median, Multi-Krum)
+\emph{across} the revealed cluster sums, and we quantify the resulting
+privacy--robustness tension: the anonymity set grows with $c$ while the probability a
+cluster sum stays uncontaminated decays as $(1-f)^{c}$ under malicious fraction $f$.
+We prove a simulation-based privacy theorem, identify a \emph{laundering} effect by
+which cluster averaging turns amplified sign-flip poisoning into plausible-magnitude
+inverted sums that defeat all coordinate-wise robust rules, and introduce CB-SAFE+:
+re-randomized clustering with root-anchored direction flags accumulates per-client
+suspicion across rounds (temporal group testing over private sums) and excludes
+attackers the server never observes individually, revealing no update content beyond
+the cluster sums CB-SAFE already exposes.
+Experiments across four datasets in two modalities (non-IID CIFAR-10,
+FashionMNIST, and EMNIST, and tabular Edge-IIoTset IoT intrusion detection) with
+label-flipping, sign-flipping, and backdoor attacks validate the framework: the
+laundering effect and CB-SAFE+'s recovery replicate on every dataset (CB-SAFE+
+beats every baseline under sign-flip, Holm-corrected $p{<}0.01$), and the
+implementation is released open-source.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Post-quantum cryptography, federated learning, secure aggregation, HQC, code-based
+cryptography, Byzantine robustness, cryptographic diversity.
+\end{IEEEkeywords}
+
+\section{Introduction}
+\IEEEPARstart{F}{ederated} learning (FL) trains a shared model across many clients without
+centralizing data \cite{mcmahan2017,kairouz2021}, but the transmitted model updates leak private information:
+gradient-inversion \cite{zhu2019,geiping2020} and membership- or model-inversion
+\cite{shokri2017,fredrikson2015} attacks reconstruct training samples from
+individual updates. Secure aggregation closes this channel by ensuring the server
+observes only the \emph{sum} of updates, using pairwise additive masks that cancel on
+aggregation \cite{bonawitz2017,bell2020}; recent designs reduce its overhead
+\cite{lightsecagg,swiftagg}, though the sum itself can still leak
+\cite{elkordy2022}. The confidentiality of those masks rests on key
+establishment that Shor's algorithm \cite{shor1997} breaks once a cryptographically relevant quantum
+computer exists, and traffic recorded today can be decrypted then
+(``harvest-now, decrypt-later'').
+
+The standard response replaces classical key exchange with a post-quantum KEM, and
+nearly all post-quantum FL does so with \emph{lattice} cryptography
+\cite{pqsf2024,qinxu2025,narsimhulu2026,nguyen2025lattice,byzpqfl2026}. Lattices are
+efficient and standardized (ML-KEM, FIPS~203 \cite{fips203}), but concentrating an
+entire ecosystem's confidentiality on one hardness assumption is a systemic risk: a
+single cryptanalytic advance would break every such deployment simultaneously. NIST
+recognized exactly this risk when, in March~2025, it \emph{selected} the code-based
+KEM HQC (whose security reduces to syndrome decoding of quasi-cyclic codes
+\cite{macwilliams1977}, not to lattice problems, in the tradition of code-based
+cryptography since McEliece \cite{mceliece1978}) as a diversified backup to ML-KEM
+\cite{nistir8545}. That diversity has not reached federated learning.
+
+A second, orthogonal tension is that secure aggregation and Byzantine robustness pull
+in opposite directions: hiding individual updates denies the server exactly the
+visibility that poisoning defenses need. Recent work combines robustness with
+\emph{lattice}-based post-quantum aggregation \cite{byzpqfl2026}, or achieves
+cluster-based robust aggregation on \emph{quantum hardware} \cite{cqsa2026}; no prior
+framework provides both under a code-based, classical post-quantum assumption.
+
+This paper presents CB-SAFE (Code-Based Secure Aggregation for Federated
+lEarning), making five contributions:
+\begin{enumerate}
+\item \textbf{A KEM-agnostic secure-aggregation protocol} (Definition~1) that
+formalizes Bonawitz-style double masking over any IND-CCA2 KEM, with per-round mask
+seeds derived from long-lived encapsulated secrets so key encapsulation is a one-time
+cost. The post-quantum primitive becomes a single replaceable module.
+\item \textbf{The first code-based instantiation, scope-qualified:} to our knowledge,
+CB-SAFE is the first FL secure-aggregation framework whose post-quantum
+confidentiality comes from the NIST-selected code-based KEM (HQC) rather than a
+lattice KEM, at matched NIST security levels.
+\item \textbf{A quantified reconciliation of privacy and robustness:} secure
+aggregation \emph{within} clusters of $c$ clients, robust aggregation (trimmed mean,
+median, Multi-Krum) \emph{across} cluster sums, and an explicit trade-off law (the
+anonymity set is $c$ while the clean-cluster probability decays as $(1-f)^c$)
+validated experimentally under three attacks. We further identify and analyze a
+\emph{laundering} effect: cluster averaging turns amplified sign-flip poisoning into
+plausible-magnitude, direction-inverted cluster sums that defeat every
+coordinate-wise robust rule (Proposition~\ref{prop:launder}).
+\item \textbf{CB-SAFE+, a defense that identifies hidden attackers:} per-round
+re-randomized clustering plus direction flags against a small server root dataset
+accumulate per-client suspicion (temporal group testing over privacy-preserving
+observations) and exclude malicious clients the server has never observed
+individually. The flags are post-processing of already-revealed cluster sums, so the
+defense adds \emph{no} update-content leakage beyond CB-SAFE itself (Theorem~\ref{thm:priv}).
+\item \textbf{An honest, measured cost analysis:} on a 291k-parameter model,
+per-round traffic is KEM-independent and the full code-based premium is a one-time
+15.2~KiB vs.\ 3.8~KiB per client (NIST level~1), i.e., $0.7\%$ of one round's
+traffic and under $0.03\%$ amortized over training; HQC's $\sim$200$\times$ slower operations contribute about 2\,s (one-time,
+30 clients) versus 0.02\,s for ML-KEM.
+\end{enumerate}
+
+\section{Related Work}
+\textbf{Secure aggregation.} Masking-based secure aggregation lets an
+honest-but-curious server learn only the \emph{sum} of client updates. Bonawitz
+\emph{et al.}\ \cite{bonawitz2017} cancel pairwise one-time masks and tolerate dropout
+through secret-shared seeds; subsequent work drives down the quadratic overhead with
+(poly)logarithmic-round constructions \cite{bell2020}, coded and one-shot recovery
+(LightSecAgg \cite{lightsecagg}, SwiftAgg \cite{swiftagg}), and single-server
+multi-round aggregation that removes the per-round setup (Flamingo \cite{flamingo}).
+This entire line shares one property we must contend with: by construction the server
+sees only the aggregate---which can itself still leak \cite{elkordy2022}---and never
+the per-client updates that Byzantine defenses rely on. Our masked-aggregation layer
+follows the same double-masking template but factors key establishment behind a
+KEM-agnostic interface, so a code-based post-quantum KEM substitutes for the classical
+one in a single module.
+
+\textbf{Post-quantum FL is lattice-dominated.} PQSF reconstructs masks with lattice
+multi-stage secret sharing \cite{pqsf2024}; Qin and Xu build single-round aggregation
+from a lattice key-homomorphic PRF \cite{qinxu2025}; Narsimhulu \emph{et al.}
+aggregate Dilithium-style lattice signatures \cite{narsimhulu2026}; and a 2026
+framework combines reputation-weighted Byzantine-robust aggregation with
+Kyber/lattice-based secure aggregation for IoT threat intelligence
+\cite{byzpqfl2026}. Surveys confirm lattice dominance across post-quantum deployment
+\cite{nguyen2025lattice}. Non-lattice exceptions are rare and code-free: multivariate
+cryptography with blockchain \cite{singh2025pqfog}, and CQSA, which partitions
+clients into clusters aggregated via GHZ states on near-term \emph{quantum hardware}
+\cite{cqsa2026}. CB-SAFE differs from all of the above on the confidentiality
+assumption: syndrome decoding of quasi-cyclic codes, via a standard-track classical
+KEM \cite{nistir8545}, with the KEM exposed behind an agnostic interface so lattice
+and code-based variants differ in exactly one module.
+
+\textbf{Byzantine robustness and poisoning.} Model- and data-poisoning attacks
+\cite{fang2020,shejwalkar2021,tolpegin2020}, including stealthy \cite{baruch2019}
+and backdoor \cite{bagdasaryan2020,wangtails2020} variants, and their defenses are a
+large literature: robust aggregation rules such as Multi-Krum \cite{blanchard2017},
+coordinate-wise trimmed mean and median \cite{yin2018}, Bulyan \cite{bulyan}, and the
+geometric-median aggregator RFA \cite{rfa}; trust-bootstrapped filtering
+(FLTrust \cite{fltrust}, Zeno \cite{zeno}); malicious-client detection, including
+recent 2025--26 methods (FLDetector \cite{fldetector2022}, FLAegis \cite{flaegis2025},
+SafeFL \cite{safefl2025}, and loss-trend monitoring \cite{flltd2026}, whose
+temporal-loss signal parallels our root-loss probe); and backdoor-specific defenses
+(FLAME \cite{flame2022}). These detectors inspect \emph{individual} client updates,
+which secure aggregation deliberately hides. A parallel line enforces robustness or
+integrity \emph{on the masked updates themselves}---zero-knowledge norm and
+well-formedness proofs (RoFL \cite{rofl}), verifiable secret-shared integrity checks
+(EIFFeL \cite{eiffel}), and two-server distributed-trust aggregation that withstands
+malicious clients (ELSA \cite{elsa})---but these are classical (pre-quantum) and
+\emph{bound or validate} updates rather than identifying the responsible clients.
+Privacy-preserving robust aggregators
+narrow that gap (PriRoAgg \cite{priroagg2024}, Giskard \cite{giskard2026}), but obtain
+confidentiality from lattice/MPC rather than a post-quantum code-based KEM and do not
+identify individual attackers. This is the privacy--robustness--post-quantum tension we
+address.
+
+\textbf{Cluster-based robust aggregation.} Reconciling Byzantine resilience
+with secure aggregation is an established goal: BREA does so through
+secret-shared distance computation \cite{brea2021}, CQSA through clustered
+aggregation on quantum hardware \cite{cqsa2026}, and, closest to our robustness
+mechanism, FedGT \cite{fedgt} identifies malicious clients by non-adaptive group
+testing \cite{dorfman1943,aldridge2019} over overlapping secure-aggregation groups,
+decoding a fixed parity-check assignment with a per-round BCJR decoder whose code is
+designed for a small, fixed population ($n{\le}31$). Aggregating within groups and
+inspecting group sums is thus a known structure; our contribution is not the cluster
+topology itself but (i) its first classical post-quantum, code-based
+instantiation and (ii) an explicit, experimentally validated statement of the
+privacy--robustness trade-off it induces (Section~\ref{sec:tradeoff}), with a
+temporal group-testing defense (CB-SAFE+) that matches FedGT's attacker
+identification at far lower false-positive cost, and scales past FedGT's fixed
+small-population design.
+
+Across this landscape, existing
+post-quantum FL is lattice-based and, with one recent exception \cite{byzpqfl2026},
+not Byzantine-robust; classical robust-aggregation and detection methods are neither
+post-quantum nor compatible with secure aggregation; and FedGT---the closest design---is
+neither post-quantum nor scalable beyond its fixed $n{\le}31$ code. CB-SAFE+ is, to our
+knowledge, the only framework that is simultaneously code-based post-quantum,
+secure-aggregating, Byzantine-robust, identifies malicious clients, and scales.
+
+\section{The CB-SAFE Framework}
+
+\begin{figure*}[tp]
+\centering
+\includegraphics[width=\textwidth]{fig_architecture.pdf}
+\caption{CB-SAFE, one training round end to end: one-time HQC key setup,
+within-cluster masked aggregation (the server sees only the $k$ cluster sums), and
+the CB-SAFE+ flag/exclude stage.}
+\label{fig:arch}
+\end{figure*}
+
+\subsection{Notation}
+We use lowercase bold for vectors and uppercase bold for matrices. The server
+coordinates $N$ clients grouped into clusters of size $c$; a fraction $f$ is
+malicious.
+
+\subsection{System and Threat Model}
+A server coordinates $N$ clients running FedAvg over non-IID data partitions.
+Clients are partitioned into $k=N/c$ fixed clusters of size $c$. The server is
+honest-but-curious; a fraction $f$ of clients are malicious and submit poisoned
+updates; clients may drop out mid-round. Within a cluster, mask recovery uses a
+$t$-of-$c$ threshold with $t=\lfloor c/2\rfloor+1$, so privacy holds against the
+server colluding with up to $t-1$ members of a cluster, and any $c-t$ members can
+drop without stalling the round. Update authentication is out of the code-based
+scope: HQC cannot sign and no code-based signature is standardized, so where
+signatures are required we compose the lattice-based ML-DSA \cite{fips204} and state
+explicitly that only the confidentiality layer is code-based.
+
+\subsection{KEM-Agnostic Masked Aggregation}
+\begin{definition}[KEM-agnostic cluster masking]\label{def:kem}
+Let $\mathcal{K}=(\mathrm{KeyGen},\mathrm{Encaps},\mathrm{Decaps})$ be an IND-CCA2
+KEM, $H$ a key-derivation function, and $G$ a PRG into $(\mathbb{Z}_{2^{64}})^d$.
+At setup, each client $i$ publishes $pk_i$; for each cluster pair $i<j$, client $i$
+computes $(ct_{ij}, ss_{ij})=\mathrm{Encaps}(pk_j)$ and $j$ recovers
+$ss_{ij}=\mathrm{Decaps}(sk_j, ct_{ij})$. In round $r$, client $i$ quantizes its
+update $x_i$ to $q(x_i)\in(\mathbb{Z}_{2^{64}})^d$, draws a self-mask seed $b_i^r$,
+Shamir-shares it $t$-of-$c$ within its cluster, and submits
+\begin{equation}\label{eq:mask}
+\mathbf{y}_i = q(\mathbf{x}_i) + G(b_i^r) + \!\sum_{j>i}\! G\!\big(H(ss_{ij}, r)\big)
+      - \!\sum_{j<i}\! G\!\big(H(ss_{ij}, r)\big) \!\!\!\pmod{2^{64}},
+\end{equation}
+where the sums run over the cluster peers of $i$. The server adds each cluster's
+submissions (pairwise masks cancel), reconstructs each survivor's $b_i^r$ from $t$
+shares and removes $G(b_i^r)$; for a dropped client $d$, each survivor $j$ reveals
+the per-round seed $H(ss_{dj}, r)$ and the server removes the orphaned mask halves.
+The server thus obtains exactly $\sum_{i \in \mathrm{alive}} q(x_i)$ per cluster.
+\end{definition}
+
+Correctness is exact: masking is modular-arithmetic exact, and the only deviation
+from plain float aggregation is fixed-point quantization ($2^{-16}$ per coordinate).
+Because encapsulation happens once and per-round seeds come from $H(ss_{ij}, r)$,
+per-round messages contain no KEM material at all: the masked update is $8d$ bytes
+regardless of the KEM, and the KEM's key and ciphertext sizes appear only in the
+one-time setup. Instantiating $\mathcal{K}$ with HQC gives the code-based variant;
+with ML-KEM \cite{fips203}, the lattice baseline.
+
+\begin{algorithm}[t]
+\caption{Cluster Secure Aggregation (round $r$)}
+\label{alg:secagg}
+\DontPrintSemicolon
+\KwIn{cluster $C$ of size $c$, threshold $t$, per-pair secrets $\{ss_{ij}\}$}
+\KwOut{cluster sum $\textstyle\sum_{i\in\mathrm{alive}} q(\mathbf{x}_i)$}
+\ForEach{client $i \in C$}{
+  $q(\mathbf{x}_i) \leftarrow$ quantize local update\;
+  draw self-mask seed $b_i^r$; Shamir $t$-of-$c$ share it to peers\;
+  send masked $\mathbf{y}_i$ by Eq.~\eqref{eq:mask}\;
+}
+$Y \leftarrow \sum_{i\in\mathrm{alive}} \mathbf{y}_i$ \tcp*{pairwise masks cancel}
+\ForEach{survivor $i$}{reconstruct $b_i^r$ from $t$ shares; $Y \leftarrow Y - G(b_i^r)$\;}
+\ForEach{dropout $d$}{survivors reveal $H(ss_{dj},r)$; remove orphaned mask halves from $Y$\;}
+\Return $Y$\;
+\end{algorithm}
+
+\begin{theorem}[Privacy against honest-but-curious coalitions]\label{thm:priv}
+Assume $\mathcal{K}$ is IND-CCA2, $H$ is a secure KDF, and $G$ is a secure PRG. Fix
+a cluster $C$ of size $c$ with threshold $t=\lfloor c/2\rfloor+1$, and let the
+adversary $\mathcal{A}$ comprise the honest-but-curious server and any statically
+chosen $T \subset C$ with $|T| \le t-1$ (the corruption set is fixed before the
+protocol runs; we do not claim adaptive-corruption security). There exists a PPT simulator that, given only the corrupted
+clients' inputs and the sum $\sum_{i \in \mathrm{alive}(C)\setminus T} q(x_i)$,
+produces a view computationally indistinguishable from $\mathcal{A}$'s view of a
+CB-SAFE round. The CB-SAFE+ flag bits are a deterministic function of the revealed
+cluster sums and server-local data, so CB-SAFE+ leaks nothing beyond CB-SAFE.
+\end{theorem}
+
+\emph{Proof sketch.} A hybrid argument. (H1) Replace each pairwise secret $ss_{ij}$
+between honest clients by a uniform string: distinguishing H1 from the real game
+breaks IND-CCA2 of $\mathcal{K}$. (H2) Replace the per-round seeds $H(ss_{ij},r)$
+and mask streams $G(\cdot)$ by uniform: breaks the KDF/PRG. In H2 every honest
+submission $y_i$ is uniform subject to the alive-honest submissions summing to the
+revealed cluster sum, which the simulator can sample directly. Shamir shares held by
+$\le t-1$ corrupted parties are uniform by perfect secrecy below the threshold, and
+a dropped client's revealed seeds $H(ss_{dj}, r)$ are independent of other rounds'
+seeds under the KDF assumption, so both recovery paths are simulatable. Distinct
+rounds use distinct seeds, so views compose across rounds. \hfill$\square$
+
+The anonymity set of an honest client is therefore its cluster's alive honest-member
+count, and re-randomizing the partition each round (CB-SAFE+) does not change the
+per-round argument because each round reveals sums of fresh, independently masked
+updates.
+
+\subsection{Robust Aggregation Across Cluster Sums}\label{sec:tradeoff}
+The server sees $k$ cluster sums $S_1,\dots,S_k$ (means after dividing by alive
+counts) and no individual update. CB-SAFE applies a robust rule across the cluster
+means: coordinate-wise trimmed mean (trim $\beta$ per side) or median \cite{yin2018},
+Multi-Krum \cite{blanchard2017}, Bulyan \cite{bulyan}, or the geometric median
+(RFA) \cite{rfa}. This resolves the hide-versus-inspect tension structurally (privacy
+is enforced below the cluster boundary, robustness operates above it) at a
+quantifiable price. A cluster mean is contaminated if it contains at least one
+malicious member, so with malicious fraction $f$ and random cluster assignment,
+\begin{equation}\label{eq:contam}
+\Pr[\text{cluster clean}] = (1-f)^{c},
+\end{equation}
+and the expected number of clean cluster means is $k(1-f)^c$. Larger $c$ improves
+privacy (bigger anonymity set) but shrinks the clean fraction the robust rule can
+rely on; a trimmed mean discarding $\beta$ per side tolerates at most
+$\lfloor \beta k \rfloor$ contaminated clusters. $c$ is therefore a tunable
+privacy--robustness dial, and Section~\ref{sec:eval} traces its consequences
+empirically. Setting $c{=}1$ recovers classical (privacy-free) robust aggregation;
+setting $c{=}N$ recovers full secure aggregation with no robustness.
+
+The contamination probability, however, understates the problem: cluster averaging
+also \emph{disguises} what it contaminates.
+
+\begin{proposition}[Laundering by cluster averaging]\label{prop:launder}
+Let each honest update be $h$ (up to noise) and let $m$ members of a cluster of size
+$c$ submit the scaled sign-flip $-\gamma h$. The cluster mean is
+$\mu = \frac{c - m(1+\gamma)}{c}\, h$. Its magnitude equals an honest cluster's
+($|\mu| = |h|$) exactly when $\gamma = 2c/m - 1$, while its direction is inverted.
+At the common attack setting $\gamma{=}5$ with $c{=}3$, $m{=}1$ this holds with
+equality: the poisoned cluster sum is indistinguishable from honest by any
+magnitude- or order-statistic test, and a near-symmetric $\pm h$ population drives
+coordinate-wise trimmed mean and median toward $0$, stalling learning entirely.
+\end{proposition}
+
+This laundering effect explains the empirical collapse of every coordinate-wise
+rule in Section~\ref{sec:eval} and motivates direction-based detection: what
+cluster averaging cannot hide is the \emph{sign} of the update. The proposition
+idealizes honest updates as a common $h$; under non-IID heterogeneity real honest
+updates vary, so it predicts the boundary $\gamma^{*}$ in the mean rather than
+exactly per cluster. We therefore read the four-dataset collapse as strong
+empirical validation \emph{near} that boundary, not as a guarantee of collapse for
+arbitrary honest-update distributions.
+
+\begin{figure}[tbp]
+\centering
+\begin{tikzpicture}[>=Stealth,line width=0.5pt]
+  \def\R{1.7}
+  % axes (thin, gray)
+  \draw[gray!45,->] (-3.0,0) -- (3.0,0);
+  \draw[gray!45,->] (0,-2.2) -- (0,2.2);
+  % circle of radius |h|
+  \draw[dashed,gray!65] (0,0) circle (\R);
+  \node[gray!55,font=\scriptsize] at (48:\R) {$|\mathbf{h}|$};
+  % honest updates (black): the c-m clean members near +h
+  \draw[->,black] (0,0) -- (34:\R) node[right,font=\scriptsize] {$\mathbf{h}$};
+  \draw[->,black!60] (0,0) -- (21:\R);
+  % single amplified sign-flip -gamma h (accent), truncated with a scale break
+  \draw[->,accent] (0,0) -- (214:2.45);
+  \draw[accent] (214:1.05)++(-0.06,0.09) -- ++(0.12,-0.18);
+  \draw[accent] (214:1.22)++(-0.06,0.09) -- ++(0.12,-0.18);
+  \node[accent,font=\scriptsize] at (214:2.75) {$-\gamma\mathbf{h}$};
+  % resulting cluster mean mu = -h (accent): same magnitude, inverted direction
+  \draw[->,accent] (0,0) -- (214:\R) node[below,font=\scriptsize] {$\boldsymbol{\mu}$};
+\end{tikzpicture}
+\caption{Laundering geometry (schematic). Averaging $c{-}m$ honest updates
+$\mathbf{h}$ with $m$ sign-flips $-\gamma\mathbf{h}$ gives
+$\boldsymbol{\mu}=\tfrac{c-m(1+\gamma)}{c}\,\mathbf{h}$; at $\gamma^{\!*}{=}2c/m-1$ it
+matches $|\mathbf{h}|$ with opposite sign (Proposition~\ref{prop:launder}).}
+\label{fig:launder-geom}
+\end{figure}
+
+\subsection{CB-SAFE+: Temporal Group Testing over Cluster Sums}\label{sec:defense}
+CB-SAFE+ turns the laundering signature into an identification mechanism, using
+three ingredients. (i)~\emph{Re-randomized clustering}: the partition is redrawn
+every round (pairwise secrets with all peers are established once at setup, so
+re-clustering adds no per-round KEM cost). (ii)~\emph{Loss-probe flags}: the
+server maintains a small root dataset ($|\mathcal{D}_0|{=}200$ samples held out from all
+clients, the standard trust-bootstrapping assumption \cite{fltrust,zeno}), applies
+each cluster mean to the current model $\theta^r$, and flags every cluster whose mean
+\emph{increases} root loss,
+\begin{equation}\label{eq:flag}
+g_\ell^{\,r} = \mathbb{1}\!\left[\, L(\theta^r + \mathbf{S}_\ell;\, \mathcal{D}_0) > L(\theta^r;\, \mathcal{D}_0)\,\right].
+\end{equation}
+Flags are computed from already-revealed cluster sums
+and server-local data, so they reveal no update content beyond those sums
+(Theorem~\ref{thm:priv}). The probe is
+the product of two measured failures. Anchor-free direction flags are
+sign-ambiguous: the poisoned cluster sums form their own coherent cloud at $-h$, and
+a Krum-based reference locks onto that cloud in a large fraction of rounds.
+Anchored \emph{cosine} flags break the symmetry but lose specificity under non-IID
+data: an $m{=}1$ poisoned cluster mean is dominated by $-\gamma$ times one client's
+idiosyncratic direction, nearly orthogonal to the balanced anchor, so its sign test
+approaches a coin flip (at $f{=}0.2$ we measured cosine flags hitting clean clusters
+as often as dirty ones, and suspicion never separated). The loss probe is immune to
+this decorrelation because a $\gamma$-amplified ascent direction raises root loss
+regardless of whose data dominates the cluster sum. (iii)~\emph{Suspicion accumulation and exclusion}: every member of a flagged
+cluster gains one suspicion count, so after $r$ rounds client $i$ has accumulated
+\begin{equation}\label{eq:susp}
+s_i^{\,r} = \sum_{\rho=1}^{r} g_{\ell(i,\rho)}^{\,\rho},
+\end{equation}
+where $\ell(i,\rho)$ is the cluster containing $i$ in round $\rho$. A malicious
+client sits in a flagged cluster in essentially every round ($\mathbb{E}[s_i^{\,r}/r]\!\to\!1$),
+while an honest client is flagged only when randomly
+co-clustered with an attacker, i.e., with probability
+\begin{equation}\label{eq:ph}
+p_h = 1-(1-f)^{\,c-1} < 1 .
+\end{equation}
+A client is excluded once its flagged fraction exceeds a threshold $\tau\in(p_h,1)$
+after a warmup of $W$ rounds,
+\begin{equation}\label{eq:excl}
+\text{exclude } i \iff r>W \ \text{and}\ s_i^{\,r}/r > \tau .
+\end{equation}
+By Hoeffding's inequality the two populations separate exponentially: the
+per-client misclassification probability is at most $e^{-2r(\tau-p_h)^2}$, so a few
+rounds suffice to isolate the attackers, as the measured suspicion trajectories
+confirm (Fig.~\ref{fig:suspicion}). The server thereby identifies individual
+attackers it has never observed individually: group testing \cite{dorfman1943,aldridge2019} where the
+pools are the privacy-preserving cluster sums and the tests repeat over training rounds. The
+\emph{hybrid} variant augments Eq.~\eqref{eq:susp} with a per-round combinatorial
+(COMP) decode over the overlapping groups (degree $o$), so a client is suspected
+only if \emph{all} its groups are flagged, further suppressing false positives.
+
+\begin{algorithm}[t]
+\caption{CB-SAFE+: Temporal Group Testing over Cluster Sums}
+\label{alg:cbsafeplus}
+\DontPrintSemicolon
+\KwIn{clients $[N]$, root $\mathcal{D}_0$, cluster size $c$, threshold $\tau$, warmup $W$, rounds $R$}
+\KwOut{global model $\theta$, excluded set $\mathcal{E}$}
+$s_i \leftarrow 0\ \forall i$;\quad $\mathcal{E}\leftarrow\varnothing$\;
+\For{$r \leftarrow 1$ \KwTo $R$}{
+  redraw a random partition of $[N]\setminus\mathcal{E}$ into clusters of size $c$\;
+  \ForEach{cluster $\ell$}{
+    $\mathbf{S}_\ell \leftarrow$ \textsc{ClusterSecureAgg}$(\ell,r)/|\mathrm{alive}(\ell)|$ \tcp*{Alg.~\ref{alg:secagg}}
+    $g_\ell^{\,r} \leftarrow$ loss-probe flag, Eq.~\eqref{eq:flag}\;
+    \lForEach{active $i\in\ell$ with $g_\ell^{\,r}{=}1$}{$s_i \leftarrow s_i+1$}
+  }
+  \If{$r > W$}{
+    \lForEach{active $i$ with $s_i/r > \tau$}{$\mathcal{E}\leftarrow\mathcal{E}\cup\{i\}$}
+  }
+  $\theta \leftarrow \theta + \textsc{RobustAgg}\big(\{\mathbf{S}_\ell : g_\ell^{\,r}{=}0\}\big)$\;
+}
+\Return $\theta,\ \mathcal{E}$\;
+\end{algorithm}
+
+\section{Implementation}
+CB-SAFE is implemented in Python on liboqs~0.15.0 (via \texttt{liboqs-python}) and
+PyTorch, with the KEM selected by a one-line configuration change among HQC-128/192/256
+and ML-KEM-512/768/1024 (Kyber round-3 parameter sets are retained for comparison
+with older literature). Masks are ChaCha20 keystreams; per-round seeds use
+HKDF-SHA256; self-mask seeds are shared with Shamir's scheme over
+$\mathrm{GF}(2^{127}-1)$. \emph{HQC provenance:} liboqs~0.15.0 ships the PQClean
+constant-time implementation of the Round-4 HQC specification (2023-04-30), the
+version NIST evaluated and selected \cite{nistir8545}; the finalized standard's
+parameters may differ slightly once published (a draft is expected as FIPS~207).
+Federated training is simulated in-process; every protocol byte count and crypto
+timing reported below is measured from real objects on the wire path of the
+protocol (public keys, ciphertexts, shares, masked vectors), not modeled.
+\emph{Reproducibility:} Python 3.12, PyTorch 2.5.0 (CUDA 12.4), liboqs-python
+0.15.0, on a single NVIDIA RTX 2060 (6\,GB); one training round of 30 clients takes
+$\approx$21\,s. All runs use fixed seed 0 with deterministic partitioning and
+cluster assignment; results are averaged over three seeds at 50 rounds,
+significance is by paired $t$-test with Holm correction,
+and every experiment is reproducible from a per-run CSV and the released scripts.
+
+\section{Evaluation}\label{sec:eval}
+\subsection{Setup}
+\textbf{Task and data.} Primary task: CIFAR-10 partitioned across $N{=}30$ clients
+by a Dirichlet($\alpha{=}0.5$) label-skew split; a CNN with $d{=}291\,498$
+parameters; one local epoch per round (SGD, lr $0.01$, momentum $0.9$, batch $64$);
+$k{=}10$ clusters of $c{=}3$ unless stated. The split is sharply non-IID: clients
+hold $631$ to $3298$ samples with strongly skewed label distributions, the
+heterogeneity under which all robustness results are reported.
+
+Generalization (Section~\ref{sec:general})
+adds FashionMNIST (same CNN) and Edge-IIoTset (a 15-class tabular IoT
+intrusion-detection set with a multilayer perceptron), each Dirichlet-partitioned
+identically. \textbf{Configurations.} Plain FedAvg (no
+cryptography); CB-SAFE/lattice (ML-KEM); CB-SAFE/code-based (HQC), at matched NIST
+levels. \textbf{Attacks.} Label flipping ($y \to 9-y$), sign flipping
+($-5\Delta$), and a backdoor \cite{bagdasaryan2020} (3$\times$3 trigger patch,
+target class~0, 50\% local poison rate) at malicious fractions $f \in \{0.1, 0.2, 0.3\}$, against aggregation
+rules mean, trimmed mean, median, Multi-Krum, and the CB-SAFE+ reputation defense
+(Section~\ref{sec:defense}; server root set of 200 samples held out from all
+clients). \textbf{Metrics.} Test accuracy;
+backdoor attack success rate (ASR: fraction of triggered non-target test samples
+classified as the target); communication bytes per client (setup vs.\ per-round);
+crypto wall-time; dropout-recovery cost.
+
+\textbf{Datasets and reproducibility.} The four benchmarks are CIFAR-10 ($50{,}000$/$10{,}000$, $10$ classes), FashionMNIST ($60{,}000$/$10{,}000$, $10$ classes), EMNIST-balanced ($112{,}800$/$18{,}800$, $47$ classes), and Edge-IIoTset (tabular IoT/IIoT intrusion detection, $15$ classes, class-stratified to at most $120{,}000$ rows), each Dirichlet($\alpha{=}0.5$) partitioned across $N{=}30$ clients. Unless stated: overlap degree $o\in\{1,4\}$, Shamir threshold $t{=}\lfloor c/2\rfloor{+}1{=}2$, server root $|\mathcal{D}_0|{=}200$ held out from all clients, and exclusion threshold $\tau{=}0.85$ after a warmup of $W{=}5$ rounds. KEMs span HQC-128/192/256 and ML-KEM-512/768/1024 at matched NIST levels; masks are ChaCha20 keystreams with HKDF-SHA256 per-round seeds. Runs use Python~3.12, PyTorch~2.5.0 (CUDA~12.4), and liboqs-python~0.15.0 on a single NVIDIA RTX~2060 (6\,GB); all results are averaged over three seeds, with significance by paired $t$-tests (Holm-corrected).
+
+\subsection{Overhead: the Code-Based Premium Is a One-Time Cost}
+Table~\ref{tab:overhead} reports measured per-client traffic and crypto time.
+Per-round traffic is identical across all six KEMs (2\,277~KiB per client,
+dominated by the $8d$-byte masked update plus 102~B of Shamir material) because
+Definition~\ref{def:kem} keeps KEM objects out of the per-round path entirely. The
+KEM appears only in setup: at NIST level~1, HQC costs 15.2~KiB per client against
+ML-KEM's 3.8~KiB ($4.0\times$; $6.4\times$ at level~5), and 2.0\,s of one-time
+compute for all 30 clients against 0.02\,s. Amortized over 40 training rounds
+($\sim$89\,MiB of per-client update traffic), the code-based premium is below
+$0.03\%$ of total communication (Table~\ref{tab:overhead}). A round with 10\% dropouts
+adds only seed-reveal messages (32~B per survivor--dropout pair) and kept server
+unmasking below 0.28\,s in all configurations. The practicality question that
+motivated this work has a quantitative answer: \emph{cryptographic diversity in FL
+secure aggregation is essentially free at the protocol level once key establishment
+is amortized}: the trade-off is a one-time setup constant, not a per-round tax.
+
+\begin{table}[t]
+\caption{Measured per-client overhead ($N{=}30$, $c{=}3$, $d{=}291\,498$).
+Setup is one-time; per-round traffic is KEM-independent.}
+\label{tab:overhead}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+KEM & Setup (KiB) & Setup wall (s) & Round (KiB) & Mask (ms) \\
+\midrule
+ML-KEM-512  & 3.8  & 0.02 & 2\,277 & 25 \\
+HQC-128     & 15.2 & 2.0  & 2\,277 & 26 \\
+ML-KEM-768  & 5.6  & 0.02 & 2\,277 & 27 \\
+HQC-192     & 30.8 & 5.7  & 2\,277 & 25 \\
+ML-KEM-1024 & 7.7  & 0.02 & 2\,277 & 25 \\
+HQC-256     & 49.4 & 10.6 & 2\,277 & 26 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Scalability in the Client Population}
+Secure-aggregation cost is set by how many pairwise partners each client must
+maintain. All-pairs masking~\cite{bonawitz2017} gives every client $N-1$ partners,
+so per-client setup traffic and per-round mask derivation grow as $O(N)$. CB-SAFE
+masks only \emph{within} clusters of size $c$, capping partners at $c-1$, so both
+quantities are \emph{constant in $N$}. Extrapolating the
+measured HQC-128 and ML-KEM-512 primitives (Table~\ref{tab:overhead}) by partner
+count, at $N{=}1000$ a client's one-time setup is $15.2$~KiB (HQC) or $3.8$~KiB
+(ML-KEM) regardless of population, versus $7.4$~MiB for all-pairs masking, a
+$500\times$ reduction that widens linearly with $N$ (final column of
+Table~\ref{tab:scale-n500}). Because the privacy law
+$\Pr[S_j\ \mathrm{clean}]{=}(1-f)^c$ and the laundering boundary
+(Prop.~\ref{prop:launder}) are stated \emph{per cluster}, they are independent of
+$N$, and the re-randomized group tests add no per-round KEM cost
+(Fig.~\ref{fig:arch}d). CB-SAFE therefore targets the cross-device regime where
+all-pairs masking is infeasible.
+
+\textbf{Robustness holds as the population scales.} Cost is only half the
+scaling question; the other is whether robustness survives a $16\times$ larger
+client population. We ran every rule that admits a configuration at $N{=}500$ under
+sign-flip ($f{=}0.2$) for 50 rounds (Table~\ref{tab:scale-n500},
+Fig.~\ref{fig:convergence-n500}). FedGT is necessarily absent here: its
+parity-check matrices and prevalence-estimation tables are hardcoded for
+$n{\le}31$~\cite{fedgt}, so it has no configuration at this population and cannot be
+run without hand-designing new ones---a concrete scalability ceiling in the method,
+not a tuning choice. At this scale each client holds only $\sim$100 samples and
+attacker exclusion consumes the first $\sim$15--20 rounds, so a short 30-round
+budget truncates every method mid-recovery; extending to 50 rounds lets recovery
+complete and collapses the between-seed spread (from $\pm$10 to $\pm$2,
+Fig.~\ref{fig:convergence-n500}). At the converged horizon CB-SAFE+ reaches
+$65.7\%$ (last-five-round mean over three seeds), the coordinate-wise rules remain
+laundered near chance, and FLTrust's trust weighting, which recovers fastest early,
+plateaus $\sim$4 points lower ($61.3\%$) because soft down-weighting never fully
+removes the laundered mass. CB-SAFE+ reaches that accuracy while excluding only
+$11$ honest clients of 400 (2.75\%). Among the methods that admit a configuration at this
+scale, CB-SAFE+ is the only one that pairs top-tier robustness with near-zero
+honest exclusion and post-quantum security.
+
+\input{../results/tables/table_n500_scale.tex}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_convergence_allmethods_n500.pdf}
+\caption{Test accuracy vs round at $N{=}500$ (FashionMNIST, sign-flip $f{=}0.2$), one
+panel per seed; eight rules (FedGT excluded, see text).}
+\label{fig:convergence-n500}
+\end{figure}
+
+\subsection{Utility and Cryptographic Equivalence}
+Plain FedAvg reaches 59.0\% test accuracy (mean of the final five of 40 rounds;
+59.6\% at round 40) on the non-IID split. In every round,
+the same client updates were pushed through the full cryptographic pipeline twice
+(once under HQC-128, once under ML-KEM-768), and every per-cluster secure sum was
+compared coordinate-wise against the plain sum. The maximum deviation across all 40
+rounds and both KEMs was $2.28\times10^{-5}$, which \emph{equals} the worst-case
+fixed-point rounding bound for a 3-element sum ($3\cdot 2^{-17}=2.29\times10^{-5}$):
+the masking arithmetic itself is exact, so CB-SAFE's accuracy curve is identical to
+plain FedAvg by construction, not approximately. Both dropout modes were exercised:
+in round 10, two of three dropped clients landed in the same cluster, driving it
+below its $t{=}2$ threshold: the protocol excluded that cluster and recovered the
+remaining nine exactly; in round 20, three dropouts in three distinct clusters were
+all recovered by seed-reveal plus Shamir reconstruction. Measured in-run, setup cost
+2.6\,s (HQC-128) vs.\ 0.02\,s (ML-KEM-768) for all 30 clients, and steady-state
+rounds took $\sim$30\,ms of client-side masking and $\sim$0.29\,s of server-side
+unmasking, negligible against the $\sim$21\,s of local training per round.
+
+\subsection{Robustness Under Attack}
+\textbf{The contamination law holds.} Across all runs, the realized fraction of
+clean cluster sums tracked $(1-f)^c$ closely: at $c{=}3$, observed $0.70/0.50/0.40$
+versus predicted $0.73/0.51/0.34$ for $f{=}0.1/0.2/0.3$.
+
+\textbf{Sign-flip: laundering collapses coordinate-wise rules exactly at the
+predicted boundary} (Table~\ref{tab:signflip}, Fig.~\ref{fig:dynamics}). At $f{=}0.1$ ($\approx$3 dirty
+clusters, within trim capacity) the static rules work: trimmed mean 51.7\%, median
+55.5\%, Multi-Krum 60.5\%, versus 20.0\% for the undefended mean and $\sim$60\% clean
+baseline. At $f{=}0.2$ ($\approx$5 dirty clusters) every coordinate-wise rule is
+pinned at exactly 10.0\% (random guessing), not because the model diverges but
+because the laundered $\pm h$ population drives the aggregate to zero
+(Proposition~\ref{prop:launder}), while Multi-Krum, which selects whole vectors
+rather than per-coordinate statistics, still reaches 45.3\% (21.4\% at $f{=}0.3$).
+Robust rules that rely on magnitude order statistics are structurally weakened by
+the very mechanism that provides privacy; vector-selection rules retain power.
+
+\textbf{The collapse is a wide basin, not a knife-edge.} Since $\gamma{=}5$ is the
+exact laundering point $\gamma^{*}{=}2c/m{-}1$, one might ask whether the collapse is
+an artifact of that singular value. Sweeping $\gamma\in\{2,3,5,8,15\}$ at $f{=}0.2$
+(Fig.~\ref{fig:gamma-basin}) shows it is not: median and trimmed mean collapse to
+$10\%$ at \emph{every} $\gamma\ge\gamma^{*}$ and only partially degrade below it, and
+Multi-Krum---robust until $\gamma{=}8$---itself collapses at $\gamma{=}15$. CB-SAFE+
+holds $\sim$50--53\% throughout. Bulyan matches it here, its trim capacity not
+exceeded at $f{=}0.2$; that parity breaks at $f{=}0.3$ (Table~\ref{tab:signflip}),
+where identifying attackers rather than merely trimming them decides the outcome.
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=\columnwidth]{fig_gamma_basin.pdf}
+\caption{Sign-flip amplification sweep (CIFAR-10, $f{=}0.2$, 3 seeds): test accuracy
+vs $\gamma$. Coordinate-wise rules collapse for all $\gamma\ge\gamma^{*}{=}5$; dashed
+lines mark chance and the clean baseline.}
+\label{fig:gamma-basin}
+\end{figure}
+
+\textbf{The full baseline panel confirms the mechanism} (Fig.~\ref{fig:dynamics},
+Fig.~\ref{fig:acc-vs-f}, Table~\ref{tab:signflip}). Averaged over three seeds, the eight rules separate into
+three regimes at $f{=}0.3$: the coordinate-wise rules (mean, trimmed mean, median)
+are laundered to chance ($\approx$10\%) and the robust geometric median RFA
+\cite{rfa} degrades to $\sim$20\%, confirming that location- and magnitude-based
+aggregation fails regardless of sophistication; the vector-selection family degrades
+but falls (Multi-Krum 21\%, Bulyan \cite{bulyan} 35\%); and only CB-SAFE+ holds near the
+clean baseline at 57.4\%, whereas FedGT's actual BCJR decoder \cite{fedgt}, run per
+round, degrades to 34\% on CIFAR-10 (and collapses to near-chance on FashionMNIST and
+EMNIST) at this contamination by over-excluding honest clients
+(Table~\ref{tab:detect}). That RFA collapses while Bulyan merely degrades sharpens
+Proposition~\ref{prop:launder}: laundering specifically defeats rules that trust the
+\emph{aggregate} direction or magnitude, precisely what cluster averaging preserves
+for the attacker, whereas whole-vector selection resists longer.
+
+\begin{table}[t]
+\caption{Attacker identification, CIFAR-10 sign-flip ($N{=}30$, 3 seeds): attackers
+caught ($\uparrow$) and honest false positives ($\downarrow$). FedGT is its real BCJR
+decoder~\cite{fedgt}. Best in bold.}
+\label{tab:detect}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+& \multicolumn{2}{c}{$f{=}0.1$} & \multicolumn{2}{c}{$f{=}0.2$} & \multicolumn{2}{c}{$f{=}0.3$}\\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(l){6-7}
+Method & caught$\uparrow$ & FP$\downarrow$ & caught$\uparrow$ & FP$\downarrow$ & caught$\uparrow$ & FP$\downarrow$\\
+\midrule
+FedGT~\cite{fedgt}  & 2.7/3 & 13.0 & 5.3/6 & 17.7 & 7.7/9 & 11.0\\
+CB-SAFE+ (ov1)   & 3/3 & 0.7 & 4/6 & 0.7 & 6/9 & 1.3\\
+CB-SAFE+ hybrid  & \textbf{3/3} & \textbf{0.3} & \textbf{6/6} & \textbf{0.3} & \textbf{9/9} & \textbf{0.0}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{CB-SAFE+ restores learning past the static breakdown}
+(Table~\ref{tab:signflip}). With loss-probe
+flags and temporal suspicion, the defense identifies all 3 of 3 attackers at
+$f{=}0.1$ (60.5\%, at the clean ceiling) and all 9 sign-flip attackers
+with \emph{zero} honest false positives at $f{=}0.3$ (three-seed means in Table~\ref{tab:detect}), recovering to 57.4\%
+accuracy where every static coordinate-wise rule sat at 10\% and Multi-Krum at
+21.4\%---exceeding even the 39--41\% the median achieves \emph{without any privacy}
+($c{=}1$), i.e., the defense refunds the privacy dial's cost in rounds rather than
+anonymity. At $f{=}0.2$ it holds 57.5\% while Multi-Krum reaches only 45.3\%, so the
+defense's advantage over vector-selection rules grows with attack severity.
+Under label flipping (a weak attack in this regime: all rules land within
+44--52\%) the probe flags only the worst clusters and excludes conservatively (zero
+false positives at $f{=}0.2$), matching the best static rule.
+
+\textbf{Backdoor: a mechanism-independent blind spot.} The trigger attack leaves
+main-task accuracy intact for every rule (50--55\%) while ASR stays at 86--97\%
+across mean, trimmed mean, Multi-Krum, \emph{and} CB-SAFE+
+(Fig.~\ref{fig:backdoor}): backdoored cluster sums \emph{reduce} clean root loss
+and align with the honest direction, so they are invisible to loss- and
+direction-based tests alike. The one partial exception is the coordinate-wise
+median at $f{=}0.1$, which suppresses ASR to 67\% on CIFAR-10 (and to 42\% on
+FashionMNIST): order statistics can filter the
+trigger direction's coordinates when contamination is sparse. We therefore claim
+CB-SAFE+ for \emph{untargeted} model poisoning only; targeted trigger attacks under
+secure aggregation remain open, consistent with their difficulty even without
+privacy constraints.
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=\columnwidth]{fig_backdoor_asr.pdf}
+\caption{Backdoor attack success rate vs.\ malicious fraction (CIFAR-10); lower is
+better.}
+\label{fig:backdoor}
+\end{figure}
+
+\subsection{Generalization Across Datasets and Modalities}\label{sec:general}
+To test whether the laundering effect and CB-SAFE+'s recovery are artifacts of one
+dataset, we repeat the sign-flip evaluation on FashionMNIST (a second image
+benchmark, three seeds) and on Edge-IIoTset (tabular IoT/IIoT intrusion detection
+with a multilayer perceptron, a different modality in the security domain of the
+closest prior work \cite{byzpqfl2026}). The pattern is identical everywhere
+(Table~\ref{tab:signflip}, Fig.~\ref{fig:dynamics}): every coordinate-wise rule
+collapses to chance at $f{\ge}0.2$ (10.0\% on the 10-class image sets, 7.3\% on
+15-class Edge-IIoTset), Multi-Krum degrades gracefully then falls at $f{=}0.3$, and
+CB-SAFE+ tracks the clean baseline. The round-by-round view
+(Fig.~\ref{fig:dynamics}) shows this is not an endpoint artifact: the static rules
+decay progressively while CB-SAFE+ dips during warmup and recovers as exclusions
+fire. At $f{=}0.3$ CB-SAFE+ retains $\sim$95\%, $\sim$99\%,
+and $\sim$99\% of the no-attack accuracy on CIFAR-10, FashionMNIST, and Edge-IIoTset
+respectively, versus 12--18\% for the worst static rule. Pooling all matched
+(dataset, $f$, seed) cells, CB-SAFE+ beats every baseline under a paired $t$-test
+with Holm correction: versus the mean by 57.3 points ($p{<}10^{-15}$), the median by
+44.0 ($p{<}10^{-8}$), Multi-Krum by 18.6 ($p{<}10^{-3}$), and
+FedGT's actual BCJR decoder---across all four datasets at $N{=}30$---by
+18.8 ($p{<}10^{-3}$). The
+Edge-IIoTset result is the sharpest: at $f{=}0.3$ CB-SAFE+ holds 64.5\% against a
+$\sim$65\% clean baseline while mean, trimmed mean, and median all sit at 7.4\%.
+
+\input{../results/tables/table1_signflip.tex}
+
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_dynamics_signflip.pdf}
+\caption{Training dynamics under sign-flip: test accuracy vs round, eight rules
+across four datasets (columns) $\times$ malicious fraction $f$ (rows). Mean over 3
+seeds; $\pm1$ SD bands for CB-SAFE+ and FedGT (real BCJR~\cite{fedgt}).
+Dashed line: warmup $W{=}5$.}
+\label{fig:dynamics}
+\end{figure}
+
+\begin{figure*}[tp]
+\centering
+\includegraphics[width=\textwidth]{fig_acc_vs_f.pdf}
+\caption{Final test accuracy vs.\ malicious fraction $f$ under sign-flip (mean over 3
+seeds, 50 rounds; error bars $\pm$1 SD), one panel per dataset. The coordinate-wise
+rules (mean, trimmed mean, median) and the geometric median collapse to chance by
+$f{=}0.2$; Multi-Krum and Bulyan degrade then fall at $f{=}0.3$; only CB-SAFE+ tracks
+the clean baseline (grey dotted) across all four datasets, staying within a few points
+of the oracle (black dotted: perfect detection, all malicious clients excluded from
+round~1). This is the endpoint summary of the round-by-round view in
+Fig.~\ref{fig:dynamics}.}
+\label{fig:acc-vs-f}
+\end{figure*}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig_suspicion.pdf}
+\caption{Temporal suspicion (CB-SAFE+, CIFAR-10): mean flagged fraction
+$s_i^{\,r}/r$ for malicious vs honest clients, per fraction $f$ (3 seeds). Dashed:
+predicted honest rate $p_h{=}1-(1-f)^{c-1}$; warmup shaded.}
+\label{fig:suspicion}
+\end{figure}
+
+\subsection{Secondary Attack: Label Flipping}
+Label flipping is a far milder attack than sign-flip, and it doubles as a control.
+Table~\ref{tab:labelflip} shows that \emph{no} coordinate-wise rule collapses: the
+undefended mean retains 53--64\% at $f{=}0.3$, versus 10\% under sign-flip. That
+contrast isolates the laundering mechanism (Proposition~\ref{prop:launder}) as the
+cause of the sign-flip failures, rather than any generic fragility of the setup.
+CB-SAFE+ stays at or above every baseline, and on FashionMNIST it holds 87\% at
+$f{=}0.3$ where the mean falls to 59\%. FedGT's actual BCJR decoder survives this
+mild attack---unlike its sign-flip collapse---but trails CB-SAFE+ on CIFAR-10
+($\sim$50--56\% vs $\sim$56--61\%) and is noisier between seeds, so even where its
+accuracy signal is informative it is the less stable identifier.
+
+\input{../results/tables/table3_labelflip.tex}
+
+\subsection{Adaptive Attacker: Duty-Cycled Poisoning}
+The exclusion rule $s_i^r/r>\tau$ ($\tau{=}0.85$) invites an obvious evasion: poison
+only a fraction $\delta<\tau$ of rounds, keeping most of the attack while never
+crossing the threshold. We test this directly (Table~\ref{tab:duty}), and it fails.
+Because the partition is re-randomized every round, a resting attacker is still
+flagged whenever it co-clusters with an \emph{active} one, so its accumulated
+suspicion runs ahead of its nominal duty: at $\delta{=}0.84$, right at the threshold,
+CB-SAFE+ still excludes all six attackers in every seed. Across
+$\delta\in[0.5,1.0]$ it excludes $4$--$6$ of $6$ and accuracy never drops below
+$\sim$50\% (clean baseline $59\%$), where coordinate-wise rules sit at $10\%$. The
+duty-cycler faces a no-win trade-off: raise $\delta$ and it is caught; lower it and
+the attack is correspondingly weaker (accuracy rises to $53.7\%$). A stronger
+threshold-aware adversary that jointly minimizes footprint and detectability remains
+open, but the naive duty-cycle evasion does not succeed.
+\input{../results/tables/table_duty.tex}
+
+\subsection{Ablation: Which Component Earns the Robustness}
+CB-SAFE+ layers three ingredients on top of clustered secure aggregation: temporal
+reputation, overlapping re-randomized groups, and a per-round COMP decode.
+Table~\ref{tab:ablation-variants} isolates each under the identical sign-flip
+protocol. The base temporal reputation (ov1) already restores learning at moderate
+contamination but degrades at $f{=}0.3$ (37.9\% on CIFAR-10); adding overlapping
+groups (ov4) lifts it to 48.8\%, and the full hybrid COMP decode reaches 50.0\%---
+far above FedGT's actual BCJR decoder, which collapses to chance at this
+contamination (Table~\ref{tab:detect}). Each component contributes, and the gains
+concentrate in the high-$f$ regime where laundering is strongest. The trust-free variant, which uses
+\emph{no} root dataset, matches the others at $f{=}0.1$ but collapses beyond it:
+attacker identification without any trusted anchor is possible only in the
+low-contamination regime, a capability boundary we state rather than hide.
+
+\input{../results/tables/table2_ablation.tex}
+
+\subsection{The Privacy--Robustness Dial, Measured}
+
+\begin{table}[t]
+\caption{Ablations on CIFAR-10 sign-flip (final accuracy, \%). (a) The cluster-size
+dial (median rule). (b) Overlap degree $o$ (CB-SAFE+ reputation).}
+\label{tab:ablation}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+(a) cluster size $c$ (rule: median)\\[2pt]
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+ & $f{=}.05$ & $f{=}.1$ & $f{=}.2$ & $f{=}.3$\\
+\midrule
+$c{=}1$ (no privacy) & 51 & 49 & 45 & 40\\
+$c{=}3$              & 53 & 49 & 10 & 10\\
+$c{=}5$              & 52 & 40 & 10 & 10\\
+\bottomrule
+\end{tabular}\\[5pt]
+(b) overlap degree $o$ (rule: CB-SAFE+ reputation)\\[2pt]
+\begin{tabular}{@{}lccc@{}}
+\toprule
+ & $f{=}.1$ & $f{=}.2$ & $f{=}.3$\\
+\midrule
+$o{=}1$ & 54 & 48 & 39\\
+$o{=}4$ & 54 & 51 & 49\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Fixing the rule (median) and sweeping cluster size traces the dial empirically
+(Table~\ref{tab:ablation}a). Without privacy ($c{=}1$), the median degrades gently from
+50\% to 39\% as $f$ grows to $0.3$, i.e., classical robust aggregation. At $c{=}3$ the
+same rule holds to $f{=}0.1$ (43.4\%) and collapses beyond; at $c{=}5$ degradation
+begins already at $f{=}0.1$ (33.7\%): the breakdown frontier shifts left exactly as
+$(1-f)^c$ predicts. Two further observations sharpen the
+picture. First, at $f{=}0.05$ privacy is \emph{free}: $c{=}3$ and $c{=}5$ match or
+slightly exceed $c{=}1$ (52.2\% vs.\ 50.2\%), because cluster averaging denoises
+before the median. Second, the dial's cost is refundable: at $c{=}3$, $f{=}0.3$,
+where the private median collapses to 10\% against 39--41\% without privacy,
+CB-SAFE+ recovers comparable accuracy \emph{while keeping the anonymity set},
+by paying in rounds (warmup) rather than in privacy.
+
+
+
+\section{Security Discussion and Limitations}
+\textbf{What the design guarantees.} Within a cluster, privacy reduces to the
+double-masking argument of \cite{bonawitz2017} with the DH-style key agreement
+replaced by an IND-CCA2 KEM: masks are ChaCha20 outputs keyed by HKDF of
+encapsulated secrets, so an honest-but-curious server colluding with fewer than $t$
+cluster members learns only cluster sums. The robust layer never inspects anything
+finer than a cluster mean. \textbf{What it does not.} We do not claim security
+against an actively malicious server (who could misreport dropouts; standard
+mitigations apply), nor differential privacy on the cluster sums themselves; the
+anonymity set is bounded by the alive cluster size, and cluster sums of very small
+clusters leak more than full-cohort sums. Robustness degrades predictably as
+$k(1-f)^c$ approaches the trim capacity: at $c{=}3$, $f{=}0.3$ leaves an expected
+$3.4$ clean clusters of 10, near the breakdown of a 2-per-side trimmed mean; this
+is the price of the anonymity set and we report it rather than hide it. HQC
+operations are $\sim$200$\times$ slower than ML-KEM's, which is immaterial here
+(setup-only) but would matter for protocols that encapsulate per round.
+
+\section{Conclusion}
+CB-SAFE positions cryptographic diversity as a configuration choice rather than a
+research programme: the KEM sits behind one interface, and the measured cost of
+choosing the code-based occupant is a one-time setup constant. The more consequential
+finding is what secure aggregation does to robustness: cluster averaging does not
+merely dilute poisoning, it \emph{launders} it, transforming conspicuous attacks
+into plausible-looking sums that defeat exactly the rules practitioners would reach
+for. Defending therefore requires signals that survive aggregation (direction,
+loss) accumulated over time. CB-SAFE+ shows one such design that identifies
+individual attackers from group observations without spending any privacy. The open
+questions our results make concrete: targeted backdoors remain invisible to
+sum-level probes at every malicious fraction we tested, an actively malicious server
+is outside our threat model, and while a naive duty-cycled attacker does not evade
+the temporal test (Table~\ref{tab:duty}), a threshold-aware adversary that jointly
+minimizes its footprint and detectability remains the natural next step. The implementation and all measurement scripts are
+released open-source as, to our knowledge, the first code-based reference point for
+post-quantum secure aggregation in FL.
+
+\begin{thebibliography}{9}
+\bibitem{bonawitz2017} K.\ Bonawitz \emph{et al.}, ``Practical secure aggregation
+for privacy-preserving machine learning,'' in \emph{Proc.\ ACM CCS}, 2017,
+pp.\ 1175--1191.
+\bibitem{nistir8545} National Institute of Standards and Technology, ``Status report
+on the fourth round of the NIST post-quantum cryptography standardization process,''
+NIST IR 8545, Mar.\ 2025.
+\bibitem{fips203} National Institute of Standards and Technology,
+``Module-lattice-based key-encapsulation mechanism standard,'' FIPS 203, Aug.\ 2024.
+\bibitem{pqsf2024} X.\ Zhang, H.\ Deng, R.\ Wu, J.\ Ren, and Y.\ Ren, ``PQSF:
+Post-quantum secure privacy-preserving federated learning,'' \emph{Sci.\ Rep.},
+vol.\ 14, Art.\ no.\ 23553, 2024.
+\bibitem{qinxu2025} X.\ Qin and R.\ Xu, ``Efficient post-quantum cross-silo
+federated learning based on key homomorphic pseudo-random function,''
+\emph{Mathematics}, vol.\ 13, no.\ 9, Art.\ no.\ 1404, 2025.
+\bibitem{narsimhulu2026} P.\ Narsimhulu, P.\ Chithaluru, and R.\ Aluvalu,
+``Efficient post-quantum cryptographic signature aggregation for low-latency
+distributed networks,'' \emph{EURASIP J.\ Inf.\ Secur.}, vol.\ 2026, Art.\ no.\ 6, 2026.
+\bibitem{byzpqfl2026} ``Byzantine-robust federated learning framework with
+post-quantum secure aggregation for real-time threat intelligence sharing in
+critical IoT infrastructure,'' arXiv:2601.01053, 2026.
+\bibitem{cqsa2026} ``CQSA: Byzantine-robust clustered quantum secure aggregation in
+federated learning,'' arXiv:2602.22269, 2026.
+\bibitem{singh2025pqfog} J.\ Singh, P.\ Singh, A.\ Kaur, and M.\ Hedabou,
+``Post-quantum secure fog-edge computing using federated learning with blockchain,''
+\emph{J.\ Supercomput.}, vol.\ 81, Art.\ no.\ 1249, 2025.
+\bibitem{fltrust} X.\ Cao, M.\ Fang, J.\ Liu, and N.\ Z.\ Gong, ``FLTrust:
+Byzantine-robust federated learning via trust bootstrapping,'' in \emph{Proc.\ NDSS},
+2021.
+\bibitem{zeno} C.\ Xie, S.\ Koyejo, and I.\ Gupta, ``Zeno: Distributed stochastic
+gradient descent with suspicion-based fault-tolerance,'' in \emph{Proc.\ ICML}, 2019.
+\bibitem{bell2020} J.\ H.\ Bell, K.\ A.\ Bonawitz, A.\ Gasc\'on, T.\ Lepoint, and
+M.\ Raykova, ``Secure single-server aggregation with (poly)logarithmic overhead,''
+in \emph{Proc.\ ACM CCS}, 2020, pp.\ 1253--1269.
+\bibitem{blanchard2017} P.\ Blanchard, E.\ M.\ El Mhamdi, R.\ Guerraoui, and
+J.\ Stainer, ``Machine learning with adversaries: Byzantine tolerant gradient
+descent,'' in \emph{Proc.\ NeurIPS}, 2017, pp.\ 119--129.
+\bibitem{yin2018} D.\ Yin, Y.\ Chen, R.\ Kannan, and P.\ Bartlett,
+``Byzantine-robust distributed learning: Towards optimal statistical rates,'' in
+\emph{Proc.\ ICML}, 2018, pp.\ 5650--5659.
+\bibitem{bagdasaryan2020} E.\ Bagdasaryan, A.\ Veit, Y.\ Hua, D.\ Estrin, and
+V.\ Shmatikov, ``How to backdoor federated learning,'' in \emph{Proc.\ AISTATS},
+2020, pp.\ 2938--2948.
+\bibitem{brea2021} J.\ So, B.\ G\"uler, and A.\ S.\ Avestimehr,
+``Byzantine-resilient secure federated learning,'' \emph{IEEE J.\ Sel.\ Areas
+Commun.}, vol.\ 39, no.\ 7, pp.\ 2168--2181, 2021.
+\bibitem{nguyen2025lattice} H.\ Nguyen, S.\ Huda, Y.\ Nogami, and T.\ T.\ Nguyen,
+``Security in post-quantum era: A comprehensive survey on lattice-based
+algorithms,'' \emph{IEEE Access}, vol.\ 13, pp.\ 89003--89024, 2025.
+\bibitem{fedgt} M.\ Xhemrishi, J.\ \"Ostman, A.\ Wachter-Zeh, and A.\ Graell~i~Amat,
+``FedGT: Identification of malicious clients in federated learning with secure
+aggregation,'' \emph{IEEE Trans.\ Inf.\ Forensics Security}, vol.\ 20,
+pp.\ 2577--2592, 2025.
+\bibitem{bulyan} E.\ M.\ El Mhamdi, R.\ Guerraoui, and S.\ Rouault, ``The hidden
+vulnerability of distributed learning in Byzantium,'' in \emph{Proc.\ ICML}, 2018,
+pp.\ 3521--3530.
+\bibitem{rfa} K.\ Pillutla, S.\ M.\ Kakade, and Z.\ Harchaoui, ``Robust aggregation
+for federated learning,'' \emph{IEEE Trans.\ Signal Process.}, vol.\ 70,
+pp.\ 1142--1154, 2022.
+\bibitem{fang2020} M.\ Fang, X.\ Cao, J.\ Jia, and N.\ Z.\ Gong, ``Local model
+poisoning attacks to Byzantine-robust federated learning,'' in \emph{Proc.\ USENIX
+Security}, 2020, pp.\ 1605--1622.
+\bibitem{shejwalkar2021} V.\ Shejwalkar and A.\ Houmansadr, ``Manipulating the
+Byzantine: Optimizing model poisoning attacks and defenses for federated learning,''
+in \emph{Proc.\ NDSS}, 2021.
+\bibitem{flame2022} T.\ D.\ Nguyen \emph{et al.}, ``FLAME: Taming backdoors in
+federated learning,'' in \emph{Proc.\ USENIX Security}, 2022, pp.\ 1415--1432.
+\bibitem{mcmahan2017} B.\ McMahan, E.\ Moore, D.\ Ramage, S.\ Hampson, and
+B.\ A.\ y~Arcas, ``Communication-efficient learning of deep networks from
+decentralized data,'' in \emph{Proc.\ AISTATS}, 2017, pp.\ 1273--1282.
+\bibitem{kairouz2021} P.\ Kairouz \emph{et al.}, ``Advances and open problems in
+federated learning,'' \emph{Found.\ Trends Mach.\ Learn.}, vol.\ 14, no.\ 1--2,
+pp.\ 1--210, 2021.
+\bibitem{zhu2019} L.\ Zhu, Z.\ Liu, and S.\ Han, ``Deep leakage from gradients,''
+in \emph{Proc.\ NeurIPS}, 2019, pp.\ 14747--14756.
+\bibitem{geiping2020} J.\ Geiping, H.\ Bauermeister, H.\ Dr\"oge, and M.\ Moeller,
+``Inverting gradients: How easy is it to break privacy in federated learning?,''
+in \emph{Proc.\ NeurIPS}, 2020, pp.\ 16937--16947.
+\bibitem{fredrikson2015} M.\ Fredrikson, S.\ Jha, and T.\ Ristenpart, ``Model
+inversion attacks that exploit confidence information and basic countermeasures,''
+in \emph{Proc.\ ACM CCS}, 2015, pp.\ 1322--1333.
+\bibitem{shokri2017} R.\ Shokri, M.\ Stronati, C.\ Song, and V.\ Shmatikov,
+``Membership inference attacks against machine learning models,'' in
+\emph{Proc.\ IEEE Symp.\ Secur.\ Privacy}, 2017, pp.\ 3--18.
+\bibitem{elkordy2022} A.\ R.\ Elkordy, J.\ Zhang, Y.\ H.\ Ezzeldin, K.\ Psounis,
+and S.\ Avestimehr, ``How much privacy does federated learning with secure
+aggregation guarantee?,'' \emph{Proc.\ Privacy Enhancing Technol.}, 2022,
+pp.\ 510--526.
+\bibitem{lightsecagg} J.\ So \emph{et al.}, ``LightSecAgg: A lightweight and
+versatile design for secure aggregation in federated learning,'' in
+\emph{Proc.\ MLSys}, 2022, pp.\ 694--720.
+\bibitem{swiftagg} T.\ Jahani-Nezhad, M.\ A.\ Maddah-Ali, S.\ Li, and G.\ Caire,
+``SwiftAgg: Communication-efficient and dropout-resistant secure aggregation for
+federated learning with worst-case security guarantees,'' in \emph{Proc.\ IEEE
+ISIT}, 2022, pp.\ 103--108.
+\bibitem{shor1997} P.\ W.\ Shor, ``Polynomial-time algorithms for prime
+factorization and discrete logarithms on a quantum computer,'' \emph{SIAM
+J.\ Comput.}, vol.\ 26, no.\ 5, pp.\ 1484--1509, 1997.
+\bibitem{mceliece1978} R.\ J.\ McEliece, ``A public-key cryptosystem based on
+algebraic coding theory,'' \emph{JPL Deep Space Netw.\ Prog.\ Rep.}, pp.\ 114--116,
+1978.
+\bibitem{macwilliams1977} F.\ J.\ MacWilliams and N.\ J.\ A.\ Sloane, \emph{The
+Theory of Error-Correcting Codes}.\ Amsterdam, The Netherlands: North-Holland,
+1977.
+\bibitem{fips204} National Institute of Standards and Technology,
+``Module-lattice-based digital signature standard,'' FIPS 204, Aug.\ 2024.
+\bibitem{baruch2019} G.\ Baruch, M.\ Baruch, and Y.\ Goldberg, ``A little is
+enough: Circumventing defenses for distributed learning,'' in \emph{Proc.\ NeurIPS},
+2019, pp.\ 8635--8645.
+\bibitem{wangtails2020} H.\ Wang \emph{et al.}, ``Attack of the tails: Yes, you
+really can backdoor federated learning,'' in \emph{Proc.\ NeurIPS}, 2020,
+pp.\ 16070--16084.
+\bibitem{tolpegin2020} V.\ Tolpegin, S.\ Truex, M.\ E.\ Gursoy, and L.\ Liu,
+``Data poisoning attacks against federated learning systems,'' in \emph{Proc.\
+ESORICS}, 2020, pp.\ 480--501.
+\bibitem{fldetector2022} Z.\ Zhang, X.\ Cao, J.\ Jia, and N.\ Z.\ Gong,
+``FLDetector: Defending federated learning against model poisoning attacks via
+detecting malicious clients,'' in \emph{Proc.\ ACM KDD}, 2022, pp.\ 2545--2555.
+\bibitem{dorfman1943} R.\ Dorfman, ``The detection of defective members of large
+populations,'' \emph{Ann.\ Math.\ Stat.}, vol.\ 14, no.\ 4, pp.\ 436--440, 1943.
+\bibitem{aldridge2019} M.\ Aldridge, O.\ Johnson, and J.\ Scarlett, ``Group
+testing: An information theory perspective,'' \emph{Found.\ Trends Commun.\ Inf.\
+Theory}, vol.\ 15, no.\ 3--4, pp.\ 196--392, 2019.
+\bibitem{krizhevsky2009} A.\ Krizhevsky, ``Learning multiple layers of features
+from tiny images,'' Univ.\ Toronto, Tech.\ Rep., 2009.
+\bibitem{fashionmnist} H.\ Xiao, K.\ Rasul, and R.\ Vollgraf, ``Fashion-MNIST: A
+novel image dataset for benchmarking machine learning algorithms,''
+arXiv:1708.07747, 2017.
+\bibitem{emnist} G.\ Cohen, S.\ Afshar, J.\ Tapson, and A.\ van~Schaik, ``EMNIST:
+Extending MNIST to handwritten letters,'' in \emph{Proc.\ IJCNN}, 2017,
+pp.\ 2921--2926.
+\bibitem{edgeiiot} M.\ A.\ Ferrag, O.\ Friha, D.\ Hamouda, L.\ Maglaras, and
+H.\ Janicke, ``Edge-IIoTset: A new comprehensive realistic cyber security dataset
+of IoT and IIoT applications for centralized and federated learning,'' \emph{IEEE
+Access}, vol.\ 10, pp.\ 40281--40306, 2022.
+\bibitem{hsu2019} T.-M.\ H.\ Hsu, H.\ Qi, and M.\ Brown, ``Measuring the effects
+of non-identical data distribution for federated visual classification,''
+arXiv:1909.06335, 2019.
+\bibitem{priroagg2024} S.\ Hou, S.\ Li, T.\ Jahani-Nezhad, and G.\ Caire, ``PriRoAgg:
+Achieving robust model aggregation with minimum privacy leakage for federated
+learning,'' \emph{IEEE Trans.\ Inf.\ Forensics Security}, 2024.
+\bibitem{giskard2026} O.\ Touat, C.\ Sabater, M.\ Maouche, and S.\ Ben~Mokhtar,
+``Giskard: Byzantine robust and confidential aggregation for large-scale decentralized
+learning,'' arXiv:2606.19129, 2026.
+\bibitem{flaegis2025} E.\ M\'armol~Campos, A.\ Gonz\'alez~Vidal, J.\ L.\
+Hern\'andez~Ramos, and A.\ Skarmeta, ``FLAegis: A two-layer defense framework for
+federated learning against poisoning attacks,'' arXiv:2508.18737, 2025.
+\bibitem{safefl2025} Z.\ Dou, J.\ Wang, W.\ Sun, Z.\ Liu, and M.\ Fang, ``Toward
+malicious clients detection in federated learning,'' arXiv:2505.09110, 2025.
+\bibitem{flltd2026} D.\ K.\ Bhaskar, B.\ Minimol, and V.\ P.\ Binu, ``Robust federated
+learning for malicious clients using loss trend deviation detection,''
+arXiv:2601.20915, 2026.
+\bibitem{flamingo} Y.\ Ma, J.\ Woods, S.\ Angel, A.\ Polychroniadou, and T.\ Rabin,
+``Flamingo: Multi-round single-server secure aggregation with applications to private
+federated learning,'' in \emph{Proc.\ IEEE Symp.\ Security and Privacy (S\&P)}, 2023,
+pp.\ 477--496.
+\bibitem{rofl} H.\ Lycklama, L.\ Burkhalter, A.\ Viand, N.\ K\"uchler, and A.\ Hithnawi,
+``RoFL: Robustness of secure federated learning,'' in \emph{Proc.\ IEEE Symp.\ Security
+and Privacy (S\&P)}, 2023, pp.\ 453--476.
+\bibitem{eiffel} A.\ Roy~Chowdhury, C.\ Guo, S.\ Jha, and L.\ van~der~Maaten,
+``EIFFeL: Ensuring integrity for federated learning,'' in \emph{Proc.\ ACM CCS}, 2022,
+pp.\ 2535--2549.
+\bibitem{elsa} M.\ Rathee, C.\ Shen, S.\ Wagh, and R.\ A.\ Popa, ``ELSA: Secure
+aggregation for federated learning with malicious actors,'' in \emph{Proc.\ IEEE Symp.\
+Security and Privacy (S\&P)}, 2023, pp.\ 1961--1979.
+\end{thebibliography}
+
+\end{document}
