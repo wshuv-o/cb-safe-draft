@@ -11,13 +11,13 @@
         <mxCell id="3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fontFamily=Georgia;dashed=1;dashPattern=6 4;fillColor=#ABFFB5;strokeColor=#000000;fontColor=#000000;" value="" vertex="1">
           <mxGeometry height="318" width="88.72" x="2190.9729378255206" y="609.5757853190107" as="geometry" />
         </mxCell>
-        <mxCell id="4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fontFamily=Georgia;text;html=1;align=left;verticalAlign=middle;fontSize=16;fillColor=none;strokeColor=none;align=center;fontColor=#000000;" value="&lt;b&gt;(a)&lt;/b&gt;&amp;nbsp; Secure Aggregation Within Clusters" vertex="1">
+        <mxCell id="4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fontFamily=Georgia;text;html=1;align=left;verticalAlign=middle;fontSize=16;fillColor=none;strokeColor=none;align=center;fontColor=#000000;" value="&lt;b&gt;(e)&lt;/b&gt;&amp;nbsp; Secure Aggregation Within Clusters" vertex="1">
           <mxGeometry height="54" width="368" x="1082.332937825521" y="546.5757853190107" as="geometry" />
         </mxCell>
-        <mxCell id="5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fontFamily=Georgia;text;html=1;align=left;verticalAlign=middle;fontSize=16;fillColor=none;strokeColor=none;align=center;fontColor=#000000;" value="&lt;b&gt;(c)&lt;/b&gt;&amp;nbsp; Loss-Probe Flagging &amp;amp; Temporal Group Testing" vertex="1">
+        <mxCell id="5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fontFamily=Georgia;text;html=1;align=left;verticalAlign=middle;fontSize=16;fillColor=none;strokeColor=none;align=center;fontColor=#000000;" value="&lt;b&gt;(f)&lt;/b&gt;&amp;nbsp; Loss-Probe Flagging &amp;amp; Temporal Group Testing" vertex="1">
           <mxGeometry height="54" width="700" x="1354.3363118489585" y="555.5757649739589" as="geometry" />
         </mxCell>
-        <mxCell id="6" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fontFamily=Georgia;text;html=1;align=left;verticalAlign=middle;fontSize=16;fillColor=none;strokeColor=none;align=center;fontColor=#000000;" value="&lt;b&gt;(d)&lt;/b&gt;&amp;nbsp; Robust Aggregation &amp;amp; Model Update" vertex="1">
+        <mxCell id="6" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fontFamily=Georgia;text;html=1;align=left;verticalAlign=middle;fontSize=16;fillColor=none;strokeColor=none;align=center;fontColor=#000000;" value="&lt;b&gt;(g)&lt;/b&gt;&amp;nbsp; Robust Aggregation &amp;amp; Model Update" vertex="1">
           <mxGeometry height="54" width="378" x="1861.332937825521" y="555.5757853190107" as="geometry" />
         </mxCell>
         <mxCell id="7" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=11;fontFamily=Georgia;text;html=1;align=left;verticalAlign=middle;fontSize=12;fillColor=none;strokeColor=none;fontColor=#000000;" value="1" vertex="1">
