@@ -293,8 +293,8 @@ $L(\cdot;\mathcal{D}_0)$ & root loss probe \\
 $g_\ell^r$ & flag bit of cluster $\ell$ in round $r$ \\
 $s_i^r$ & accumulated suspicion of client $i$ \\
 $p_h$ & honest co-cluster flag prob.\ $1-(1-f)^{c-1}$ \\
-$\tau$ & exclusion threshold \\
-$o$ & overlap degree (groups per client) \\
+$\sigma^{*}$ & adaptive-gap exclusion threshold \\
+$o$ & overlap degree (COMP window, in rounds) \\
 $R$ & number of training rounds \\
 ASR & backdoor attack success rate \\
 \bottomrule
@@ -459,16 +459,28 @@ matches $|\mathbf{h}|$ with opposite sign (Proposition~\ref{prop:launder}).}
 
 \subsection{CB-SAFE+: Temporal Group Testing over Cluster Sums}\label{sec:defense}
 CB-SAFE+ turns the laundering signature into an identification mechanism, using
-three ingredients. (i)~\emph{Re-randomized clustering}: the partition is redrawn
-every round (pairwise secrets with all peers are established once at setup, so
-re-clustering adds no per-round KEM cost). (ii)~\emph{Loss-probe flags}: the
-server maintains a small root dataset ($|\mathcal{D}_0|{=}200$ samples held out from all
-clients, the standard trust-bootstrapping assumption \cite{fltrust,zeno}), applies
-each cluster mean to the current model $\theta^r$, and flags every cluster whose mean
-\emph{increases} root loss,
+three ingredients. (i)~\emph{Re-randomized clustering, one partition per round}: the
+server draws a \emph{single} fresh partition of the active clients into size-$c$
+clusters each round (pairwise secrets with all peers are established once at setup, so
+re-clustering adds no per-round KEM cost). Using \emph{one} partition per round is a
+privacy requirement, not merely a convenience: it reveals exactly one size-$c$ cluster
+sum per client (rank $c$), whereas placing a client in $o$ groups
+\emph{simultaneously} would reveal $o$ overlapping sums of the same update and make the
+round's linear system solvable, defeating Theorem~\ref{thm:priv}. The overlap that
+group testing needs is instead obtained \emph{across} rounds (ingredient~iii).
+(ii)~\emph{Loss-probe flags}: the server maintains a small root dataset
+($|\mathcal{D}_0|{=}200$ samples held out from all clients, the standard
+trust-bootstrapping assumption \cite{fltrust,zeno}), applies each cluster mean
+$\mathbf{S}_\ell$ to the current model $\theta^r$, and records the change in root loss
+$\Delta_\ell^{\,r}=L(\theta^r+\mathbf{S}_\ell;\,\mathcal{D}_0)-L(\theta^r;\,\mathcal{D}_0)$.
+An absolute $\Delta_\ell>0$ test over-flags, because an honest non-IID cluster mean can
+itself raise the loss slightly on a small balanced root set; we therefore flag
+\emph{relative to the cleanest cluster of the round},
 \begin{equation}\label{eq:flag}
-g_\ell^{\,r} = \mathbb{1}\!\left[\, L(\theta^r + \mathbf{S}_\ell;\, \mathcal{D}_0) > L(\theta^r;\, \mathcal{D}_0)\,\right].
+g_\ell^{\,r} = \mathbb{1}\!\left[\, \Delta_\ell^{\,r} \;>\; \min_{k}\Delta_k^{\,r} + \delta \,\right],
 \end{equation}
+with a small margin $\delta$: a $\gamma$-amplified ascent direction spikes
+$\Delta_\ell$ far above the cleanest cluster no matter whose data dominates the sum.
 Flags are computed from already-revealed cluster sums
 and server-local data, so they reveal no update content beyond those sums
 (Theorem~\ref{thm:priv}). The probe is
@@ -481,51 +493,64 @@ idiosyncratic direction, nearly orthogonal to the balanced anchor, so its sign t
 approaches a coin flip (at $f{=}0.2$ we measured cosine flags hitting clean clusters
 as often as dirty ones, and suspicion never separated). The loss probe is immune to
 this decorrelation because a $\gamma$-amplified ascent direction raises root loss
-regardless of whose data dominates the cluster sum. (iii)~\emph{Suspicion accumulation and exclusion}: every member of a flagged
-cluster gains one suspicion count, so after $r$ rounds client $i$ has accumulated
+regardless of whose data dominates the cluster sum. (iii)~\emph{Temporal group
+testing and adaptive exclusion}: across $o$ consecutive rounds a client is
+re-clustered into $o$ different groups, the across-round analog of $o$ overlapping
+tests. A client accrues a suspicion mark in round $r$ only if its cluster was flagged
+in \emph{every} one of the last $o$ rounds (a windowed COMP decode); writing
+$G_i^{\,r}=\prod_{\rho=r-o+1}^{r} g_{\ell(i,\rho)}^{\,\rho}$ for that windowed
+conjunction ($o{=}1$ recovers plain per-round accumulation), after $r$ rounds client
+$i$ has accumulated
 \begin{equation}\label{eq:susp}
-s_i^{\,r} = \sum_{\rho=1}^{r} g_{\ell(i,\rho)}^{\,\rho},
+s_i^{\,r} = \sum_{\rho\le r} G_i^{\,\rho}.
 \end{equation}
-where $\ell(i,\rho)$ is the cluster containing $i$ in round $\rho$. A malicious
-client sits in a flagged cluster in essentially every round ($\mathbb{E}[s_i^{\,r}/r]\!\to\!1$),
-while an honest client is flagged only when randomly
-co-clustered with an attacker, i.e., with probability
+A malicious client is caught in essentially every window
+($\mathbb{E}[s_i^{\,r}/r]\!\to\!1$), while an honest client is flagged only when
+randomly co-clustered with an attacker, with per-round probability
 \begin{equation}\label{eq:ph}
-p_h = 1-(1-f)^{\,c-1} < 1 .
+p_h = 1-(1-f)^{\,c-1} < 1 ,
 \end{equation}
-A client is excluded once its flagged fraction exceeds a threshold $\tau\in(p_h,1)$
-after a warmup of $W$ rounds,
+and only $p_h^{\,o}$ across a full window, so overlap further suppresses honest false
+positives. After a warmup of $W$ rounds the server excludes clients by an
+\emph{adaptive gap} rather than a fixed cut: it sorts the flagged fractions
+$s_i^{\,r}/r$, takes the largest gap between consecutive values, and excludes the high
+side when that gap exceeds a minimum separation, its midpoint $\sigma^{*}$ sits above a
+floor, and the excluded set is a minority,
 \begin{equation}\label{eq:excl}
-\text{exclude } i \iff r>W \ \text{and}\ s_i^{\,r}/r > \tau .
+\text{exclude } i \iff r>W \ \text{and}\ s_i^{\,r}/r > \sigma^{*} .
 \end{equation}
-By Hoeffding's inequality the two populations separate exponentially: the
-per-client misclassification probability is at most $e^{-2r(\tau-p_h)^2}$, so a few
-rounds suffice to isolate the attackers, as the measured suspicion trajectories
-confirm (Fig.~\ref{fig:suspicion}). The server thereby identifies individual
-attackers it has never observed individually: group testing \cite{dorfman1943,aldridge2019} where the
-pools are the privacy-preserving cluster sums and the tests repeat over training rounds. The
-\emph{hybrid} variant augments Eq.~\eqref{eq:susp} with a per-round combinatorial
-(COMP) decode over the overlapping groups (degree $o$), so a client is suspected
-only if \emph{all} its groups are flagged, further suppressing false positives.
+A fixed threshold $\tau$ is deliberately avoided: a $\gamma$-amplified attacker can
+plateau its flagged fraction just below any preset $\tau$ (we observed $\sim$0.73
+against $\tau{=}0.85$) and evade the cut, whereas the gap rule keys on the
+\emph{separation} between the honest and malicious populations, which is present
+whenever an attack is. By Hoeffding's inequality those populations concentrate near
+$p_h^{\,o}$ and $1$ and separate exponentially, so a few rounds open a gap wide enough
+to cut, as the measured suspicion trajectories confirm (Fig.~\ref{fig:suspicion}).
+The server thereby identifies individual attackers it has never observed
+individually: group testing \cite{dorfman1943,aldridge2019} whose pools are the
+privacy-preserving cluster sums and whose tests repeat, and overlap, over training
+rounds. At large populations ($N>N_0{=}50$) per-client data shrinks, so absolute loss
+deltas compress and the suspicion histogram densifies; the flag and the exclusion then
+switch to scale-invariant robust rules (upper median-plus-MAD outliers), which is what
+keeps CB-SAFE+ effective at $N{=}500$ (Section~\ref{sec:eval}).
 
 \begin{algorithm}[t]
 \caption{CB-SAFE+: Temporal Group Testing over Cluster Sums}
 \label{alg:cbsafeplus}
 \DontPrintSemicolon
-\KwIn{clients $[N]$, root $\mathcal{D}_0$, cluster size $c$, threshold $\tau$, warmup $W$, rounds $R$}
+\KwIn{clients $[N]$, root $\mathcal{D}_0$, cluster size $c$, overlap $o$, warmup $W$, flag margin $\delta$, rounds $R$}
 \KwOut{global model $\theta$, excluded set $\mathcal{E}$}
-$s_i \leftarrow 0\ \forall i$;\quad $\mathcal{E}\leftarrow\varnothing$\;
+$s_i \leftarrow 0$, window $h_i \leftarrow (\,)\ \forall i$;\quad $\mathcal{E}\leftarrow\varnothing$\;
 \For{$r \leftarrow 1$ \KwTo $R$}{
-  redraw a random partition of $[N]\setminus\mathcal{E}$ into clusters of size $c$\;
-  \ForEach{cluster $\ell$}{
-    $\mathbf{S}_\ell \leftarrow$ \textsc{ClusterSecureAgg}$(\ell,r)/|\mathrm{alive}(\ell)|$ \tcp*{Alg.~\ref{alg:secagg}}
-    $g_\ell^{\,r} \leftarrow$ loss-probe flag, Eq.~\eqref{eq:flag}\;
-    \lForEach{active $i\in\ell$ with $g_\ell^{\,r}{=}1$}{$s_i \leftarrow s_i+1$}
+  redraw \emph{one} random partition of $[N]\setminus\mathcal{E}$ into clusters of size $c$\;
+  \lForEach{cluster $\ell$}{$\mathbf{S}_\ell \leftarrow \textsc{ClusterSecureAgg}(\ell,r)/|\mathrm{alive}(\ell)|$;\ \ $\Delta_\ell \leftarrow L(\theta{+}\mathbf{S}_\ell;\mathcal{D}_0){-}L(\theta;\mathcal{D}_0)$}
+  \lForEach{cluster $\ell$}{$g_\ell \leftarrow \mathbb{1}[\Delta_\ell > \min_k\Delta_k + \delta]$}\tcp*{Eq.~\eqref{eq:flag}}
+  \ForEach{active client $i$, in its cluster $\ell$}{
+    append $g_\ell$ to $h_i$ and keep its last $o$ entries\;
+    \lIf{$|h_i|{=}o$ \textup{and} $\min h_i{=}1$}{$s_i \leftarrow s_i{+}1$}\tcp*{windowed COMP}
   }
-  \If{$r > W$}{
-    \lForEach{active $i$ with $s_i/r > \tau$}{$\mathcal{E}\leftarrow\mathcal{E}\cup\{i\}$}
-  }
-  $\theta \leftarrow \theta + \textsc{RobustAgg}\big(\{\mathbf{S}_\ell : g_\ell^{\,r}{=}0\}\big)$\;
+  \lIf{$r > W$}{$\mathcal{E}\leftarrow\mathcal{E}\cup\textsc{GapExclude}\big(\{s_i/r\}\big)$}\tcp*{adaptive gap, Eq.~\eqref{eq:excl}}
+  $\theta \leftarrow \theta + \textsc{RobustAgg}\big(\{\mathbf{S}_\ell : g_\ell{=}0\}\big)$\;
 }
 \Return $\theta,\ \mathcal{E}$\;
 \end{algorithm}
@@ -743,7 +768,7 @@ decoder~\cite{fedgt}. Best in bold.}
 Method & caught$\uparrow$ & FP$\downarrow$ & caught$\uparrow$ & FP$\downarrow$ & caught$\uparrow$ & FP$\downarrow$\\
 \midrule
 FedGT~\cite{fedgt}  & 2.7/3 & 13.0 & 5.3/6 & 17.7 & 7.7/9 & 11.0\\
-CB-SAFE+ (ov1)   & 3/3 & 0.7 & 4/6 & 0.7 & 6/9 & 1.3\\
+CB-SAFE+ (ov1)   & 3/3 & 0.7 & 4/6 & 0.7 & 6.3/9 & 1.3\\
 CB-SAFE+ hybrid  & \textbf{3/3} & \textbf{0.3} & \textbf{6/6} & \textbf{0.3} & \textbf{9/9} & \textbf{0.0}\\
 \bottomrule
 \end{tabular}
@@ -858,12 +883,13 @@ accuracy signal is informative it is the less stable identifier.
 \input{../results/tables/table3_labelflip.tex}
 
 \subsection{Adaptive Attacker: Duty-Cycled Poisoning}
-The exclusion rule $s_i^r/r>\tau$ ($\tau{=}0.85$) invites an obvious evasion: poison
-only a fraction $\delta<\tau$ of rounds, keeping most of the attack while never
-crossing the threshold. We test this directly (Table~\ref{tab:duty}), and it fails.
+Suspicion-based exclusion invites an obvious evasion: poison only a fraction
+$\delta$ of rounds, keeping most of the attack while holding the flagged fraction low
+enough to blend into the honest side of the suspicion gap. We test this directly
+(Table~\ref{tab:duty}), and it fails.
 Because the partition is re-randomized every round, a resting attacker is still
 flagged whenever it co-clusters with an \emph{active} one, so its accumulated
-suspicion runs ahead of its nominal duty: at $\delta{=}0.84$, right at the threshold,
+suspicion runs ahead of its nominal duty: even at a high duty $\delta{=}0.84$,
 CB-SAFE+ still excludes all six attackers in every seed. Across
 $\delta\in[0.5,1.0]$ it excludes $4$--$6$ of $6$ and accuracy never drops below
 $\sim$50\% (clean baseline $59\%$), where coordinate-wise rules sit at $10\%$. The
@@ -875,14 +901,17 @@ open, but the naive duty-cycle evasion does not succeed.
 
 \subsection{Ablation: Which Component Earns the Robustness}
 CB-SAFE+ layers three ingredients on top of clustered secure aggregation: temporal
-reputation, overlapping re-randomized groups, and a per-round COMP decode.
+reputation, temporally-overlapping re-randomized groups, and a windowed COMP decode.
 Table~\ref{tab:ablation-variants} isolates each under the identical sign-flip
-protocol. The base temporal reputation (ov1) already restores learning at moderate
-contamination but degrades at $f{=}0.3$ (37.9\% on CIFAR-10); adding overlapping
-groups (ov4) lifts it to 48.8\%, and the full hybrid COMP decode reaches 50.0\%---
-far above FedGT's actual BCJR decoder, which collapses to chance at this
-contamination (Table~\ref{tab:detect}). Each component contributes, and the gains
-concentrate in the high-$f$ regime where laundering is strongest. The trust-free variant, which uses
+protocol. The base temporal reputation (ov1) restores learning at moderate
+contamination and holds $53.6\%$ at $f{=}0.3$ on CIFAR-10; spreading the tests over
+$o{=}4$ overlapping rounds (ov4) lifts this to $57.7\%$, and the full hybrid is
+comparable at $57.4\%$, all far above FedGT's actual BCJR decoder, which collapses to
+chance at this contamination (Table~\ref{tab:detect}). The decisive gain is the
+temporal overlap; the windowed COMP decode, which counts a client only when it is
+flagged across the whole window, mainly suppresses honest false positives rather than
+adding accuracy. Both gains concentrate in the high-$f$ regime where laundering is
+strongest. The trust-free variant, which uses
 \emph{no} root dataset, matches the others at $f{=}0.1$ but collapses beyond it:
 attacker identification without any trusted anchor is possible only in the
 low-contamination regime, a capability boundary we state rather than hide.
@@ -998,8 +1027,10 @@ local poison rate \cite{bagdasaryan2020}, evaluated by attack success rate (ASR)
 Unless stated: cluster size $c{=}3$ ($k{=}10$ clusters), Shamir threshold
 $t{=}\lfloor c/2\rfloor{+}1{=}2$, robust rule trimmed mean/median with trim
 $\beta$ per side, overlap degree $o\in\{1,4\}$, server root $|\mathcal{D}_0|{=}200$
-held out from all clients, exclusion threshold $\tau{=}0.85$ (or the adaptive
-gap rule) after a warmup of $W{=}5$ rounds. KEMs span HQC-128/192/256 and
+held out from all clients, and adaptive-gap exclusion (flag margin $\delta{=}0.25$,
+minimum suspicion gap $0.15$, floor $0.25$) after a warmup of $W{=}5$ rounds; for
+$N{>}50$ the flag and exclusion switch to robust median-plus-MAD thresholds
+($1.0$ and $2.5$ MAD). KEMs span HQC-128/192/256 and
 ML-KEM-512/768/1024 at matched NIST levels; masks are ChaCha20 keystreams with
 HKDF-SHA256 per-round seeds. Runs use Python~3.12, PyTorch~2.5.0 (CUDA~12.4),
 liboqs-python~0.15.0 on a single NVIDIA RTX~2060 (6\,GB). CIFAR-10, FashionMNIST,
