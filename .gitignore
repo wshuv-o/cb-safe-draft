@@ -54,3 +54,8 @@ paper/overleaf/
 # Office lock/temp files
 ~$*
 **/~$*
+
+# local run environment / scratch (added during 5080 battery run)
+.venv/
+data/
+*.log

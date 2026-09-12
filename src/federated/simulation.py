@@ -84,14 +84,22 @@ def poisons_this_round(cfg: Config, client: int, r: int) -> bool:
 
 
 def local_train(global_flat: np.ndarray, loader: DataLoader, cfg: Config,
-                device: torch.device, malicious: bool) -> np.ndarray:
-    """Train locally from the global model; return the flat float32 delta."""
+                device: torch.device, malicious: bool,
+                epochs: int | None = None) -> np.ndarray:
+    """Train locally from the global model; return the flat float32 delta.
+
+    `epochs` overrides cfg.local_epochs. Used for the FLTrust root update: the
+    root set is far smaller than a client shard, so matching *epochs* would give
+    the server ~8x fewer SGD steps than a client and shrink the aggregate (which
+    FLTrust rescales to the root's norm) by the same factor. Cao et al. match
+    local *iterations*, so the caller passes the epoch count that equalises them.
+    """
     model = make_model(cfg.dataset).to(device)
     load_flat_params(model, global_flat)
     model.train()
     opt = torch.optim.SGD(model.parameters(), lr=cfg.lr, momentum=cfg.momentum)
     loss_fn = nn.CrossEntropyLoss()
-    for _ in range(cfg.local_epochs):
+    for _ in range(cfg.local_epochs if epochs is None else epochs):
         for x, y in loader:
             if malicious and cfg.attack == "labelflip":
                 y = attacks.flip_labels(y, cfg.n_classes)
@@ -281,7 +289,12 @@ def run(cfg: Config, client_dls: list[DataLoader], test_dl: DataLoader,
             # server's own root-data update (needs server_dl; fixed clusters)
             means = np.stack([np.mean(np.stack([deltas[i] for i in cl]), axis=0)
                               for cl in clusters])
-            root_update = local_train(global_flat, server_dl, cfg, device, malicious=False)
+            # match client SGD steps, not epochs (see local_train docstring)
+            n_root = max(1, len(server_dl))
+            n_client = max(1, int(np.median([len(dl) for dl in client_dls])))
+            root_epochs = max(1, round(cfg.local_epochs * n_client / n_root))
+            root_update = local_train(global_flat, server_dl, cfg, device,
+                                      malicious=False, epochs=root_epochs)
             delta_agg = robust.fltrust(means, root_update)
         else:
             if on_round is not None:
