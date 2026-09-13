@@ -100,10 +100,13 @@ def load_edgeiiot(csv_path: str, seed: int = 0, test_frac: float = 0.2,
 
     df = pd.read_csv(csv_path, low_memory=False)
     if len(df) > max_rows:  # subsample for tractable FL rounds, class-stratified
-        df = df.groupby(_LABEL_COL, group_keys=False).apply(
-            lambda g: g.sample(min(len(g), max(1, max_rows // df[_LABEL_COL].nunique())),
-                               random_state=seed)
-        )
+        # Built by concatenating per-group samples rather than groupby().apply():
+        # pandas 3 excludes the grouping column from an apply result, which silently
+        # dropped Attack_type and made the next line raise KeyError. Older pandas only
+        # warned. This form keeps every column on any version.
+        per = max(1, max_rows // df[_LABEL_COL].nunique())
+        df = pd.concat([g.sample(min(len(g), per), random_state=seed)
+                        for _, g in df.groupby(_LABEL_COL, sort=False)])
     df = df.dropna(axis=0, how="any").reset_index(drop=True)
 
     y_raw = df[_LABEL_COL].astype(str)
@@ -113,9 +116,12 @@ def load_edgeiiot(csv_path: str, seed: int = 0, test_frac: float = 0.2,
 
     drop = [c for c in _EDGEIIOT_DROP + [_LABEL_COL] if c in df.columns]
     X = df.drop(columns=drop)
-    # label-encode any remaining object columns, coerce the rest to numeric
+    # Label-encode any remaining non-numeric column, then coerce the rest.
+    # Testing `dtype == object` missed them on pandas 3, where text columns carry
+    # StringDtype: they reached the float cast unencoded and raised on values like
+    # 'GET'. A numeric-dtype test is correct on every version.
     for col in X.columns:
-        if X[col].dtype == object:
+        if not pd.api.types.is_numeric_dtype(X[col]):
             X[col] = X[col].astype("category").cat.codes
     X = X.apply(lambda s: s.astype(np.float32)).to_numpy()
     X = np.nan_to_num(X, nan=0.0, posinf=0.0, neginf=0.0)

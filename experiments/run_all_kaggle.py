@@ -36,6 +36,9 @@ METHODS = [
     ("reputation", 1, True), ("reputation", 4, True), ("reputation_tf", 1, False),
     ("hybrid", 4, True),
 ]
+_M = [m.strip() for m in os.environ.get("CBSAFE_METHODS", "").split(",") if m.strip()]
+if _M:                     # e.g. CBSAFE_METHODS=fedgt to top up one aggregator
+    METHODS = [m for m in METHODS if m[0] in _M]
 FS = [0.1, 0.2, 0.3]
 SF_SEEDS = [0, 1, 2]       # sign-flip: 3 seeds (headline)
 # Backdoor/label-flip default to 1 seed to bound runtime, which the paper footnotes.
