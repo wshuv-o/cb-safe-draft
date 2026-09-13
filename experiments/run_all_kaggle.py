@@ -38,7 +38,11 @@ METHODS = [
 ]
 FS = [0.1, 0.2, 0.3]
 SF_SEEDS = [0, 1, 2]       # sign-flip: 3 seeds (headline)
-OTHER_SEEDS = [0]          # backdoor/label-flip: 1 seed (bound runtime; footnoted)
+# Backdoor/label-flip default to 1 seed to bound runtime, which the paper footnotes.
+# CBSAFE_OTHER_SEEDS overrides it so missing seeds can be topped up without editing
+# this file, e.g. CBSAFE_OTHER_SEEDS=1,2 to complete an existing grid.
+OTHER_SEEDS = [int(x) for x in
+               os.environ.get("CBSAFE_OTHER_SEEDS", "0").split(",") if x.strip()]
 ROUNDS = int(os.environ.get("CBSAFE_ROUNDS", "25"))
 # Optionally scope attacks (comma-separated), e.g. CBSAFE_ATTACKS=labelflip.
 _ATTACKS = [a.strip() for a in os.environ.get("CBSAFE_ATTACKS", "").split(",") if a.strip()] or None
