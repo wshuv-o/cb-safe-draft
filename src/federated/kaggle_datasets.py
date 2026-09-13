@@ -136,14 +136,30 @@ def load_edgeiiot(csv_path: str, seed: int = 0, test_frac: float = 0.2,
     return train, test, ytr
 
 
-def find_edgeiiot_csv(search_root: str = "/kaggle/input") -> str | None:
-    """Locate the Edge-IIoTset DNN CSV anywhere under the Kaggle input mount."""
+def find_edgeiiot_csv(search_root: str | None = None) -> str | None:
+    """Locate the Edge-IIoTset DNN CSV.
+
+    Searches CBSAFE_EDGEIIOT_DIR if set, then the repository's data/ directory, then
+    the Kaggle input mount. The local paths are what let the Edge-IIoT experiments run
+    off Kaggle: the mount does not exist on a workstation, so the presence probe
+    returned None and the dataset was skipped without an error.
+    """
     prefer = "DNN-EdgeIIoT-dataset.csv"
+    if search_root is not None:
+        roots = [search_root]
+    else:
+        here = os.path.dirname(os.path.abspath(__file__))
+        repo = os.path.dirname(os.path.dirname(here))
+        roots = [os.environ.get("CBSAFE_EDGEIIOT_DIR"),
+                 os.path.join(repo, "data"),
+                 "/kaggle/input"]
     fallback = None
-    for dirpath, _dirs, files in os.walk(search_root):
-        for fn in files:
-            if fn == prefer:
-                return os.path.join(dirpath, fn)
-            if fn.lower().endswith(".csv") and "edge" in fn.lower() and fallback is None:
-                fallback = os.path.join(dirpath, fn)
+    for root in [r for r in roots if r and os.path.isdir(r)]:
+        for dirpath, _dirs, files in os.walk(root):
+            for fn in files:
+                if fn == prefer:
+                    return os.path.join(dirpath, fn)
+                if fn.lower().endswith(".csv") and "edge" in fn.lower() \
+                        and fallback is None:
+                    fallback = os.path.join(dirpath, fn)
     return fallback
