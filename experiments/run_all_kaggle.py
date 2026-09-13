@@ -40,7 +40,15 @@ _M = [m.strip() for m in os.environ.get("CBSAFE_METHODS", "").split(",") if m.st
 if _M:                     # e.g. CBSAFE_METHODS=fedgt to top up one aggregator
     METHODS = [m for m in METHODS if m[0] in _M]
 FS = [0.1, 0.2, 0.3]
+# Scope the malicious fractions, e.g. CBSAFE_FS=0.1 to run a single control config
+# instead of the full 3x3 grid.
+_FS = [float(x) for x in os.environ.get("CBSAFE_FS", "").split(",") if x.strip()]
+if _FS:
+    FS = _FS
 SF_SEEDS = [0, 1, 2]       # sign-flip: 3 seeds (headline)
+_SF = [int(x) for x in os.environ.get("CBSAFE_SF_SEEDS", "").split(",") if x.strip()]
+if _SF:
+    SF_SEEDS = _SF
 # Backdoor/label-flip default to 1 seed to bound runtime, which the paper footnotes.
 # CBSAFE_OTHER_SEEDS overrides it so missing seeds can be topped up without editing
 # this file, e.g. CBSAFE_OTHER_SEEDS=1,2 to complete an existing grid.

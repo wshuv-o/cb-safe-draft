@@ -90,7 +90,10 @@ def significance(long: pd.DataFrame) -> pd.DataFrame | None:
     """CB-SAFE+ (reputation) vs each static rule, on sign-flip cells where the
     laundering effect makes robustness non-trivial. Pairs by (dataset, attack, f,
     seed) so each comparison is like-for-like."""
-    baselines = ["mean", "trimmed", "median", "krum"]
+    # FLTrust included: the manuscript claims CB-SAFE+ beats *every* baseline, so
+    # the strongest non-collapsing one has to be in the test, not just the
+    # coordinate-wise rules that collapse under laundering.
+    baselines = ["mean", "trimmed", "median", "krum", "fltrust"]
     sub = long[(long["attack"] == "signflip") & (long["c"] == 3)
                & long["dataset"].isin(["cifar10", "fmnist", "emnist", "edgeiiot"])]
     rep = sub[sub["agg"] == "reputation"].set_index(["dataset", "f", "seed"])["final_acc"]

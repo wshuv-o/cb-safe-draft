@@ -116,16 +116,16 @@ def notebook():
         md("## 5. Read off the numbers\n\n"
            "Final-round accuracy per configuration, which is what the table cell "
            "reports."),
-        code("import pandas as pd, numpy as np, collections\n"
+        code("import pandas as pd, numpy as np, collections, re\n"
              "rows = collections.defaultdict(list)\n"
              "for p in glob.glob('/kaggle/working/results/kaggle/edgeiiot/robust_labelflip_fedgt_*.csv'):\n"
              "    df = pd.read_csv(p)\n"
-             "    f = os.path.basename(p).split('_f')[1][:2]\n"
+             "    f = int(re.search(r'_f(\\d\\d)_', os.path.basename(p)).group(1))\n"
              "    rows[f].append(100*df['acc'].iloc[-1])\n"
              "for f in sorted(rows):\n"
              "    v = np.array(rows[f])\n"
-             "    print('f=0.%s  n=%d  acc = %.1f +/- %.1f' %\n"
-             "          (f[0] if f[1]=='0' else f, len(v), v.mean(),\n"
+             "    print('f=%.1f  n=%d  acc = %.1f +/- %.1f' %\n"
+             "          (f/100, len(v), v.mean(),\n"
              "           v.std(ddof=1) if len(v) > 1 else 0.0))"),
         todo("FedGT label-flip on Edge-IIoTset",
              "f = 0.1: <b>______ &plusmn; ______</b> &nbsp; (paper currently: 62.0, no error bar)<br>\n"
