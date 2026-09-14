@@ -1024,6 +1024,40 @@ low-contamination regime, a capability boundary of trust-free identification.
 
 \input{../results/tables/table2_ablation.tex}
 
+\subsection{Sensitivity to the Detector Thresholds}\label{sec:sensitivity}
+CB-SAFE+'s detector has three hand-set constants: the loss-probe flag margin $\delta$,
+the minimum suspicion gap that counts as a real separation, and the floor a flagged
+group must exceed before exclusion. A margin stated in absolute cross-entropy units
+that works unchanged across four datasets invites the question of whether it was
+fitted to them, so we sweep each over five values around its operating point, three
+seeds at 50 rounds, on CIFAR-10 sign-flip at $f{=}0.2$ --- the configuration where the
+components separate at all (Table~\ref{tab:ablation-variants}):
+
+\begin{center}\scriptsize\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lccccc@{}}\toprule
+Threshold & \multicolumn{5}{c}{setting:\,accuracy (\%)}\\\midrule
+$\delta$ (flag margin) & .10:58.9 & .15:58.7 & \textbf{.25:59.0} & .40:57.3 & .60:53.7\\
+suspicion gap & .05:59.4 & .10:59.3 & \textbf{.15:59.2} & .25:58.9 & .35:58.4\\
+exclusion floor & .10:59.5 & .20:59.3 & \textbf{.25:59.3} & .35:59.3 & .50:58.8\\
+\bottomrule\end{tabular}
+\end{center}
+
+\noindent Bold marks the value used throughout the paper. Two of the three knobs are
+close to inert: the suspicion gap spans $1.1$ points across a sevenfold range and the
+exclusion floor $0.7$ points across a fivefold one. The flag margin matters more
+($5.3$ points), but asymmetrically --- accuracy is flat from $\delta{=}0.10$ to
+$0.25$ and falls only as $\delta$ grows past it, where the probe becomes too
+permissive to flag poisoned clusters at all. The operating point therefore sits on a
+plateau rather than at a peak, which is the signature one wants: had $\delta$ been
+fitted to these runs, the neighbouring settings would be worse, not equal.
+
+One caveat on reading these against Table~\ref{tab:signflip}. This sweep was run on a
+different GPU and PyTorch build than the CB-SAFE+ rows of the main tables, and the
+simulator does not pin cuDNN determinism, so the same configuration reproduces
+$59.0\%$ here against the $57.5\%$ reported there --- a consistent $+1.5$-point offset
+across all three seeds. The sweep is internally consistent and should be read as a
+comparison among its own settings, not as a restatement of table values.
+
 \subsection{The Privacy--Robustness Dial, Measured}
 
 Fixing the rule (median) and sweeping cluster size traces the dial empirically

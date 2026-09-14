@@ -197,9 +197,7 @@ def build_f0_table(methods, outfile="table_f0.tex"):
     """Reviewer request: an f=0 row for every rule, so attack damage can be told
     apart from implementation damage. Reads the robust_none_*_f00_* runs, which
     existed but fed no table."""
-    # Three image benchmarks only: the f=0 phase never covered Edge-IIoTset, so that
-    # column would be empty. Reporting the complete grid beats a wider one with gaps.
-    dsets = [(ds, d) for ds, d in DSROOT.items() if ds != "Edge-IIoTset"]
+    dsets = list(DSROOT.items())
     rows, allcells, prev = [], [], []
     for agg, lbl in methods:
         cells = []
@@ -215,7 +213,7 @@ def build_f0_table(methods, outfile="table_f0.tex"):
         rows.append(f"{lbl} & " + " & ".join(cells) + r"\\")
         allcells += cells
         prev.append(lbl.ljust(34) + "".join(f"{c[:18]:>20}" for c in cells))
-    cap = (r"No-attack reference accuracy (\%) at $f{=}0$ on the three image benchmarks "
+    cap = (r"No-attack reference accuracy (\%) at $f{=}0$ across all four benchmarks "
            r"(mean\,$\pm$\,std over 3 seeds, 50 rounds). Every rule is applied to benign "
            r"updates only, so a value below the undefended mean is the cost of the "
            r"aggregation rule itself rather than of any attack. Read the robustness tables "
@@ -224,8 +222,8 @@ def build_f0_table(methods, outfile="table_f0.tex"):
            + _legend_if_needed(allcells))
     L = [r"\begin{table}[t]\centering\footnotesize",
          r"\caption{" + cap + r"}", r"\label{tab:noattack}",
-         r"\begin{tabular}{@{}lccc@{}}\toprule",
-         r"Method & CIFAR-10 & FashionMNIST & EMNIST\\\midrule"] + rows
+         r"\begin{tabular}{@{}l" + "c" * len(dsets) + r"@{}}\toprule",
+         "Method & " + " & ".join(ds for ds, _ in dsets) + r"\\\midrule"] + rows
     L += [r"\bottomrule\end{tabular}\end{table}"]
     open(os.path.join(TBL, outfile), "w").write("\n".join(L))
     return prev
