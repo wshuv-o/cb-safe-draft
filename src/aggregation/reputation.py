@@ -27,15 +27,28 @@ pairwise secrets once at setup (O(N) encapsulations per client).
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 
 import numpy as np
 
 from . import robust
 
+
+def _tuned(name: str, default: float) -> float:
+    """Detector thresholds, overridable for the sensitivity study.
+
+    A loss margin in absolute cross-entropy units that works unchanged across four
+    datasets is either luck or tuning against the reported runs, and the manuscript
+    cannot tell those apart without a sweep. These constants therefore read from the
+    environment with the published values as defaults: unset, every existing result
+    reproduces exactly; set, the sweep varies them without editing the algorithm.
+    """
+    return float(os.environ.get(name, default))
+
 # flag a cluster when its root-loss increase exceeds the best cluster's by this
 # margin (cross-entropy units); poisoned ascent directions overshoot it by far
-PROBE_MARGIN = 0.25
+PROBE_MARGIN = _tuned("CBSAFE_PROBE_MARGIN", 0.25)
 
 # --- scale-adaptive thresholds (activate only for large client populations) ---
 # At small N the absolute/gap rules above are well separated and used verbatim, so
@@ -54,8 +67,8 @@ class ReputationState:
     warmup: int = 5          # rounds before exclusion starts
     tau: float = 0.85        # (legacy) fixed exclusion threshold; unused when adaptive
     adaptive: bool = True    # gap-based adaptive exclusion instead of fixed tau
-    min_gap: float = 0.20    # smallest suspicion gap that counts as a real separation
-    min_floor: float = 0.35  # a flagged group must sit above this to be excluded
+    min_gap: float = field(default_factory=lambda: _tuned("CBSAFE_MIN_GAP", 0.20))
+    min_floor: float = field(default_factory=lambda: _tuned("CBSAFE_MIN_FLOOR", 0.35))
     n_byzantine: int = 2     # Krum parameter for the reference
     n_clients: int = 0       # population size; >SCALE_N switches to scale-adaptive rules
     comp_window: int = 1     # temporal COMP: rounds a client must be flagged in a row

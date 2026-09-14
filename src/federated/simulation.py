@@ -31,7 +31,7 @@ from torch.utils.data import DataLoader
 
 from ..adversary import attacks
 from ..aggregation import robust
-from ..aggregation.reputation import ReputationState, defend_round
+from ..aggregation.reputation import ReputationState, _tuned, defend_round
 from ..aggregation.secure_agg import make_clusters
 from .models import flat_params, load_flat_params, make_model
 
@@ -263,8 +263,12 @@ def run(cfg: Config, client_dls: list[DataLoader], test_dl: DataLoader,
             # size cfg.cluster_size, so the anonymity set is unchanged.
             if cfg.temporal_overlap:
                 rep.comp_window = cfg.overlap           # o overlapping groups spread over rounds
-                rep.min_floor = 0.25                    # temporal suspicion peaks ~0.6 not ~0.9; lower the exclusion floor
-                rep.min_gap = 0.15
+                # temporal suspicion peaks ~0.6 not ~0.9, so the exclusion floor is
+                # lowered here. Routed through _tuned so the sensitivity sweep reaches
+                # the CB-SAFE+ path too; without this the sweep would move only the
+                # non-temporal rules and read as spuriously insensitive.
+                rep.min_floor = _tuned("CBSAFE_MIN_FLOOR", 0.25)
+                rep.min_gap = _tuned("CBSAFE_MIN_GAP", 0.15)
                 clusters_r = make_clusters(active, cfg.cluster_size, cfg.seed + 13 + r)
             else:
                 clusters_r = []
