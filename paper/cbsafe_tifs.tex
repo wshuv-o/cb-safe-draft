@@ -552,7 +552,7 @@ backdoor attack success rate (ASR: fraction of triggered non-target test samples
 classified as the target); communication bytes per client (setup vs.\ per-round);
 crypto wall-time; dropout-recovery cost.
 
-\textbf{Datasets and reproducibility.} The four benchmarks are CIFAR-10~\cite{krizhevsky2009} ($50{,}000$/$10{,}000$, $10$ classes), FashionMNIST~\cite{fashionmnist} ($60{,}000$/$10{,}000$, $10$ classes), EMNIST-balanced~\cite{emnist} ($112{,}800$/$18{,}800$, $47$ classes), and Edge-IIoTset~\cite{edgeiiot} (tabular IoT/IIoT intrusion detection, $15$ classes, class-stratified to at most $120{,}000$ rows), each Dirichlet($\alpha{=}0.5$)~\cite{hsu2019} partitioned across $N{=}30$ clients. Unless stated: overlap degree $o\in\{1,4\}$, Shamir threshold $t{=}\lfloor c/2\rfloor{+}1{=}2$, server root $|\mathcal{D}_0|{=}200$ held out from all clients, and adaptive-gap exclusion (flag margin $\delta{=}0.25$, minimum suspicion gap $0.15$, floor $0.25$) after a warmup of $W{=}5$ rounds; for $N{>}50$ the flag and exclusion switch to robust median-plus-MAD thresholds ($1.0$ and $2.5$ MAD). KEMs span HQC-128/192/256 and ML-KEM-512/768/1024 at matched NIST levels; masks are ChaCha20 keystreams with HKDF-SHA256 per-round seeds. Runs use Python~3.12, PyTorch~2.5.0 (CUDA~12.4), and liboqs-python~0.15.0 on a single NVIDIA RTX~2060 (6\,GB); all results are averaged over three seeds, with significance by paired $t$-tests (Holm-corrected).
+\textbf{Datasets and reproducibility.} The four benchmarks are CIFAR-10~\cite{krizhevsky2009} ($50{,}000$/$10{,}000$, $10$ classes), FashionMNIST~\cite{fashionmnist} ($60{,}000$/$10{,}000$, $10$ classes), EMNIST-balanced~\cite{emnist} ($112{,}800$/$18{,}800$, $47$ classes), and Edge-IIoTset~\cite{edgeiiot} (tabular IoT/IIoT intrusion detection, the \texttt{DNN-EdgeIIoT-dataset.csv} release of $2{,}219{,}201$ flows over $15$ classes, class-stratified to at most $120{,}000$ rows), each Dirichlet($\alpha{=}0.5$)~\cite{hsu2019} partitioned across $N{=}30$ clients. Unless stated: overlap degree $o\in\{1,4\}$, Shamir threshold $t{=}\lfloor c/2\rfloor{+}1{=}2$, server root $|\mathcal{D}_0|{=}200$ held out from all clients, and adaptive-gap exclusion (flag margin $\delta{=}0.25$, minimum suspicion gap $0.15$, floor $0.25$) after a warmup of $W{=}5$ rounds; for $N{>}50$ the flag and exclusion switch to robust median-plus-MAD thresholds ($1.0$ and $2.5$ MAD). KEMs span HQC-128/192/256 and ML-KEM-512/768/1024 at matched NIST levels; masks are ChaCha20 keystreams with HKDF-SHA256 per-round seeds. Runs use Python~3.12, PyTorch~2.5.0 (CUDA~12.4), and liboqs-python~0.15.0 on a single NVIDIA RTX~2060 (6\,GB); all results are averaged over three seeds, with significance by paired $t$-tests (Holm-corrected).
 
 \subsection{Overhead: the Code-Based Premium Is a One-Time Cost}
 Table~\ref{tab:overhead} reports measured per-client traffic and crypto time.
@@ -774,13 +774,13 @@ respectively, versus 12--18\% for the worst static rule. Pooling all matched
 (dataset, $f$, seed) cells, CB-SAFE+ beats every baseline under a paired $t$-test
 with Holm correction: versus the mean by 56.8 points ($p{<}10^{-15}$), the median by
 43.5 ($p{<}10^{-8}$), Multi-Krum by 18.1 ($p{<}10^{-3}$),
-FLTrust by 4.8 ($p{<}10^{-8}$), and
+FLTrust by 5.0 ($p{<}10^{-9}$), and
 FedGT's actual BCJR decoder---across all four datasets at $N{=}30$---by
 18.3 ($p{<}10^{-3}$). The
 Edge-IIoTset result is the sharpest: at $f{=}0.3$ CB-SAFE+ holds 64.5\% against a
 $\sim$65\% clean baseline while mean, trimmed mean, and median all sit at 7.4\%.
 FLTrust is the one baseline that also withstands laundering on this dataset,
-trailing CB-SAFE+ by 3.1 points there (61.4\% vs 64.5\%); that is the smallest
+trailing CB-SAFE+ by 2.0 points there (62.5\% vs 64.5\%); that is the smallest
 margin we report, which is why it is tested explicitly above.
 
 \input{../results/tables/table1_signflip.tex}
@@ -827,7 +827,7 @@ contrast isolates the laundering mechanism (Proposition~\ref{prop:launder}) as t
 cause of the sign-flip failures, rather than any generic fragility of the setup.
 CB-SAFE+ leads on the image benchmarks---on FashionMNIST it holds 87\% at
 $f{=}0.3$ where the mean falls to 59\%---while on Edge-IIoTset all nine rules fall
-within 2.6 points of one another, so the ordering there is a wash and trimmed mean
+within 4.0 points of one another, so the ordering there is a wash and trimmed mean
 edges ahead at $f{=}0.2$ (66.3\% vs 64.3\%). We read that as the
 control behaving as intended: with no laundering to exploit, robust aggregation has
 little left to recover, so the separation that matters appears only under sign-flip. FedGT's actual BCJR decoder survives this

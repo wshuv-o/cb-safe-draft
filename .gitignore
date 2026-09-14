@@ -60,3 +60,7 @@ paper/overleaf/
 data/
 *.log
 data/edgeiiot/
+
+# Edge-IIoTset source CSVs (1.2 GB); fetched from Kaggle, see paper Section V
+data/edgeiiot_dnn/
+data/edgeiiot/
