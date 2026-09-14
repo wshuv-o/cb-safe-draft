@@ -222,43 +222,6 @@ print("\n=== TABLE: no-attack f=0 reference (preview, acc%) ===")
 print("\n".join(prevF0))
 
 
-# ============ TABLE: backdoor attack-success rate ============
-def build_backdoor_table(methods, outfile="table_backdoor.tex"):
-    """Reviewer request: backdoor numbers existed only in prose. Edge-IIoTset has no
-    backdoor runs (the patch trigger is image-specific), so it is omitted rather
-    than shown as an empty column."""
-    dsets = [(ds, d) for ds, d in DSROOT.items() if ds != "Edge-IIoTset"]
-    rows, allcells, prev = [], [], []
-    for agg, lbl in methods:
-        cells = [fmt(val(runs(d, agg, "backdoor", f), asr=True))
-                 for _ds, d in dsets for f in FS]
-        rows.append(f"{lbl} & " + " & ".join(cells) + r"\\")
-        allcells += cells
-        prev.append(lbl.ljust(34) + "".join(f"{c[:12]:>14}" for c in cells))
-    cap = (r"Backdoor attack-success rate (\%, lower is better) for the patch-trigger "
-           r"attack (mean\,$\pm$\,std over 3 seeds, 50 rounds). Edge-IIoTset is omitted: the "
-           r"patch trigger is image-specific. No rule here defends against this attack, "
-           r"CB-SAFE+ included."
-           + _legend_if_needed(allcells))
-    # table*, not table: ten columns do not fit one IEEE column (a single-column
-    # version overflowed the margin by 194pt).
-    L = [r"\begin{table*}[t]\centering\footnotesize",
-         r"\caption{" + cap + r"}",
-         r"\label{tab:backdoor}", r"\setlength{\tabcolsep}{4pt}",
-         r"\begin{tabular}{@{}l" + "ccc" * len(dsets) + r"@{}}\toprule",
-         "& " + " & ".join(r"\multicolumn{3}{c}{%s}" % ds for ds, _ in dsets) + r"\\",
-         r"\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(l){8-10}",
-         r"Method & " + " & ".join(f"$f{{=}}.{int(f*10)}$" for _ in dsets for f in FS)
-         + r"\\\midrule"] + rows
-    L += [r"\bottomrule\end{tabular}\end{table*}"]
-    open(os.path.join(TBL, outfile), "w").write("\n".join(L))
-    return prev
-
-
-prevBD = build_backdoor_table(main_methods)
-print("\n=== TABLE: backdoor ASR (preview, %) ===")
-print("\n".join(prevBD))
-
 # ============ TABLE II: FedGT head-to-head + identification + cost (CIFAR + FMNIST) ============
 methods2 = [("fedgt", "FedGT [TIFS'25]"), ("reputation", "CB-SAFE+ ov1"),
             ("reputation_ov4", "CB-SAFE+ ov4"), ("reputation_tf", "CB-SAFE+ trust-free"),

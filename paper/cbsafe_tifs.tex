@@ -846,11 +846,10 @@ main-task accuracy intact for every rule (50--55\%) while ASR stays at 86--97\%
 across mean, trimmed mean, Multi-Krum, \emph{and} CB-SAFE+:
 backdoored cluster sums \emph{reduce} clean root loss
 and align with the honest direction, so they are invisible to loss- and
-direction-based tests alike. Among these rules the partial exception at $f{=}0.1$ is
-the coordinate-wise median, which suppresses ASR to 67\% on CIFAR-10 (and to 42\% on
-FashionMNIST): order statistics can filter the trigger direction's coordinates when
-contamination is sparse, and rules that trim per coordinate after a selection step
-share that property. We therefore claim CB-SAFE+ for \emph{untargeted} model
+direction-based tests alike. Among the rules compared here, the partial exception at
+$f{=}0.1$ is the coordinate-wise median, which suppresses ASR to 67\% on CIFAR-10
+(and to 42\% on FashionMNIST): order statistics can filter the trigger direction's
+coordinates when contamination is sparse. We therefore claim CB-SAFE+ for \emph{untargeted} model
 poisoning only; targeted trigger attacks under secure aggregation remain open,
 consistent with their difficulty even without privacy constraints, and we do not
 position CB-SAFE+ against defenses built for them.
