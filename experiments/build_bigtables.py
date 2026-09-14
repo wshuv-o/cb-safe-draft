@@ -115,9 +115,12 @@ def build_signflip_table(methods, caption, label, outfile, attack="signflip"):
     if "textcolor{red}" in "\n".join(body):
         caption += (r" Red entries are provisional (runs still completing); "
                     r"a dash ($-$) marks a configuration not yet evaluated.")
-    L = [r"\begin{table*}[t]\centering\footnotesize",
+    # scriptsize with 2pt column separation. At footnotesize/4pt this 13-column grid
+    # ran past the physical page edge (measured 615pt on a 612pt page), clipping the
+    # last Edge-IIoTset column; LaTeX reported no overfull box for it.
+    L = [r"\begin{table*}[t]\centering\scriptsize",
          r"\caption{" + caption + r"}",
-         r"\label{" + label + r"}", r"\setlength{\tabcolsep}{4pt}",
+         r"\label{" + label + r"}", r"\setlength{\tabcolsep}{2pt}",
          r"\begin{tabular}{@{}l" + "ccc" * 4 + r"@{}}\toprule",
          r"& \multicolumn{3}{c}{CIFAR-10} & \multicolumn{3}{c}{FashionMNIST} & \multicolumn{3}{c}{EMNIST} & \multicolumn{3}{c}{Edge-IIoTset}\\",
          r"\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}\cmidrule(l){11-13}",

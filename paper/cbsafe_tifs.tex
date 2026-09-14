@@ -299,8 +299,11 @@ $ss_{ij}=\mathrm{Decaps}(sk_j, ct_{ij})$. In round $r$, client $i$ quantizes its
 update $x_i$ to $q(x_i)\in(\mathbb{Z}_{2^{64}})^d$, draws a self-mask seed $b_i^r$,
 Shamir-shares it $t$-of-$c$ within its cluster, and submits
 \begin{equation}\label{eq:mask}
-\mathbf{y}_i = q(\mathbf{x}_i) + G(b_i^r) + \!\sum_{j>i}\! G\!\big(H(ss_{ij}, r)\big)
-      - \!\sum_{j<i}\! G\!\big(H(ss_{ij}, r)\big) \!\!\!\pmod{2^{64}},
+\begin{split}
+\mathbf{y}_i = q(\mathbf{x}_i) + G(b_i^r)
+  &+ \sum_{j>i} G\big(H(ss_{ij}, r)\big)\\
+  &- \sum_{j<i} G\big(H(ss_{ij}, r)\big) \bmod 2^{64},
+\end{split}
 \end{equation}
 where the sums run over the cluster peers of $i$. The server adds each cluster's
 submissions (pairwise masks cancel), reconstructs each survivor's $b_i^r$ from $t$
