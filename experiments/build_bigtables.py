@@ -106,7 +106,8 @@ def identfp(dsdir, agg, f):
 
 
 # ============ sign-flip tables (full-width table*), reusable builder ============
-def build_signflip_table(methods, caption, label, outfile, attack="signflip"):
+def build_signflip_table(methods, caption, label, outfile, attack="signflip",
+                         colsep="1pt"):
     # The red/dash legend is appended only when such cells actually exist. A fixed
     # legend went stale once the grid completed, explaining markup the table no
     # longer contained; hard-removing it would instead leave a future partial run
@@ -115,14 +116,16 @@ def build_signflip_table(methods, caption, label, outfile, attack="signflip"):
     if "textcolor{red}" in "\n".join(body):
         caption += (r" Red entries are provisional (runs still completing); "
                     r"a dash ($-$) marks a configuration not yet evaluated.")
-    # footnotesize with 1pt column separation. At the original footnotesize/4pt this
-    # 13-column grid ran past the physical page edge (615pt on a 612pt page), clipping
-    # the last Edge-IIoTset column, and LaTeX reported no overfull box for it.
-    # Tightening only the column separation keeps the larger body font: the table then
-    # ends at 561.6pt against the 563.0pt text boundary, where 2pt overruns it by 6pt.
+    # footnotesize, with column separation tuned per table. At the original
+    # footnotesize/4pt this 13-column grid ran past the physical page edge (615pt on a
+    # 612pt page), clipping the last Edge-IIoTset column, and LaTeX reported no overfull
+    # box for it. Separation, not font size, is what sets the width here, so each table
+    # gets the value that fills the 514pt text block without crossing 563pt: the widest
+    # content (sign-flip) needs 1pt, the narrower label-flip and ablation grids can
+    # afford more.
     L = [r"\begin{table*}[t]\centering\footnotesize",
          r"\caption{" + caption + r"}",
-         r"\label{" + label + r"}", r"\setlength{\tabcolsep}{1pt}",
+         r"\label{" + label + r"}", r"\setlength{\tabcolsep}{" + colsep + r"}",
          r"\begin{tabular}{@{}l" + "ccc" * 4 + r"@{}}\toprule",
          r"& \multicolumn{3}{c}{CIFAR-10} & \multicolumn{3}{c}{FashionMNIST} & \multicolumn{3}{c}{EMNIST} & \multicolumn{3}{c}{Edge-IIoTset}\\",
          r"\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}\cmidrule(l){11-13}",
@@ -180,7 +183,8 @@ abl_cap = (r"Ablation of CB-SAFE+ components under sign-flip (same protocol as "
            r"variants agree within $0.3$ points and the base rule already suffices. The "
            r"trust-free variant uses no root dataset but degrades beyond $f{=}0.1$. Best per "
            r"column in bold.")
-prevA = build_signflip_table(abl_methods, abl_cap, "tab:ablation-variants", "table2_ablation.tex")
+prevA = build_signflip_table(abl_methods, abl_cap, "tab:ablation-variants",
+                             "table2_ablation.tex", colsep="1.7pt")
 print("\n=== TABLE Ib: CB-SAFE+ ablation (preview, acc%) ===")
 print("\n".join(prevA))
 
@@ -192,7 +196,7 @@ lf_cap = (r"Test accuracy (\%) under the label-flip attack across four datasets 
           r"isolates laundering as the mechanism behind the sign-flip failures. Higher is better; "
           r"best per column in bold.")
 prevLF = build_signflip_table(main_methods, lf_cap, "tab:labelflip", "table3_labelflip.tex",
-                              attack="labelflip")
+                              attack="labelflip", colsep="2.5pt")
 print("\n=== TABLE (secondary): label-flip (preview, acc%) ===")
 print("\n".join(prevLF))
 
