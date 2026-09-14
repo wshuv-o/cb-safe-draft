@@ -172,7 +172,7 @@ robustness survives when the server is allowed to see only cluster sums. Our ans
 to the first is that the cost is a one-time setup constant. Our answer to the second
 is less comfortable: privacy-preserving aggregation actively launders a standard
 poisoning attack, and recovering from it requires a detector built for the
-constraint rather than a robust rule borrowed from the plaintext setting. The rest
+constraint. The rest
 of the paper develops both answers and reports where each stops holding.
 
 \section{Related Work}
@@ -184,7 +184,7 @@ through secret-shared seeds; subsequent work drives down the quadratic overhead 
 (LightSecAgg \cite{lightsecagg}, SwiftAgg \cite{swiftagg}), and single-server
 multi-round aggregation that removes the per-round setup (Flamingo \cite{flamingo}).
 This entire line shares one property we must contend with: by construction the server
-sees only the aggregate---which can itself still leak \cite{elkordy2022}---and never
+sees only the aggregate, which can itself still leak \cite{elkordy2022}, and never
 the per-client updates that Byzantine defenses rely on. Our masked-aggregation layer
 follows the same double-masking template but factors key establishment behind a
 KEM-agnostic interface, so a code-based post-quantum KEM substitutes for the classical
@@ -207,8 +207,7 @@ the multi-round FL setting explicitly. That work and ours reach code-based
 confidentiality by different routes: it replaces the aggregation primitive with an
 LPN-based homomorphic scheme, whereas we keep Bonawitz-style pairwise masking and
 replace only the key-establishment KEM, which is what lets the same protocol run
-unchanged over HQC or ML-KEM and makes the code-based premium a one-time setup cost
-rather than a per-round one. Our claim is therefore scoped to the KEM route, not to
+unchanged over HQC or ML-KEM and keeps the code-based premium a one-time setup cost. Our claim is therefore scoped to the KEM route, not to
 code-based secure aggregation in general. CB-SAFE differs from the lattice work on the confidentiality
 assumption: syndrome decoding of quasi-cyclic codes, via a standard-track classical
 KEM \cite{nistir8545}, with the KEM exposed behind an agnostic interface so lattice
@@ -226,14 +225,14 @@ SafeFL \cite{safefl2025}, and loss-trend monitoring \cite{flltd2026}, whose
 temporal-loss signal parallels our root-loss probe); and backdoor-specific defenses
 (FLAME \cite{flame2022}). These detectors inspect \emph{individual} client updates,
 which secure aggregation deliberately hides. A parallel line enforces robustness or
-integrity \emph{on the masked updates themselves}---zero-knowledge norm and
+integrity \emph{on the masked updates themselves}: zero-knowledge norm and
 well-formedness proofs (RoFL \cite{rofl}), verifiable secret-shared integrity checks
 (EIFFeL \cite{eiffel}), and two-server distributed-trust aggregation that withstands
-malicious clients (ELSA \cite{elsa})---but these are classical (pre-quantum) and
-\emph{bound or validate} updates rather than identifying the responsible clients.
+malicious clients (ELSA \cite{elsa}). These are classical (pre-quantum) and
+\emph{bound or validate} updates instead of identifying the responsible clients.
 Privacy-preserving robust aggregators
 narrow that gap (PriRoAgg \cite{priroagg2024}, Giskard \cite{giskard2026}), but obtain
-confidentiality from lattice/MPC rather than a post-quantum code-based KEM and do not
+confidentiality from lattice/MPC assumptions and do not
 identify individual attackers. This is the privacy--robustness--post-quantum tension we
 address.
 
@@ -256,7 +255,7 @@ small-population design.
 Across this landscape, existing
 post-quantum FL is lattice-based and, with one recent exception \cite{byzpqfl2026},
 not Byzantine-robust; classical robust-aggregation and detection methods are neither
-post-quantum nor compatible with secure aggregation; and FedGT---the closest design---is
+post-quantum nor compatible with secure aggregation; and FedGT, the closest design, is
 neither post-quantum nor scalable beyond its fixed $n{\le}31$ code. CB-SAFE+ is, to our
 knowledge, the only framework that is simultaneously code-based post-quantum,
 secure-aggregating, Byzantine-robust, identifies malicious clients, and scales.
@@ -385,7 +384,7 @@ individual clients. Quantifying what else is recoverable that way is open.
 \emph{(ii) The server chooses the partition.} Our anonymity-set argument assumes the
 partition is drawn honestly. A curious server colluding with one client can instead
 place that colluder with a target every round, reducing the target's effective
-anonymity set to the remaining $c-2$ honest members --- one, at $c{=}3$. Making the
+anonymity set to the remaining $c-2$ honest members, one at $c{=}3$. Making the
 partition verifiably random (a shared randomness beacon, or a VRF over a public seed)
 closes this and is compatible with the protocol as specified; we assume it rather
 than implement it.
@@ -522,15 +521,15 @@ $i$ has accumulated
 \begin{equation}\label{eq:susp}
 s_i^{\,r} = \sum_{\rho\le r} G_i^{\,\rho}.
 \end{equation}
-A malicious client accumulates suspicion far faster than an honest one---its flagged
-fraction plateaus near $0.73$ in our runs---while an honest client is flagged only when
+A malicious client accumulates suspicion far faster than an honest one. Its flagged
+fraction plateaus near $0.73$ in our runs, while an honest client is flagged only when
 randomly co-clustered with an attacker, with per-round probability
 \begin{equation}\label{eq:ph}
 p_h = 1-(1-f)^{\,c-1} < 1 ,
 \end{equation}
 and only $p_h^{\,o}$ across a full window, so overlap further suppresses honest false
 positives. After a warmup of $W$ rounds the server excludes clients by an
-\emph{adaptive gap} rather than a fixed cut: it sorts the flagged fractions
+\emph{adaptive gap} instead of a fixed cut: it sorts the flagged fractions
 $s_i^{\,r}/r$, takes the largest gap between consecutive values, and excludes the high
 side when that gap exceeds a minimum separation, its midpoint $\sigma^{*}$ sits above a
 floor, and the excluded set is a minority,
@@ -641,7 +640,7 @@ so $2.8\%$ of
 clusters at $p{=}0.10$, $10.4\%$ at $p{=}0.20$ and $21.6\%$ at $p{=}0.30$; our
 $10\%$-dropout runs discarded one of ten clusters, consistent with that. Larger $c$
 both widens the anonymity set and raises the dropout budget, while lowering the
-probability a cluster sum stays clean --- so dropout tolerance belongs on the same
+probability a cluster sum stays clean, so dropout tolerance belongs on the same
 privacy--robustness dial as $(1-f)^c$, not beside it. The practicality question that
 motivated this work has a quantitative answer: \emph{cryptographic diversity in FL
 secure aggregation is essentially free at the protocol level once key establishment
@@ -679,7 +678,7 @@ With \emph{fixed} clusters, a client ever masks with the same $c-1$ partners, so
 both quantities are \emph{constant in $N$}: extrapolating the measured HQC-128 and
 ML-KEM-512 primitives (Table~\ref{tab:overhead}) by partner count, a client's
 one-time setup is $15.2$~KiB (HQC) or $3.8$~KiB (ML-KEM) at any population, versus
-$7.4$~MiB for all-pairs masking at $N{=}1000$ --- a $500\times$ reduction that
+$7.4$~MiB for all-pairs masking at $N{=}1000$, a $500\times$ reduction that
 widens linearly with $N$.
 
 CB-SAFE+ does not inherit that saving. Re-randomizing the partition every round
@@ -687,14 +686,13 @@ means any peer may become a cluster mate, so a client must hold a pairwise secre
 with all $N-1$ peers. That establishment is one-time rather than per-round, but it
 is $O(N)$: the same $7.4$~MiB at $N{=}1000$, and $3.7$~MiB at the $N{=}500$ of
 Table~\ref{tab:scale-n500}. What re-randomization buys is that this cost is paid
-once and the \emph{per-round} traffic stays $O(c)$ --- mask derivation over $c-1$
-partners --- so the saving is in recurring bandwidth, not in setup. Since every
+once and the \emph{per-round} traffic stays $O(c)$, mask derivation over $c-1$
+partners, so the saving is in recurring bandwidth, not in setup. Since every
 robustness result in Section~\ref{sec:eval} comes from CB-SAFE+, the
 constant-in-$N$ setup figure should be read as applying to the fixed-cluster
-configuration only. Removing this gap --- per-round encapsulation with only the new
+configuration only. Two routes would remove this gap: per-round encapsulation with only the new
 mates, which reintroduces per-round KEM traffic, or a hash-based key tree that
-derives cluster keys without all-pairs establishment --- is the obvious next step
-and we do not claim it here.
+derives cluster keys without all-pairs establishment. We do not claim either here.
 
 Because the privacy law $\Pr[S_j\ \mathrm{clean}]{=}(1-f)^c$ and the laundering
 boundary (Prop.~\ref{prop:launder}) are stated \emph{per cluster}, they are
@@ -708,7 +706,7 @@ sign-flip ($f{=}0.2$) for 50 rounds (Table~\ref{tab:scale-n500},
 Fig.~\ref{fig:convergence-n500}). FedGT is necessarily absent here: its
 parity-check matrices and prevalence-estimation tables are hardcoded for
 $n{\le}31$~\cite{fedgt}, so it has no configuration at this population and cannot be
-run without hand-designing new ones---a concrete scalability ceiling in the method,
+run without hand-designing new ones, a concrete scalability ceiling in the method,
 not a tuning choice. At this scale each client holds only $\sim$100 samples and
 attacker exclusion consumes the first $\sim$15--20 rounds, so a short 30-round
 budget truncates every method mid-recovery; extending to 50 rounds lets recovery
@@ -737,7 +735,7 @@ Plain FedAvg reaches 59.0\% test accuracy (mean of the final five of 40 rounds;
 59.6\% at round 40) on the non-IID split. This equivalence check is a single
 40-round run rather than the 50-round, three-seed protocol of the robustness
 experiments, since its purpose is bit-level agreement between the plain and secure
-sums rather than a converged accuracy; the corresponding converged figure is the
+sums, not converged accuracy; the corresponding converged figure is the
 $62.4\%$ of Table~\ref{tab:noattack}. In every round,
 the same client updates were pushed through the full cryptographic pipeline twice
 (once under HQC-128, once under ML-KEM-768), and every per-cluster secure sum was
@@ -757,7 +755,7 @@ unmasking, negligible against the $\sim$21\,s of local training per round.
 \subsection{Baseline Configuration and Validity}\label{sec:baselines-config}
 Robust rules are applied across the $k{=}\lceil N/c \rceil$ revealed cluster sums, not
 across individual clients, so their own preconditions must be restated in terms of
-\emph{contaminated cluster sums} rather than malicious clients. With $N{=}30$, $c{=}3$
+\emph{contaminated cluster sums} instead of malicious clients. With $N{=}30$, $c{=}3$
 we have $k{=}10$ inputs, and the expected number of contaminated sums is
 \begin{equation}\label{eq:dirty}
 \mathbb{E}[\text{contaminated sums}] \;=\; k\big(1-(1-f)^{c}\big),
@@ -786,7 +784,7 @@ The no-attack column (Table~\ref{tab:noattack}) exists so these can be told apar
 rule scoring below the undefended mean at $f{=}0$ is paying for its own aggregation,
 before any attacker acts. On CIFAR-10 the undefended mean reaches $62.4\%$; FLTrust
 costs $10.5$ points against it ($51.9\%$), Bulyan $3.2$ and Multi-Krum $2.9$, while
-every remaining rule---CB-SAFE+ included, at $62.1\%$---is within $0.9$ points.
+every remaining rule, CB-SAFE+ included at $62.1\%$, is within $0.9$ points.
 Robustness numbers should be read against that column, not against $100\%$.
 
 \input{../results/tables/table_f0.tex}
@@ -813,10 +811,10 @@ exact laundering point $\gamma^{*}{=}2c/m{-}1$, one might ask whether the collap
 an artifact of that singular value. Sweeping $\gamma\in\{2,3,5,8,15\}$ at $f{=}0.2$
 (Fig.~\ref{fig:gamma-basin}) shows it is not: median and trimmed mean collapse to
 $10\%$ at \emph{every} $\gamma\ge\gamma^{*}$ and only partially degrade below it, and
-Multi-Krum---robust until $\gamma{=}8$---itself collapses at $\gamma{=}15$. CB-SAFE+
+Multi-Krum, robust until $\gamma{=}8$, itself collapses at $\gamma{=}15$. CB-SAFE+
 holds $\sim$50--57\% throughout, reaching $57.5\%$ at $\gamma{=}5$ (Table~\ref{tab:signflip}). Bulyan matches it here, its trim capacity not
 exceeded at $f{=}0.2$; that parity breaks at $f{=}0.3$ (Table~\ref{tab:signflip}),
-where identifying attackers rather than merely trimming them decides the outcome.
+where identifying attackers, instead of merely trimming them, decides the outcome.
 
 \begin{figure}[tbp]
 \centering
@@ -869,8 +867,8 @@ flags and temporal suspicion, the defense identifies all 3 of 3 attackers at
 $f{=}0.1$ (60.5\%, at the clean ceiling) and all 9 sign-flip attackers
 with \emph{zero} honest false positives at $f{=}0.3$ (three-seed means in Table~\ref{tab:detect}), recovering to 57.4\%
 accuracy where every static coordinate-wise rule sat at 10\% and Multi-Krum at
-21.4\%---exceeding even the 39--41\% the median achieves \emph{without any privacy}
-($c{=}1$), i.e., the defense refunds the privacy dial's cost in rounds rather than
+21.4\%, exceeding even the 39--41\% the median achieves \emph{without any privacy}
+($c{=}1$), i.e., the defense refunds the privacy dial's cost in rounds, not
 anonymity. At $f{=}0.2$ it holds 57.5\% while Multi-Krum reaches only 45.3\%, so the
 defense's advantage over vector-selection rules grows with attack severity.
 Under label flipping (a weak attack in this regime: all rules land within
@@ -916,7 +914,7 @@ FLTrust by 5.0 ($p{<}10^{-9}$).
 
 Two qualifications on that test. It pools heterogeneous configurations, so it
 establishes a population-level ordering, not a per-cell one: at individual cells the
-ranking does change hands---FedGT ties CB-SAFE+ on FashionMNIST at $f{=}0.1$ and
+ranking does change hands: FedGT ties CB-SAFE+ on FashionMNIST at $f{=}0.1$ and
 leads it on Edge-IIoTset at $f{=}0.2$ (65.6 vs 65.2), and Bulyan leads at
 Edge-IIoTset $f{=}0.1$. Per-cell values are in Table~\ref{tab:signflip} and should be
 read directly. Second, the cells are not independent (three seeds share a dataset and
@@ -966,14 +964,14 @@ Label flipping is a far milder attack than sign-flip, and it doubles as a contro
 Table~\ref{tab:labelflip} shows that \emph{no} coordinate-wise rule collapses: the
 undefended mean retains 53--64\% at $f{=}0.3$, versus 10\% under sign-flip. That
 contrast isolates the laundering mechanism (Proposition~\ref{prop:launder}) as the
-cause of the sign-flip failures, rather than any generic fragility of the setup.
-CB-SAFE+ leads on the image benchmarks---on FashionMNIST it holds 87\% at
-$f{=}0.3$ where the mean falls to 59\%---while on Edge-IIoTset all nine rules fall
+cause of the sign-flip failures.
+CB-SAFE+ leads on the image benchmarks. On FashionMNIST it holds 87\% at
+$f{=}0.3$ where the mean falls to 59\%. On Edge-IIoTset all nine rules fall
 within 4.0 points of one another, so the ordering there is a wash and trimmed mean
 edges ahead at $f{=}0.2$ (66.3\% vs 64.3\%). We read that as the
 control behaving as intended: with no laundering to exploit, robust aggregation has
 little left to recover, so the separation that matters appears only under sign-flip. FedGT's actual BCJR decoder survives this
-mild attack---unlike its sign-flip collapse---but trails CB-SAFE+ on CIFAR-10
+mild attack, unlike its sign-flip collapse, but trails CB-SAFE+ on CIFAR-10
 ($\sim$50--56\% vs $\sim$56--61\%) and is noisier between seeds, so even where its
 accuracy signal is informative it is the less stable identifier.
 
@@ -982,7 +980,7 @@ accuracy signal is informative it is the less stable identifier.
 \subsection{Adaptive Attackers}
 \subsubsection{Amplitude-adaptive: choosing $\gamma$ to evade the loss probe} The
 direction flag fires on a loss margin $\delta$, so an attacker that knows the defense
-should tune its amplitude $\gamma$ rather than maximize it: too large and every
+should tune its amplitude $\gamma$ instead of maximizing it: too large and every
 cluster it touches is flagged, too small and the poisoning does little. We therefore
 sweep $\gamma\in\{2,3,5,8,15\}$ at $f{=}0.2$ on CIFAR-10 (three seeds, 50 rounds) and
 report, for each rule, the accuracy an attacker could force by picking its best
@@ -1000,7 +998,7 @@ CB-SAFE+ & 60.2 & 60.4 & \textbf{57.5} & 58.6 & 60.8\\
 
 \noindent The worst case per rule is in bold. For the coordinate-wise median and
 Multi-Krum an amplitude-adaptive attacker reaches chance ($10.0\%$); for CB-SAFE+ the
-worst attainable value is $57.5\%$, at $\gamma{=}5$ --- which is exactly $\gamma^{*}$ from (\ref{eq:gammastar}) at $c{=}3$, $m{=}1$, and the amplitude used throughout
+worst attainable value is $57.5\%$, at $\gamma{=}5$, which is exactly $\gamma^{*}$ from (\ref{eq:gammastar}) at $c{=}3$, $m{=}1$, and the amplitude used throughout
 the rest of this paper. The headline configuration is therefore already the
 attacker's best choice against CB-SAFE+, and the basin is shallow: no $\gamma$ in the
 sweep moves it more than $3.3$ points. Small $\gamma$ does not evade the probe,
@@ -1040,7 +1038,7 @@ $o{=}4$ overlapping rounds (ov4) lifts this to $57.7\%$, and the full hybrid is
 comparable at $57.4\%$, all far above FedGT's actual BCJR decoder, which collapses to
 chance at this contamination (Table~\ref{tab:detect}). The decisive gain is the
 temporal overlap; the windowed COMP decode, which counts a client only when it is
-flagged across the whole window, mainly suppresses honest false positives rather than
+flagged across the whole window, mainly suppresses honest false positives instead of
 adding accuracy. Both gains are concentrated on CIFAR-10, the hardest split: on FashionMNIST, EMNIST,
 and Edge-IIoTset the three variants agree within $0.3$ points, where the base
 temporal reputation already suffices, so the overlap and windowed decode earn their
@@ -1057,7 +1055,7 @@ the minimum suspicion gap that counts as a real separation, and the floor a flag
 group must exceed before exclusion. A margin stated in absolute cross-entropy units
 that works unchanged across four datasets invites the question of whether it was
 fitted to them, so we sweep each over five values around its operating point, three
-seeds at 50 rounds, on CIFAR-10 sign-flip at $f{=}0.2$ --- the configuration where the
+seeds at 50 rounds, on CIFAR-10 sign-flip at $f{=}0.2$, the configuration where the
 components separate at all (Table~\ref{tab:ablation-variants}):
 
 \begin{center}\scriptsize\setlength{\tabcolsep}{3pt}
@@ -1072,7 +1070,7 @@ exclusion floor & .10:59.5 & .20:59.3 & \textbf{.25:59.3} & .35:59.3 & .50:58.8\
 \noindent Bold marks the value used throughout the paper. Two of the three knobs are
 close to inert: the suspicion gap spans $1.1$ points across a sevenfold range and the
 exclusion floor $0.7$ points across a fivefold one. The flag margin matters more
-($5.3$ points), but asymmetrically --- accuracy is flat from $\delta{=}0.10$ to
+($5.3$ points), but asymmetrically: accuracy is flat from $\delta{=}0.10$ to
 $0.25$ and falls only as $\delta$ grows past it, where the probe becomes too
 permissive to flag poisoned clusters at all. The operating point therefore sits on a
 plateau, not at a peak: had $\delta$ been fitted to these runs, the neighbouring
@@ -1081,7 +1079,7 @@ settings would be worse.
 One caveat on reading these against Table~\ref{tab:signflip}. This sweep was run on a
 different GPU and PyTorch build than the CB-SAFE+ rows of the main tables, and the
 simulator does not pin cuDNN determinism, so the same configuration reproduces
-$59.0\%$ here against the $57.5\%$ reported there --- a consistent $+1.5$-point offset
+$59.0\%$ here against the $57.5\%$ reported there, a consistent $+1.5$-point offset
 across all three seeds. The sweep is internally consistent and should be read as a
 comparison among its own settings, not as a restatement of table values.
 
