@@ -115,12 +115,14 @@ def build_signflip_table(methods, caption, label, outfile, attack="signflip"):
     if "textcolor{red}" in "\n".join(body):
         caption += (r" Red entries are provisional (runs still completing); "
                     r"a dash ($-$) marks a configuration not yet evaluated.")
-    # scriptsize with 2pt column separation. At footnotesize/4pt this 13-column grid
-    # ran past the physical page edge (measured 615pt on a 612pt page), clipping the
-    # last Edge-IIoTset column; LaTeX reported no overfull box for it.
-    L = [r"\begin{table*}[t]\centering\scriptsize",
+    # footnotesize with 1pt column separation. At the original footnotesize/4pt this
+    # 13-column grid ran past the physical page edge (615pt on a 612pt page), clipping
+    # the last Edge-IIoTset column, and LaTeX reported no overfull box for it.
+    # Tightening only the column separation keeps the larger body font: the table then
+    # ends at 561.6pt against the 563.0pt text boundary, where 2pt overruns it by 6pt.
+    L = [r"\begin{table*}[t]\centering\footnotesize",
          r"\caption{" + caption + r"}",
-         r"\label{" + label + r"}", r"\setlength{\tabcolsep}{2pt}",
+         r"\label{" + label + r"}", r"\setlength{\tabcolsep}{1pt}",
          r"\begin{tabular}{@{}l" + "ccc" * 4 + r"@{}}\toprule",
          r"& \multicolumn{3}{c}{CIFAR-10} & \multicolumn{3}{c}{FashionMNIST} & \multicolumn{3}{c}{EMNIST} & \multicolumn{3}{c}{Edge-IIoTset}\\",
          r"\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}\cmidrule(l){11-13}",
