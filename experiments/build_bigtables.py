@@ -177,12 +177,8 @@ abl_methods = [("reputation", "Base: temporal reputation (ov1)"),
                ("hybrid_ov4", "\\;+ hybrid COMP decode (full)"),
                ("reputation_tf", "Trust-free (no root data)")]
 abl_cap = (r"Ablation of CB-SAFE+ components under sign-flip (same protocol as "
-           r"Table~\ref{tab:signflip}). The components separate only on CIFAR-10, the "
-           r"hardest of the four: there overlapping groups and the hybrid COMP decode add "
-           r"robustness at high $f$, while on FashionMNIST, EMNIST and Edge-IIoTset the three "
-           r"variants agree within $0.3$ points and the base rule already suffices. The "
-           r"trust-free variant uses no root dataset but degrades beyond $f{=}0.1$. Best per "
-           r"column in bold.")
+           r"Table~\ref{tab:signflip}). The trust-free variant uses no root dataset. "
+           r"Best per column in bold.")
 prevA = build_signflip_table(abl_methods, abl_cap, "tab:ablation-variants",
                              "table2_ablation.tex", colsep="1.7pt")
 print("\n=== TABLE Ib: CB-SAFE+ ablation (preview, acc%) ===")
@@ -191,10 +187,7 @@ print("\n".join(prevA))
 # TABLE (secondary): label-flip accuracy, same roster as the main table.
 lf_cap = (r"Test accuracy (\%) under the label-flip attack across four datasets "
           r"and malicious fractions $f$ (mean\,$\pm$\,std over 3 seeds, 50 rounds). "
-          r"Label flipping is a mild attack: unlike sign-flip "
-          r"(Table~\ref{tab:signflip}), coordinate-wise rules do \emph{not} collapse, which "
-          r"isolates laundering as the mechanism behind the sign-flip failures. Higher is better; "
-          r"best per column in bold.")
+          r"Higher is better; best per column in bold.")
 prevLF = build_signflip_table(main_methods, lf_cap, "tab:labelflip", "table3_labelflip.tex",
                               attack="labelflip", colsep="2.5pt")
 print("\n=== TABLE (secondary): label-flip (preview, acc%) ===")
@@ -224,10 +217,8 @@ def build_f0_table(methods, outfile="table_f0.tex"):
         prev.append(lbl.ljust(34) + "".join(f"{c[:18]:>20}" for c in cells))
     cap = (r"No-attack reference accuracy (\%) at $f{=}0$ across all four benchmarks "
            r"(mean\,$\pm$\,std over 3 seeds, 50 rounds). Every rule is applied to benign "
-           r"updates only, so a value below the undefended mean is the cost of the "
-           r"aggregation rule itself rather than of any attack. Read the robustness tables "
-           r"against this column. FedGT is run through the same harness as the other rules "
-           r"here: without an attack its group-testing decoder is inactive."
+           r"updates only. FedGT uses the same harness as the other rules here, its "
+           r"group-testing decoder being inactive without an attack."
            + _legend_if_needed(allcells))
     L = [r"\begin{table}[t]\centering\footnotesize",
          r"\caption{" + cap + r"}", r"\label{tab:noattack}",

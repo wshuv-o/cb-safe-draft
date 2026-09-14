@@ -87,7 +87,7 @@ We evaluate on CIFAR-10, FashionMNIST, EMNIST, and tabular Edge-IIoTset. The
 laundering effect and CB-SAFE+'s recovery replicate on every dataset. CB-SAFE+ beats
 every baseline under sign-flip in a pooled paired test (Holm-corrected $p{<}0.01$).
 CB-SAFE+ targets untargeted poisoning. A patch-trigger backdoor evades its direction
-and loss tests. We scope that limit out rather than claim it.
+and loss tests, which we state as a limit of scope.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -394,9 +394,8 @@ than implement it.
 updates, or two with one colluder. Gradient-inversion attacks \cite{zhu2019} are known
 to succeed on aggregates of this size, so ``sums rather than updates'' should not be
 read as strong protection at small $c$. We do not run an inversion attack on the
-revealed cluster sums; doing so would turn the privacy side of the
-privacy--robustness dial into a measured quantity rather than an asserted one, and is
-the experiment we would add next.
+revealed cluster sums; doing so would make the privacy side of the
+privacy--robustness dial measurable, and is the experiment we would add next.
 
 \subsection{Robust Aggregation Across Cluster Sums}\label{sec:tradeoff}
 The server sees $k$ cluster sums $S_1,\dots,S_k$ (means after dividing by alive
@@ -771,9 +770,8 @@ preconditions are
 \end{equation} at $k{=}10$ these hold only for $b{\le}3$
 and $b{\le}1$ respectively by (\ref{eq:precond}). Bulyan is therefore already outside its guarantee at
 $f{=}0.1$ and Multi-Krum from $f{=}0.2$ on. Their degradation at high $f$ is the
-expected consequence of that, not evidence against them, and we say so rather than
-present it as a finding; the laundering claim rests on the coordinate-wise rules,
-which have no such precondition.
+expected consequence of that, not evidence against them; the laundering claim rests
+on the coordinate-wise rules, which have no such precondition.
 
 FLTrust is given the same $|\mathcal{D}_0|{=}200$ root set as CB-SAFE+, so the two
 consume identical server-side data. An earlier revision of these results used a
@@ -948,13 +946,9 @@ Dashed line: warmup $W{=}5$.}
 \centering
 \includegraphics[width=\textwidth]{fig_acc_vs_f.pdf}
 \caption{Final test accuracy vs.\ malicious fraction $f$ under sign-flip (mean over 3
-seeds, 50 rounds; error bars $\pm$1 SD), one panel per dataset. The coordinate-wise
-rules (mean, trimmed mean, median) and the geometric median collapse to chance by
-$f{=}0.2$; Multi-Krum and Bulyan degrade then fall at $f{=}0.3$; only CB-SAFE+ tracks
-the clean baseline (grey dotted) across all four datasets, staying within a few points
-of the oracle (black dotted: perfect detection, all malicious clients excluded from
-round~1). This is the endpoint summary of the round-by-round view in
-Fig.~\ref{fig:dynamics}.}
+seeds, 50 rounds; error bars $\pm$1 SD), one panel per dataset. Grey dotted: clean
+baseline. Black dotted: oracle, with all malicious clients excluded from round~1.
+Endpoint summary of Fig.~\ref{fig:dynamics}.}
 \label{fig:acc-vs-f}
 \end{figure*}
 
@@ -1081,8 +1075,8 @@ exclusion floor $0.7$ points across a fivefold one. The flag margin matters more
 ($5.3$ points), but asymmetrically --- accuracy is flat from $\delta{=}0.10$ to
 $0.25$ and falls only as $\delta$ grows past it, where the probe becomes too
 permissive to flag poisoned clusters at all. The operating point therefore sits on a
-plateau rather than at a peak, which is the signature one wants: had $\delta$ been
-fitted to these runs, the neighbouring settings would be worse, not equal.
+plateau, not at a peak: had $\delta$ been fitted to these runs, the neighbouring
+settings would be worse.
 
 One caveat on reading these against Table~\ref{tab:signflip}. This sweep was run on a
 different GPU and PyTorch build than the CB-SAFE+ rows of the main tables, and the
