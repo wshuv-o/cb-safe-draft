@@ -62,31 +62,32 @@ scripts that regenerate every table and figure are available at
 \maketitle
 
 \begin{abstract}
-Secure aggregation reveals only the sum of federated learning (FL) updates, but its
-key establishment breaks under a quantum adversary, and post-quantum FL today rests
-almost entirely on lattice assumptions. We identify a \emph{laundering} effect:
-aggregating securely within clusters of $c$ clients turns amplified sign-flip
-poisoning into plausible-magnitude inverted cluster sums, which defeats every
-coordinate-wise robust rule applied across those sums. We introduce CB-SAFE+, which
-re-randomizes clustering each round and accumulates per-client suspicion from
-root-anchored direction flags --- temporal group testing over private sums ---
-excluding attackers the server never observes individually, using only the cluster
-sums already revealed. A simulation-based privacy theorem bounds what this discloses,
-against a tension we quantify: the anonymity set grows with $c$ while the probability
-a cluster sum stays clean decays as $(1-f)^{c}$.
-We instantiate the framework over a code-based KEM (HQC, selected by NIST in March
-2025) --- to our knowledge the first Bonawitz-style masked FL aggregation on a
-code-based rather than lattice KEM. The KEM is pluggable and affects only setup: on a
-291\,498-parameter model with 30 clients, per-round traffic is KEM-independent and
-the code-based premium is a one-time 15.2 vs.\ 3.8~KiB per masking partner at NIST
-level~1, under $0.03\%$ of training traffic. Fixed clusters give $c-1$ partners, so
-setup is constant in population; CB-SAFE+'s re-randomization needs secrets with all
-peers, making its one-time setup $O(N)$ with per-round cost still $O(c)$.
-Across CIFAR-10, FashionMNIST, EMNIST, and tabular Edge-IIoTset the laundering effect
-and CB-SAFE+'s recovery replicate everywhere, and CB-SAFE+ beats every baseline under
-sign-flip in a pooled paired test (Holm-corrected $p{<}0.01$). CB-SAFE+ targets
-untargeted poisoning: a patch-trigger backdoor evades its direction and loss tests,
-a limit we scope out rather than claim.
+Secure aggregation reveals only the sum of federated learning (FL) updates. Its key
+establishment breaks under a quantum adversary. Post-quantum FL today rests almost
+entirely on lattice assumptions. We identify a \emph{laundering} effect. Aggregating
+securely within clusters of $c$ clients turns amplified sign-flip poisoning into
+inverted cluster sums of plausible magnitude. Every coordinate-wise robust rule
+applied across those sums is defeated. We introduce CB-SAFE+. It re-randomizes the
+clustering each round. It accumulates per-client suspicion from root-anchored
+direction flags, a form of temporal group testing over private sums. Attackers the
+server never observes individually are excluded. Only the cluster sums already
+revealed are used. A simulation-based privacy theorem bounds what this discloses. We
+also quantify the tension it manages. The anonymity set grows with $c$. The
+probability that a cluster sum stays clean decays as $(1-f)^{c}$.
+We instantiate the framework over a code-based KEM. HQC was selected by NIST in March
+2025. To our knowledge this is the first Bonawitz-style masked FL aggregation built
+on a code-based rather than a lattice KEM. The KEM is pluggable and affects only
+setup. On a 291\,498-parameter model with 30 clients, per-round traffic is
+KEM-independent. The full code-based premium is a one-time 15.2 versus 3.8~KiB per
+masking partner at NIST level~1. That is under $0.03\%$ of training traffic. Fixed
+clusters give each client $c-1$ partners, so setup is constant in population.
+CB-SAFE+ instead needs secrets with all peers. Its one-time setup is therefore
+$O(N)$, while its per-round cost stays $O(c)$.
+We evaluate on CIFAR-10, FashionMNIST, EMNIST, and tabular Edge-IIoTset. The
+laundering effect and CB-SAFE+'s recovery replicate on every dataset. CB-SAFE+ beats
+every baseline under sign-flip in a pooled paired test (Holm-corrected $p{<}0.01$).
+CB-SAFE+ targets untargeted poisoning. A patch-trigger backdoor evades its direction
+and loss tests. We scope that limit out rather than claim it.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -130,37 +131,49 @@ framework provides both under a code-based, classical post-quantum assumption.
 This paper presents CB-SAFE (Code-Based Secure Aggregation for Federated
 lEarning), making five contributions:
 \begin{enumerate}
-\item \textbf{A KEM-agnostic secure-aggregation protocol} (Definition~1) that
-formalizes Bonawitz-style double masking over any IND-CCA2 KEM, with per-round mask
-seeds derived from long-lived encapsulated secrets so key encapsulation is a one-time
+\item A KEM-agnostic secure-aggregation protocol (Definition~1) that
+formalizes Bonawitz-style double masking over any IND-CCA2 KEM. Per-round mask seeds
+are derived from long-lived encapsulated secrets, so key encapsulation is a one-time
 cost. The post-quantum primitive becomes a single replaceable module.
-\item \textbf{A code-based instantiation, scope-qualified:} to our knowledge, CB-SAFE
+\item A code-based instantiation, scope-qualified. To our knowledge, CB-SAFE
 is the first FL secure-aggregation framework to obtain post-quantum confidentiality
 by substituting the \emph{key-establishment KEM} in Bonawitz-style pairwise masking
 with the NIST-selected code-based HQC, at matched NIST security levels. Code-based
-secure aggregation as such is not new --- \cite{lpnsecagg2026} reaches it through
-LPN-based homomorphic encryption --- and we claim only the KEM route, whose
+secure aggregation as such is not new. Prior work \cite{lpnsecagg2026} reaches it
+through LPN-based homomorphic encryption. We therefore claim only the KEM route. Its
 distinguishing property is that the code-based premium stays a one-time setup cost.
-\item \textbf{A quantified reconciliation of privacy and robustness:} secure
-aggregation \emph{within} clusters of $c$ clients, robust aggregation (trimmed mean,
-median, Multi-Krum) \emph{across} cluster sums, and an explicit trade-off law (the
-anonymity set is $c$ while the clean-cluster probability decays as $(1-f)^c$)
-validated experimentally under three attacks. We further identify and analyze a
-\emph{laundering} effect: cluster averaging turns amplified sign-flip poisoning into
-plausible-magnitude, direction-inverted cluster sums that defeat every
-coordinate-wise robust rule (Proposition~\ref{prop:launder}).
-\item \textbf{CB-SAFE+, a defense that identifies hidden attackers:} per-round
-re-randomized clustering plus direction flags against a small server root dataset
-accumulate per-client suspicion (temporal group testing over privacy-preserving
-observations) and exclude malicious clients the server has never observed
-individually. The flags are post-processing of already-revealed cluster sums, so the
-defense adds \emph{no} update-content leakage beyond CB-SAFE itself (Theorem~\ref{thm:priv}).
-\item \textbf{Measured cost analysis:} on a 291k-parameter model,
-per-round traffic is KEM-independent and the full code-based premium is a one-time
-15.2~KiB vs.\ 3.8~KiB per client (NIST level~1), i.e., $0.7\%$ of one round's
-traffic and under $0.03\%$ amortized over training; HQC's $\sim$100$\times$ slower key generation at NIST level~1 contributes about 2\,s (one-time,
-30 clients) versus 0.02\,s for ML-KEM.
+\item A quantified reconciliation of privacy and robustness. Secure
+aggregation runs \emph{within} clusters of $c$ clients. Robust aggregation (trimmed
+mean, median, Multi-Krum) runs \emph{across} the cluster sums. An explicit trade-off
+law relates the two: the anonymity set is $c$, while the clean-cluster probability
+decays as $(1-f)^c$. We validate it experimentally under three attacks. We further
+identify and analyze a \emph{laundering} effect. Cluster averaging turns amplified
+sign-flip poisoning into direction-inverted cluster sums of plausible magnitude.
+These defeat every coordinate-wise robust rule (Proposition~\ref{prop:launder}).
+\item CB-SAFE+, a defense that identifies hidden attackers. Per-round
+re-randomized clustering and direction flags against a small server root dataset
+accumulate per-client suspicion. This is temporal group testing over
+privacy-preserving observations. It excludes malicious clients the server has never
+observed individually. The flags are post-processing of already-revealed cluster
+sums. The defense therefore adds \emph{no} update-content leakage beyond CB-SAFE
+itself (Theorem~\ref{thm:priv}).
+\item A measured cost analysis. On a 291k-parameter model, per-round traffic
+is KEM-independent. The full code-based premium is a one-time 15.2~KiB against
+3.8~KiB per client at NIST level~1. That is $0.7\%$ of one round's traffic and under
+$0.03\%$ amortized over training. HQC's key generation is about $100\times$ slower at
+NIST level~1. It contributes roughly 2\,s once for all 30 clients, against 0.02\,s
+for ML-KEM.
 \end{enumerate}
+
+Taken together, these contributions separate two questions that the literature
+usually answers at once. The first is what a post-quantum secure-aggregation
+protocol costs once the KEM is treated as a replaceable module. The second is what
+robustness survives when the server is allowed to see only cluster sums. Our answer
+to the first is that the cost is a one-time setup constant. Our answer to the second
+is less comfortable: privacy-preserving aggregation actively launders a standard
+poisoning attack, and recovering from it requires a detector built for the
+constraint rather than a robust rule borrowed from the plaintext setting. The rest
+of the paper develops both answers and reports where each stops holding.
 
 \section{Related Work}
 \subsubsection{Secure aggregation} Masking-based secure aggregation lets an
