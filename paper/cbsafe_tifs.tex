@@ -177,7 +177,7 @@ follows the same double-masking template but factors key establishment behind a
 KEM-agnostic interface, so a code-based post-quantum KEM substitutes for the classical
 one in a single module.
 
-\textbf{Post-quantum FL is lattice-dominated.} PQSF reconstructs masks with lattice
+\textbf{Post-quantum federated learning.} PQSF reconstructs masks with lattice
 multi-stage secret sharing \cite{pqsf2024}; Qin and Xu build single-round aggregation
 from a lattice key-homomorphic PRF \cite{qinxu2025}; Narsimhulu \emph{et al.}
 aggregate Dilithium-style lattice signatures \cite{narsimhulu2026}; and a 2026
@@ -594,7 +594,7 @@ crypto wall-time; dropout-recovery cost.
 
 \textbf{Datasets and reproducibility.} The four benchmarks are CIFAR-10~\cite{krizhevsky2009} ($50{,}000$/$10{,}000$, $10$ classes), FashionMNIST~\cite{fashionmnist} ($60{,}000$/$10{,}000$, $10$ classes), EMNIST-balanced~\cite{emnist} ($112{,}800$/$18{,}800$, $47$ classes), and Edge-IIoTset~\cite{edgeiiot} (tabular IoT/IIoT intrusion detection, the \texttt{DNN-EdgeIIoT-dataset.csv} release of $2{,}219{,}201$ flows over $15$ classes, class-stratified to at most $120{,}000$ rows), each Dirichlet($\alpha{=}0.5$)~\cite{hsu2019} partitioned across $N{=}30$ clients. Unless stated: overlap degree $o\in\{1,4\}$, Shamir threshold $t{=}\lfloor c/2\rfloor{+}1{=}2$, server root $|\mathcal{D}_0|{=}200$ held out from all clients, and adaptive-gap exclusion (flag margin $\delta{=}0.25$, minimum suspicion gap $0.15$, floor $0.25$) after a warmup of $W{=}5$ rounds; for $N{>}50$ the flag and exclusion switch to robust median-plus-MAD thresholds ($1.0$ and $2.5$ MAD). KEMs span HQC-128/192/256 and ML-KEM-512/768/1024 at matched NIST levels; masks are ChaCha20 keystreams with HKDF-SHA256 per-round seeds. Runs use Python~3.12, PyTorch~2.5.0 (CUDA~12.4), and liboqs-python~0.15.0 on NVIDIA RTX~2060 (6\,GB) and RTX~5080 (16\,GB) GPUs; all results are averaged over three seeds, with significance by paired $t$-tests (Holm-corrected).
 
-\subsection{Overhead: the Code-Based Premium Is a One-Time Cost}
+\subsection{Communication and Computation Overhead}
 Table~\ref{tab:overhead} reports measured per-client traffic and crypto time.
 Per-round traffic is identical across all six KEMs (2\,277~KiB per client,
 dominated by the $8d$-byte masked update plus 102~B of Shamir material) because
@@ -607,7 +607,7 @@ $0.03\%$ of total communication (Table~\ref{tab:overhead}). A round with 10\% dr
 adds only seed-reveal messages (32~B per survivor--dropout pair) and kept server
 unmasking below 0.28\,s in all configurations.
 
-\textbf{Dropout tolerance is a utility cost of small $c$.} With $c{=}3$ and
+\textbf{Dropout tolerance.} With $c{=}3$ and
 $t{=}\lfloor c/2 \rfloor{+}1{=}2$, a cluster survives one dropout but not two: at two
 losses the threshold cannot be met and the whole cluster is discarded, taking its
 surviving honest update with it. Under an i.i.d.\ dropout rate $p$ the expected
@@ -675,7 +675,7 @@ boundary (Prop.~\ref{prop:launder}) are stated \emph{per cluster}, they are
 independent of $N$. CB-SAFE therefore targets the cross-device regime where
 recurring all-pairs mask derivation is infeasible.
 
-\textbf{Robustness holds as the population scales.} Cost is only half the
+\textbf{Scaling the client population.} Cost is only half the
 scaling question; the other is whether robustness survives a $16\times$ larger
 client population. We ran every rule that admits a configuration at $N{=}500$ under
 sign-flip ($f{=}0.2$) for 50 rounds (Table~\ref{tab:scale-n500},
@@ -728,7 +728,7 @@ all recovered by seed-reveal plus Shamir reconstruction. Measured in-run, setup 
 rounds took $\sim$30\,ms of client-side masking and $\sim$0.29\,s of server-side
 unmasking, negligible against the $\sim$21\,s of local training per round.
 
-\subsection{Baseline Configuration and Where Each Rule Is Valid}\label{sec:baselines-config}
+\subsection{Baseline Configuration and Validity}\label{sec:baselines-config}
 Robust rules are applied across the $k{=}\lceil N/c \rceil$ revealed cluster sums, not
 across individual clients, so their own preconditions must be restated in terms of
 \emph{contaminated cluster sums} rather than malicious clients. With $N{=}30$, $c{=}3$
@@ -761,7 +761,7 @@ Robustness numbers should be read against that column, not against $100\%$.
 \input{../results/tables/table_f0.tex}
 
 \subsection{Robustness Under Attack}
-\textbf{The contamination law holds.} Across all runs, the realized fraction of
+\textbf{Cluster contamination.} Across all runs, the realized fraction of
 clean cluster sums tracked $(1-f)^c$ closely: at $c{=}3$, observed $0.70/0.50/0.40$
 versus predicted $0.73/0.51/0.34$ for $f{=}0.1/0.2/0.3$.
 
@@ -777,7 +777,7 @@ rather than per-coordinate statistics, still reaches 45.3\% (21.4\% at $f{=}0.3$
 Robust rules that rely on magnitude order statistics are structurally weakened by
 the very mechanism that provides privacy; vector-selection rules retain power.
 
-\textbf{The collapse is a wide basin, not a knife-edge.} Since $\gamma{=}5$ is the
+\textbf{Attack amplitude.} Since $\gamma{=}5$ is the
 exact laundering point $\gamma^{*}{=}2c/m{-}1$, one might ask whether the collapse is
 an artifact of that singular value. Sweeping $\gamma\in\{2,3,5,8,15\}$ at $f{=}0.2$
 (Fig.~\ref{fig:gamma-basin}) shows it is not: median and trimmed mean collapse to
@@ -796,8 +796,8 @@ lines mark chance and the clean baseline.}
 \label{fig:gamma-basin}
 \end{figure}
 
-\textbf{The full baseline panel confirms the mechanism} (Fig.~\ref{fig:dynamics},
-Fig.~\ref{fig:acc-vs-f}, Table~\ref{tab:signflip}). Averaged over three seeds, the eight rules separate into
+\textbf{The full baseline panel.} Across Fig.~\ref{fig:dynamics},
+Fig.~\ref{fig:acc-vs-f} and Table~\ref{tab:signflip}, averaged over three seeds, the eight rules separate into
 three regimes at $f{=}0.3$: the coordinate-wise rules (mean, trimmed mean, median)
 are laundered to chance ($\approx$10\%) and the robust geometric median RFA
 \cite{rfa} degrades to $\sim$20\%, confirming that location- and magnitude-based
@@ -832,8 +832,8 @@ CB-SAFE+ hybrid  & \textbf{3/3} & \textbf{0.3} & \textbf{6/6} & \textbf{0.3} & \
 \end{tabular}
 \end{table}
 
-\textbf{CB-SAFE+ restores learning past the static breakdown}
-(Table~\ref{tab:signflip}). With loss-probe
+\textbf{CB-SAFE+ past the static breakdown.} In
+Table~\ref{tab:signflip}, with loss-probe
 flags and temporal suspicion, the defense identifies all 3 of 3 attackers at
 $f{=}0.1$ (60.5\%, at the clean ceiling) and all 9 sign-flip attackers
 with \emph{zero} honest false positives at $f{=}0.3$ (three-seed means in Table~\ref{tab:detect}), recovering to 57.4\%
@@ -846,7 +846,7 @@ Under label flipping (a weak attack in this regime: all rules land within
 44--52\%) the probe flags only the worst clusters and excludes conservatively (zero
 false positives at $f{=}0.2$), matching the best static rule.
 
-\textbf{Backdoor: a mechanism-independent blind spot.} The trigger attack leaves
+\textbf{Backdoor attacks.} The trigger attack leaves
 main-task accuracy intact for every rule (50--55\%) while ASR stays at 86--97\%
 across mean, trimmed mean, Multi-Krum, \emph{and} CB-SAFE+:
 backdoored cluster sums \emph{reduce} clean root loss
@@ -934,7 +934,7 @@ predicted honest rate $p_h{=}1-(1-f)^{c-1}$; warmup shaded.}
 \label{fig:suspicion}
 \end{figure}
 
-\subsection{Secondary Attack: Label Flipping}
+\subsection{Label-Flipping Attack}
 Label flipping is a far milder attack than sign-flip, and it doubles as a control.
 Table~\ref{tab:labelflip} shows that \emph{no} coordinate-wise rule collapses: the
 undefended mean retains 53--64\% at $f{=}0.3$, versus 10\% under sign-flip. That
@@ -1003,7 +1003,7 @@ threshold-aware adversary that jointly minimizes footprint and detectability rem
 open, but the naive duty-cycle evasion does not succeed.
 \input{../results/tables/table_duty.tex}
 
-\subsection{Ablation: Which Component Earns the Robustness}
+\subsection{Ablation of CB-SAFE+ Components}
 CB-SAFE+ layers three ingredients on top of clustered secure aggregation: temporal
 reputation, temporally-overlapping re-randomized groups, and a windowed COMP decode.
 Table~\ref{tab:ablation-variants} isolates each under the identical sign-flip
@@ -1058,7 +1058,7 @@ $59.0\%$ here against the $57.5\%$ reported there --- a consistent $+1.5$-point 
 across all three seeds. The sweep is internally consistent and should be read as a
 comparison among its own settings, not as a restatement of table values.
 
-\subsection{The Privacy--Robustness Dial, Measured}
+\subsection{The Privacy--Robustness Trade-off}
 
 Fixing the rule (median) and sweeping cluster size traces the dial empirically
 (CIFAR-10 sign-flip, a 30-round median-only sweep). Without privacy ($c{=}1$), the median degrades gently from
