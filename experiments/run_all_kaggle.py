@@ -110,7 +110,10 @@ def main():
             continue
         attacks = ["signflip", "labelflip"] + (["backdoor"] if ds != "edgeiiot" else [])
         if _ATTACKS:
-            attacks = [a for a in attacks if a in _ATTACKS]
+            # Intersect, but let CBSAFE_ATTACKS introduce "none" (the f=0 clean
+            # baseline), which is not part of the default attack grid. Filtering
+            # alone would silently drop it and the run would do nothing.
+            attacks = [a for a in _ATTACKS if a in attacks or a == "none"]
         odir = os.path.join(OUT, subdir(ds))
         os.makedirs(odir, exist_ok=True)
         prepared = {}

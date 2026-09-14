@@ -948,7 +948,38 @@ accuracy signal is informative it is the less stable identifier.
 
 \input{../results/tables/table3_labelflip.tex}
 
-\subsection{Adaptive Attacker: Duty-Cycled Poisoning}
+\subsection{Adaptive Attackers}
+\textbf{Amplitude-adaptive: choosing $\gamma$ to evade the loss probe.} The
+direction flag fires on a loss margin $\delta$, so an attacker that knows the defense
+should tune its amplitude $\gamma$ rather than maximize it: too large and every
+cluster it touches is flagged, too small and the poisoning does little. We therefore
+sweep $\gamma\in\{2,3,5,8,15\}$ at $f{=}0.2$ on CIFAR-10 (three seeds, 50 rounds) and
+report, for each rule, the accuracy an attacker could force by picking its best
+$\gamma$:
+
+\begin{center}\footnotesize
+\begin{tabular}{@{}lccccc@{}}\toprule
+Rule & $\gamma{=}2$ & $\gamma{=}3$ & $\gamma{=}5$ & $\gamma{=}8$ & $\gamma{=}15$\\\midrule
+Median & 47.0 & 42.3 & \textbf{10.0} & \textbf{10.0} & \textbf{10.0}\\
+Multi-Krum & 55.3 & 53.2 & 45.3 & 35.2 & \textbf{10.0}\\
+Bulyan & \textbf{55.7} & 57.1 & 57.4 & 57.3 & 57.1\\
+CB-SAFE+ & 60.2 & 60.4 & \textbf{57.5} & 58.6 & 60.8\\
+\bottomrule\end{tabular}
+\end{center}
+
+\noindent The worst case per rule is in bold. For the coordinate-wise median and
+Multi-Krum an amplitude-adaptive attacker reaches chance ($10.0\%$); for CB-SAFE+ the
+worst attainable value is $57.5\%$, at $\gamma{=}5$ --- the amplitude used throughout
+the rest of this paper. The headline configuration is therefore already the
+attacker's best choice against CB-SAFE+, and the basin is shallow: no $\gamma$ in the
+sweep moves it more than $3.3$ points. Small $\gamma$ does not evade the probe,
+because the suspicion score accumulates over rounds rather than requiring any single
+round to exceed a margin. This is amplitude adaptivity only; a fully optimized
+attacker in the style of \cite{fang2020,shejwalkar2021,baruch2019}, solving for the
+update that maximizes damage subject to staying within the flag margin, is not
+evaluated here and remains the strongest open threat to this design.
+
+\textbf{Duty-cycled: poisoning intermittently.}
 Suspicion-based exclusion invites an obvious evasion: poison only a fraction
 $\delta$ of rounds, keeping most of the attack while holding the flagged fraction low
 enough to blend into the honest side of the suspicion gap. We test this directly

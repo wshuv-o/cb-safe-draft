@@ -80,6 +80,15 @@ def build_jobs(only):
             for d in DATASETS:
                 for s in SEEDS:
                     jobs.append(job("none", agg, 0.0, 3, s, d, overlap=ov))
+    if only in (None, "backdoor"):
+        # The backdoor table carried rows only for mean/trimmed/median/krum/hybrid;
+        # these four rules were never run against the trigger, leaving four of nine
+        # rows empty.
+        for agg, ov in [("bulyan", 1), ("geomedian", 1), ("fltrust", 1), ("fedgt", 1)]:
+            for d in DATASETS:
+                for f in (0.1, 0.2, 0.3):
+                    for s in SEEDS:
+                        jobs.append(job("backdoor", agg, f, 3, s, d, overlap=ov))
     if only in (None, "dial50"):
         for c in (1, 3, 5):
             for f in (0.05, 0.1, 0.2, 0.3):
@@ -121,7 +130,7 @@ def run_one(a):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--workers", type=int, default=4)
-    p.add_argument("--only", choices=["f0", "dial50", "gamma50"], default=None)
+    p.add_argument("--only", choices=["f0", "backdoor", "dial50", "gamma50"], default=None)
     p.add_argument("--dry-run", action="store_true")
     args = p.parse_args()
 
