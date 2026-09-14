@@ -312,6 +312,18 @@ def run(cfg: Config, client_dls: list[DataLoader], test_dl: DataLoader,
             "t_round_s": time.perf_counter() - t0,
             "n_malicious": len(malicious),
         }
+        if os.environ.get("CBSAFE_LOG_NORM"):
+            # Diagnostic only, off by default so existing CSV schemas are unchanged.
+            # ||aggregate|| against the mean ||honest update|| distinguishes "the
+            # laundered +/-h population cancels to ~0" from "the model diverges":
+            # cancellation drives the ratio toward 0, divergence does not.
+            honest = [deltas[i] for i in deltas if i not in malicious]
+            hn = float(np.mean([np.linalg.norm(h) for h in honest])) if honest else float("nan")
+            an = float(np.linalg.norm(delta_agg))
+            row["agg_norm"] = an
+            row["honest_norm"] = hn
+            row["norm_ratio"] = an / hn if hn else float("nan")
+            row["global_norm"] = float(np.linalg.norm(global_flat))
         if fedgt is not None:
             row["excluded_malicious"] = len(fedgt.excluded & malicious)
             row["excluded_honest"] = len(fedgt.excluded - malicious)

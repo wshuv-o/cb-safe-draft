@@ -770,8 +770,8 @@ predicted boundary} (Table~\ref{tab:signflip}, Fig.~\ref{fig:dynamics}). At $f{=
 clusters, within trim capacity) the static rules work: trimmed mean 51.7\%, median
 55.5\%, Multi-Krum 60.5\%, versus 20.0\% for the undefended mean and $\sim$60\% clean
 baseline. At $f{=}0.2$ ($\approx$5 dirty clusters) every coordinate-wise rule is
-pinned at exactly 10.0\% (random guessing), not because the model diverges but
-because the laundered $\pm h$ population drives the aggregate to zero
+pinned at exactly 10.0\% (random guessing): with the laundered $\pm h$ population
+straddling zero, no per-coordinate statistic recovers the honest direction
 (Proposition~\ref{prop:launder}), while Multi-Krum, which selects whole vectors
 rather than per-coordinate statistics, still reaches 45.3\% (21.4\% at $f{=}0.3$).
 Robust rules that rely on magnitude order statistics are structurally weakened by
