@@ -163,7 +163,7 @@ traffic and under $0.03\%$ amortized over training; HQC's $\sim$100$\times$ slow
 \end{enumerate}
 
 \section{Related Work}
-\textbf{Secure aggregation.} Masking-based secure aggregation lets an
+\subsubsection{Secure aggregation} Masking-based secure aggregation lets an
 honest-but-curious server learn only the \emph{sum} of client updates. Bonawitz
 \emph{et al.}\ \cite{bonawitz2017} cancel pairwise one-time masks and tolerate dropout
 through secret-shared seeds; subsequent work drives down the quadratic overhead with
@@ -177,7 +177,7 @@ follows the same double-masking template but factors key establishment behind a
 KEM-agnostic interface, so a code-based post-quantum KEM substitutes for the classical
 one in a single module.
 
-\textbf{Post-quantum federated learning.} PQSF reconstructs masks with lattice
+\subsubsection{Post-quantum federated learning} PQSF reconstructs masks with lattice
 multi-stage secret sharing \cite{pqsf2024}; Qin and Xu build single-round aggregation
 from a lattice key-homomorphic PRF \cite{qinxu2025}; Narsimhulu \emph{et al.}
 aggregate Dilithium-style lattice signatures \cite{narsimhulu2026}; and a 2026
@@ -201,7 +201,7 @@ assumption: syndrome decoding of quasi-cyclic codes, via a standard-track classi
 KEM \cite{nistir8545}, with the KEM exposed behind an agnostic interface so lattice
 and code-based variants differ in exactly one module.
 
-\textbf{Byzantine robustness and poisoning.} Model- and data-poisoning attacks
+\subsubsection{Byzantine robustness and poisoning} Model- and data-poisoning attacks
 \cite{fang2020,shejwalkar2021,tolpegin2020}, including stealthy \cite{baruch2019}
 and backdoor \cite{bagdasaryan2020,wangtails2020} variants, and their defenses are a
 large literature: robust aggregation rules such as Multi-Krum \cite{blanchard2017},
@@ -224,7 +224,7 @@ confidentiality from lattice/MPC rather than a post-quantum code-based KEM and d
 identify individual attackers. This is the privacy--robustness--post-quantum tension we
 address.
 
-\textbf{Cluster-based robust aggregation.} Reconciling Byzantine resilience
+\subsubsection{Cluster-based robust aggregation} Reconciling Byzantine resilience
 with secure aggregation is an established goal: BREA does so through
 secret-shared distance computation \cite{brea2021}, CQSA through clustered
 aggregation on quantum hardware \cite{cqsa2026}, and, closest to our robustness
@@ -349,7 +349,7 @@ count, and re-randomizing the partition each round (CB-SAFE+) does not change th
 per-round argument because each round reveals sums of fresh, independently masked
 updates.
 
-\textbf{What this theorem does not cover.} Three limits deserve stating plainly,
+\subsubsection{Scope of the theorem} Three limits deserve stating plainly,
 because the per-round guarantee is weaker than it may read.
 
 \emph{(i) Cross-round composition.} Masks are independent across rounds, but
@@ -570,7 +570,7 @@ software and hardware configuration is given once in Section~\ref{sec:eval}.
 
 \section{Evaluation}\label{sec:eval}
 \subsection{Setup}
-\textbf{Task and data.} Primary task: CIFAR-10 partitioned across $N{=}30$ clients
+\subsubsection{Task and data} Primary task: CIFAR-10 partitioned across $N{=}30$ clients
 by a Dirichlet($\alpha{=}0.5$) label-skew split; a CNN with $d{=}291\,498$
 parameters; one local epoch per round (SGD, lr $0.01$, momentum $0.9$, batch $64$);
 $k{=}10$ clusters of $c{=}3$ unless stated. The split is sharply non-IID: clients
@@ -580,19 +580,19 @@ heterogeneity under which all robustness results are reported.
 Generalization (Section~\ref{sec:general})
 adds FashionMNIST (same CNN), EMNIST-balanced (47 classes), and Edge-IIoTset (a 15-class tabular IoT
 intrusion-detection set with a multilayer perceptron), each Dirichlet-partitioned
-identically. \textbf{Configurations.} Plain FedAvg (no
+identically. \subsubsection{Configurations} Plain FedAvg (no
 cryptography); CB-SAFE/lattice (ML-KEM); CB-SAFE/code-based (HQC), at matched NIST
-levels. \textbf{Attacks.} Label flipping ($y \to 9-y$), sign flipping
+levels. \subsubsection{Attacks} Label flipping ($y \to 9-y$), sign flipping
 ($-5\Delta$), and a backdoor \cite{bagdasaryan2020} (3$\times$3 trigger patch,
 target class~0, 50\% local poison rate) at malicious fractions $f \in \{0.1, 0.2, 0.3\}$, against aggregation
 rules mean, trimmed mean, median, Multi-Krum, and the CB-SAFE+ reputation defense
 (Section~\ref{sec:defense}; server root set of 200 samples held out from all
-clients). \textbf{Metrics.} Test accuracy;
+clients). \subsubsection{Metrics} Test accuracy;
 backdoor attack success rate (ASR: fraction of triggered non-target test samples
 classified as the target); communication bytes per client (setup vs.\ per-round);
 crypto wall-time; dropout-recovery cost.
 
-\textbf{Datasets and reproducibility.} The four benchmarks are CIFAR-10~\cite{krizhevsky2009} ($50{,}000$/$10{,}000$, $10$ classes), FashionMNIST~\cite{fashionmnist} ($60{,}000$/$10{,}000$, $10$ classes), EMNIST-balanced~\cite{emnist} ($112{,}800$/$18{,}800$, $47$ classes), and Edge-IIoTset~\cite{edgeiiot} (tabular IoT/IIoT intrusion detection, the \texttt{DNN-EdgeIIoT-dataset.csv} release of $2{,}219{,}201$ flows over $15$ classes, class-stratified to at most $120{,}000$ rows), each Dirichlet($\alpha{=}0.5$)~\cite{hsu2019} partitioned across $N{=}30$ clients. Unless stated: overlap degree $o\in\{1,4\}$, Shamir threshold $t{=}\lfloor c/2\rfloor{+}1{=}2$, server root $|\mathcal{D}_0|{=}200$ held out from all clients, and adaptive-gap exclusion (flag margin $\delta{=}0.25$, minimum suspicion gap $0.15$, floor $0.25$) after a warmup of $W{=}5$ rounds; for $N{>}50$ the flag and exclusion switch to robust median-plus-MAD thresholds ($1.0$ and $2.5$ MAD). KEMs span HQC-128/192/256 and ML-KEM-512/768/1024 at matched NIST levels; masks are ChaCha20 keystreams with HKDF-SHA256 per-round seeds. Runs use Python~3.12, PyTorch~2.5.0 (CUDA~12.4), and liboqs-python~0.15.0 on NVIDIA RTX~2060 (6\,GB) and RTX~5080 (16\,GB) GPUs; all results are averaged over three seeds, with significance by paired $t$-tests (Holm-corrected).
+\subsubsection{Datasets and reproducibility} The four benchmarks are CIFAR-10~\cite{krizhevsky2009} ($50{,}000$/$10{,}000$, $10$ classes), FashionMNIST~\cite{fashionmnist} ($60{,}000$/$10{,}000$, $10$ classes), EMNIST-balanced~\cite{emnist} ($112{,}800$/$18{,}800$, $47$ classes), and Edge-IIoTset~\cite{edgeiiot} (tabular IoT/IIoT intrusion detection, the \texttt{DNN-EdgeIIoT-dataset.csv} release of $2{,}219{,}201$ flows over $15$ classes, class-stratified to at most $120{,}000$ rows), each Dirichlet($\alpha{=}0.5$)~\cite{hsu2019} partitioned across $N{=}30$ clients. Unless stated: overlap degree $o\in\{1,4\}$, Shamir threshold $t{=}\lfloor c/2\rfloor{+}1{=}2$, server root $|\mathcal{D}_0|{=}200$ held out from all clients, and adaptive-gap exclusion (flag margin $\delta{=}0.25$, minimum suspicion gap $0.15$, floor $0.25$) after a warmup of $W{=}5$ rounds; for $N{>}50$ the flag and exclusion switch to robust median-plus-MAD thresholds ($1.0$ and $2.5$ MAD). KEMs span HQC-128/192/256 and ML-KEM-512/768/1024 at matched NIST levels; masks are ChaCha20 keystreams with HKDF-SHA256 per-round seeds. Runs use Python~3.12, PyTorch~2.5.0 (CUDA~12.4), and liboqs-python~0.15.0 on NVIDIA RTX~2060 (6\,GB) and RTX~5080 (16\,GB) GPUs; all results are averaged over three seeds, with significance by paired $t$-tests (Holm-corrected).
 
 \subsection{Communication and Computation Overhead}
 Table~\ref{tab:overhead} reports measured per-client traffic and crypto time.
@@ -607,7 +607,7 @@ $0.03\%$ of total communication (Table~\ref{tab:overhead}). A round with 10\% dr
 adds only seed-reveal messages (32~B per survivor--dropout pair) and kept server
 unmasking below 0.28\,s in all configurations.
 
-\textbf{Dropout tolerance.} With $c{=}3$ and
+\subsubsection{Dropout tolerance} With $c{=}3$ and
 $t{=}\lfloor c/2 \rfloor{+}1{=}2$, a cluster survives one dropout but not two: at two
 losses the threshold cannot be met and the whole cluster is discarded, taking its
 surviving honest update with it. Under an i.i.d.\ dropout rate $p$ the expected
@@ -675,7 +675,7 @@ boundary (Prop.~\ref{prop:launder}) are stated \emph{per cluster}, they are
 independent of $N$. CB-SAFE therefore targets the cross-device regime where
 recurring all-pairs mask derivation is infeasible.
 
-\textbf{Scaling the client population.} Cost is only half the
+\subsubsection{Scaling the client population} Cost is only half the
 scaling question; the other is whether robustness survives a $16\times$ larger
 client population. We ran every rule that admits a configuration at $N{=}500$ under
 sign-flip ($f{=}0.2$) for 50 rounds (Table~\ref{tab:scale-n500},
@@ -761,7 +761,7 @@ Robustness numbers should be read against that column, not against $100\%$.
 \input{../results/tables/table_f0.tex}
 
 \subsection{Robustness Under Attack}
-\textbf{Cluster contamination.} Across all runs, the realized fraction of
+\subsubsection{Cluster contamination} Across all runs, the realized fraction of
 clean cluster sums tracked $(1-f)^c$ closely: at $c{=}3$, observed $0.70/0.50/0.40$
 versus predicted $0.73/0.51/0.34$ for $f{=}0.1/0.2/0.3$.
 
@@ -777,7 +777,7 @@ rather than per-coordinate statistics, still reaches 45.3\% (21.4\% at $f{=}0.3$
 Robust rules that rely on magnitude order statistics are structurally weakened by
 the very mechanism that provides privacy; vector-selection rules retain power.
 
-\textbf{Attack amplitude.} Since $\gamma{=}5$ is the
+\subsubsection{Attack amplitude} Since $\gamma{=}5$ is the
 exact laundering point $\gamma^{*}{=}2c/m{-}1$, one might ask whether the collapse is
 an artifact of that singular value. Sweeping $\gamma\in\{2,3,5,8,15\}$ at $f{=}0.2$
 (Fig.~\ref{fig:gamma-basin}) shows it is not: median and trimmed mean collapse to
@@ -796,7 +796,7 @@ lines mark chance and the clean baseline.}
 \label{fig:gamma-basin}
 \end{figure}
 
-\textbf{The full baseline panel.} Across Fig.~\ref{fig:dynamics},
+\subsubsection{The full baseline panel} Across Fig.~\ref{fig:dynamics},
 Fig.~\ref{fig:acc-vs-f} and Table~\ref{tab:signflip}, averaged over three seeds, the eight rules separate into
 three regimes at $f{=}0.3$: the coordinate-wise rules (mean, trimmed mean, median)
 are laundered to chance ($\approx$10\%) and the robust geometric median RFA
@@ -832,7 +832,7 @@ CB-SAFE+ hybrid  & \textbf{3/3} & \textbf{0.3} & \textbf{6/6} & \textbf{0.3} & \
 \end{tabular}
 \end{table}
 
-\textbf{CB-SAFE+ past the static breakdown.} In
+\subsubsection{CB-SAFE+ beyond the static breakdown} In
 Table~\ref{tab:signflip}, with loss-probe
 flags and temporal suspicion, the defense identifies all 3 of 3 attackers at
 $f{=}0.1$ (60.5\%, at the clean ceiling) and all 9 sign-flip attackers
@@ -846,7 +846,7 @@ Under label flipping (a weak attack in this regime: all rules land within
 44--52\%) the probe flags only the worst clusters and excludes conservatively (zero
 false positives at $f{=}0.2$), matching the best static rule.
 
-\textbf{Backdoor attacks.} The trigger attack leaves
+\subsubsection{Backdoor attacks} The trigger attack leaves
 main-task accuracy intact for every rule (50--55\%) while ASR stays at 86--97\%
 across mean, trimmed mean, Multi-Krum, \emph{and} CB-SAFE+:
 backdoored cluster sums \emph{reduce} clean root loss
@@ -953,7 +953,7 @@ accuracy signal is informative it is the less stable identifier.
 \input{../results/tables/table3_labelflip.tex}
 
 \subsection{Adaptive Attackers}
-\textbf{Amplitude-adaptive: choosing $\gamma$ to evade the loss probe.} The
+\subsubsection{Amplitude-adaptive: choosing $\gamma$ to evade the loss probe} The
 direction flag fires on a loss margin $\delta$, so an attacker that knows the defense
 should tune its amplitude $\gamma$ rather than maximize it: too large and every
 cluster it touches is flagged, too small and the poisoning does little. We therefore
@@ -983,7 +983,7 @@ attacker in the style of \cite{fang2020,shejwalkar2021,baruch2019}, solving for 
 update that maximizes damage subject to staying within the flag margin, is not
 evaluated here and remains the strongest open threat to this design.
 
-\textbf{Duty-cycled: poisoning intermittently.}
+\subsubsection{Duty-cycled: poisoning intermittently}
 Suspicion-based exclusion invites an obvious evasion: poison only a fraction
 $\delta$ of rounds, keeping most of the attack while holding the flagged fraction low
 enough to blend into the honest side of the suspicion gap. We test this directly
@@ -1078,12 +1078,12 @@ to $57.7\%$ (Table~\ref{tab:ablation-variants}).
 
 
 \section{Security Discussion and Limitations}
-\textbf{What the design guarantees.} Within a cluster, privacy reduces to the
+\subsubsection{Guarantees of the design} Within a cluster, privacy reduces to the
 double-masking argument of \cite{bonawitz2017} with the DH-style key agreement
 replaced by an IND-CCA2 KEM: masks are ChaCha20 outputs keyed by HKDF of
 encapsulated secrets, so an honest-but-curious server colluding with fewer than $t$
 cluster members learns only cluster sums. The robust layer never inspects anything
-finer than a cluster mean. \textbf{What it does not.} We do not claim security
+finer than a cluster mean. \subsubsection{Limits of the guarantee} We do not claim security
 against an actively malicious server (who could misreport dropouts; standard
 mitigations apply), nor differential privacy on the cluster sums themselves; the
 anonymity set is bounded by the alive cluster size, and cluster sums of very small
