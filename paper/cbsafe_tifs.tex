@@ -87,9 +87,11 @@ clusters cap partners at $c-1$, so their setup is constant in population. CB-SAF
 needs secrets with all peers, making its one-time setup $O(N)$ at per-round cost
 $O(c)$.
 We evaluate on CIFAR-10, FashionMNIST, EMNIST, and tabular Edge-IIoTset. The
-laundering effect and CB-SAFE+'s recovery replicate on every dataset. CB-SAFE+ beats
-every baseline under sign-flip in a pooled paired test (Holm-corrected $p{<}0.01$).
-The advantage holds as the population grows. At $500$ clients, a $16\times$ larger
+laundering effect and CB-SAFE+'s recovery replicate on every dataset. In pooled
+paired tests CB-SAFE+ beats every baseline under both attacks: by up to $56.8$ points
+under sign-flip (Holm-corrected $p{<}0.01$) and by up to $5.6$ under the milder
+label-flip, where no rule collapses (all $p{<}0.05$). The advantage holds as the
+population grows. At $500$ clients, a $16\times$ larger
 federation, CB-SAFE+ reaches $65.7\%$ where the coordinate-wise rules stay near
 chance and the closest group-testing baseline has no valid configuration at all. It
 does so while excluding $11$ honest clients of $400$, or $2.75\%$.
@@ -970,6 +972,13 @@ Table~\ref{tab:labelflip} shows that \emph{no} coordinate-wise rule collapses: t
 undefended mean retains 53--64\% at $f{=}0.3$, versus 10\% under sign-flip. That
 contrast isolates the laundering mechanism (Proposition~\ref{prop:launder}) as the
 cause of the sign-flip failures.
+
+Even in this regime CB-SAFE+ stays ahead. Pooling the same 36 matched (dataset, $f$,
+seed) cells, it beats every baseline under a paired $t$-test with Holm correction,
+from 5.6 points against the undefended mean down to 1.3 against Multi-Krum, all at
+$p{<}0.05$. The margins are an order of magnitude smaller than under sign-flip, which
+is what a control should show: with no laundering to exploit, a robust rule has far
+less to recover.
 CB-SAFE+ leads on the image benchmarks. On FashionMNIST it holds 87\% at
 $f{=}0.3$ where the mean falls to 59\%. On Edge-IIoTset all nine rules fall
 within 4.0 points of one another, so the ordering there is a wash and trimmed mean

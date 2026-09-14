@@ -86,15 +86,16 @@ def holm(pvals: list[float]) -> list[float]:
     return adj
 
 
-def significance(long: pd.DataFrame) -> pd.DataFrame | None:
-    """CB-SAFE+ (reputation) vs each static rule, on sign-flip cells where the
-    laundering effect makes robustness non-trivial. Pairs by (dataset, attack, f,
-    seed) so each comparison is like-for-like."""
+def significance(long: pd.DataFrame, attack: str = "signflip") -> pd.DataFrame | None:
+    """CB-SAFE+ (reputation) vs each static rule. Pairs by (dataset, f, seed) so each
+    comparison is like-for-like. Run for label-flip as well: the manuscript claims a
+    win under both attacks, and a claim that is only tested on one of them is an
+    assertion about the other."""
     # FLTrust included: the manuscript claims CB-SAFE+ beats *every* baseline, so
     # the strongest non-collapsing one has to be in the test, not just the
     # coordinate-wise rules that collapse under laundering.
     baselines = ["mean", "trimmed", "median", "krum", "bulyan", "geomedian", "fltrust"]
-    sub = long[(long["attack"] == "signflip") & (long["c"] == 3)
+    sub = long[(long["attack"] == attack) & (long["c"] == 3)
                & long["dataset"].isin(["cifar10", "fmnist", "emnist", "edgeiiot"])]
     rep = sub[sub["agg"] == "reputation"].set_index(["dataset", "f", "seed"])["final_acc"]
     if rep.empty:
@@ -128,7 +129,8 @@ def significance(long: pd.DataFrame) -> pd.DataFrame | None:
         rec["t_p"] = round(rec["t_p"], 5)
         rec["wilcoxon_p"] = round(rec["wilcoxon_p"], 5)
     out = pd.DataFrame(results)
-    out.to_csv(os.path.join(R, "significance.csv"), index=False)
+    name = "significance.csv" if attack == "signflip" else f"significance_{attack}.csv"
+    out.to_csv(os.path.join(R, name), index=False)
     return out
 
 
@@ -154,11 +156,16 @@ def main() -> None:
             best = statics.groupby("agg")["final_acc"].mean()
             print(f"  {ds:9s} f={f:.1f}: CB-SAFE+={rep:.3f}  best-static={best.max():.3f} "
                   f"({best.idxmax()})  worst-static={best.min():.3f}")
-    sig = significance(long)
-    if sig is not None:
-        print("\n== CB-SAFE+ vs baselines (sign-flip, paired, Holm-corrected) ==")
+    written = ["summary_multiseed.csv"]
+    for attack in ("signflip", "labelflip"):
+        sig = significance(long, attack)
+        if sig is None:
+            continue
+        print(f"\n== CB-SAFE+ vs baselines ({attack}, paired, Holm-corrected) ==")
         print(sig.to_string(index=False))
-    print("\nwrote summary_multiseed.csv" + (", significance.csv" if sig is not None else ""))
+        written.append("significance.csv" if attack == "signflip"
+                       else f"significance_{attack}.csv")
+    print("\nwrote " + ", ".join(written))
 
 
 if __name__ == "__main__":
