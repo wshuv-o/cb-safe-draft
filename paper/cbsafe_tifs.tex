@@ -49,7 +49,7 @@
 \thanks{M.~W.~Suva (ID 26-94088-2) and E.~M.~C.~Abha (ID 26-94089-2) are with the
 Department of Computer Science, American International University-Bangladesh,
 Dhaka, Bangladesh (e-mail: wshuvo360@gmail.com).}%
-\thanks{Manuscript prepared August 2026. Source code and artifacts are available at
+\thanks{Manuscript prepared September 2026. Source code and artifacts are available at
 the project repository.}}
 
 \markboth{IEEE Transactions on Information Forensics and Security,~Vol.~XX, No.~X, 2026}%
@@ -522,8 +522,9 @@ Federated training is simulated in-process; every protocol byte count and crypto
 timing reported below is measured from real objects on the wire path of the
 protocol (public keys, ciphertexts, shares, masked vectors), not modeled.
 \emph{Reproducibility:} Python 3.12, PyTorch 2.5.0 (CUDA 12.4), liboqs-python
-0.15.0, on a single NVIDIA RTX 2060 (6\,GB); one training round of 30 clients takes
-$\approx$21\,s. All runs use deterministic partitioning and
+0.15.0, on NVIDIA RTX 2060 (6\,GB) and RTX 5080 (16\,GB) GPUs; one training round
+of 30 clients takes $\approx$21\,s on the RTX 2060. The tabular Edge-IIoTset runs
+are CPU-bound and GPU-insensitive. All runs use deterministic partitioning and
 cluster assignment; results are averaged over three seeds $\{0,1,2\}$ at 50 rounds,
 significance is by paired $t$-test with Holm correction,
 and every experiment is reproducible from a per-run CSV and the released scripts.
@@ -552,7 +553,7 @@ backdoor attack success rate (ASR: fraction of triggered non-target test samples
 classified as the target); communication bytes per client (setup vs.\ per-round);
 crypto wall-time; dropout-recovery cost.
 
-\textbf{Datasets and reproducibility.} The four benchmarks are CIFAR-10~\cite{krizhevsky2009} ($50{,}000$/$10{,}000$, $10$ classes), FashionMNIST~\cite{fashionmnist} ($60{,}000$/$10{,}000$, $10$ classes), EMNIST-balanced~\cite{emnist} ($112{,}800$/$18{,}800$, $47$ classes), and Edge-IIoTset~\cite{edgeiiot} (tabular IoT/IIoT intrusion detection, the \texttt{DNN-EdgeIIoT-dataset.csv} release of $2{,}219{,}201$ flows over $15$ classes, class-stratified to at most $120{,}000$ rows), each Dirichlet($\alpha{=}0.5$)~\cite{hsu2019} partitioned across $N{=}30$ clients. Unless stated: overlap degree $o\in\{1,4\}$, Shamir threshold $t{=}\lfloor c/2\rfloor{+}1{=}2$, server root $|\mathcal{D}_0|{=}200$ held out from all clients, and adaptive-gap exclusion (flag margin $\delta{=}0.25$, minimum suspicion gap $0.15$, floor $0.25$) after a warmup of $W{=}5$ rounds; for $N{>}50$ the flag and exclusion switch to robust median-plus-MAD thresholds ($1.0$ and $2.5$ MAD). KEMs span HQC-128/192/256 and ML-KEM-512/768/1024 at matched NIST levels; masks are ChaCha20 keystreams with HKDF-SHA256 per-round seeds. Runs use Python~3.12, PyTorch~2.5.0 (CUDA~12.4), and liboqs-python~0.15.0 on a single NVIDIA RTX~2060 (6\,GB); all results are averaged over three seeds, with significance by paired $t$-tests (Holm-corrected).
+\textbf{Datasets and reproducibility.} The four benchmarks are CIFAR-10~\cite{krizhevsky2009} ($50{,}000$/$10{,}000$, $10$ classes), FashionMNIST~\cite{fashionmnist} ($60{,}000$/$10{,}000$, $10$ classes), EMNIST-balanced~\cite{emnist} ($112{,}800$/$18{,}800$, $47$ classes), and Edge-IIoTset~\cite{edgeiiot} (tabular IoT/IIoT intrusion detection, the \texttt{DNN-EdgeIIoT-dataset.csv} release of $2{,}219{,}201$ flows over $15$ classes, class-stratified to at most $120{,}000$ rows), each Dirichlet($\alpha{=}0.5$)~\cite{hsu2019} partitioned across $N{=}30$ clients. Unless stated: overlap degree $o\in\{1,4\}$, Shamir threshold $t{=}\lfloor c/2\rfloor{+}1{=}2$, server root $|\mathcal{D}_0|{=}200$ held out from all clients, and adaptive-gap exclusion (flag margin $\delta{=}0.25$, minimum suspicion gap $0.15$, floor $0.25$) after a warmup of $W{=}5$ rounds; for $N{>}50$ the flag and exclusion switch to robust median-plus-MAD thresholds ($1.0$ and $2.5$ MAD). KEMs span HQC-128/192/256 and ML-KEM-512/768/1024 at matched NIST levels; masks are ChaCha20 keystreams with HKDF-SHA256 per-round seeds. Runs use Python~3.12, PyTorch~2.5.0 (CUDA~12.4), and liboqs-python~0.15.0 on NVIDIA RTX~2060 (6\,GB) and RTX~5080 (16\,GB) GPUs; all results are averaged over three seeds, with significance by paired $t$-tests (Holm-corrected).
 
 \subsection{Overhead: the Code-Based Premium Is a One-Time Cost}
 Table~\ref{tab:overhead} reports measured per-client traffic and crypto time.

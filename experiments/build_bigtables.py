@@ -96,6 +96,14 @@ def identfp(dsdir, agg, f):
 
 # ============ sign-flip tables (full-width table*), reusable builder ============
 def build_signflip_table(methods, caption, label, outfile, attack="signflip"):
+    # The red/dash legend is appended only when such cells actually exist. A fixed
+    # legend went stale once the grid completed, explaining markup the table no
+    # longer contained; hard-removing it would instead leave a future partial run
+    # marked red with nothing explaining it.
+    body, prev = _signflip_body(methods, attack)
+    if "textcolor{red}" in "\n".join(body):
+        caption += (r" Red entries are provisional (runs still completing); "
+                    r"a dash ($-$) marks a configuration not yet evaluated.")
     L = [r"\begin{table*}[t]\centering\footnotesize",
          r"\caption{" + caption + r"}",
          r"\label{" + label + r"}", r"\setlength{\tabcolsep}{4pt}",
@@ -103,12 +111,21 @@ def build_signflip_table(methods, caption, label, outfile, attack="signflip"):
          r"& \multicolumn{3}{c}{CIFAR-10} & \multicolumn{3}{c}{FashionMNIST} & \multicolumn{3}{c}{EMNIST} & \multicolumn{3}{c}{Edge-IIoTset}\\",
          r"\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(lr){8-10}\cmidrule(l){11-13}",
          r"Method & " + " & ".join([f"$f{{=}}.{int(f*10)}$" for _ in DSROOT for f in FS]) + r"\\\midrule"]
+    L += body
+    L += [r"\bottomrule\end{tabular}\end{table*}"]
+    open(os.path.join(TBL, outfile), "w").write("\n".join(L))
+    return prev
+
+
+def _signflip_body(methods, attack):
+    """The data rows, built before the caption so the legend can reflect them."""
     prev = ["METHOD".ljust(30) + "".join(f"{ds[:8]:>26}" for ds in DSROOT)]
     best = {}
     for ds, dsdir in DSROOT.items():
         for f in FS:
             vals = {a: val(runs(dsdir, a, attack, f)) for a, _ in methods}
             best[(ds, f)] = max((v[0], a) for a, v in vals.items() if v)[1] if any(vals.values()) else None
+    body = []
     for agg, lbl in methods:
         cells, pcells = [], []
         for ds, dsdir in DSROOT.items():
@@ -116,11 +133,9 @@ def build_signflip_table(methods, caption, label, outfile, attack="signflip"):
                 v = val(runs(dsdir, agg, attack, f))
                 cells.append(fmt(v, bold=(best.get((ds, f)) == agg)))
                 pcells.append(f"{v[0]:.0f}" if v else "--")
-        L.append(f"{lbl} & " + " & ".join(cells) + r"\\")
+        body.append(f"{lbl} & " + " & ".join(cells) + r"\\")
         prev.append(lbl.ljust(30) + "".join(f"{c:>9}" for c in pcells))
-    L += [r"\bottomrule\end{tabular}\end{table*}"]
-    open(os.path.join(TBL, outfile), "w").write("\n".join(L))
-    return prev
+    return body, prev
 
 
 # TABLE I (main): baselines + FedGT + our flagship (hybrid) only.
@@ -131,8 +146,7 @@ main_methods = [("mean", "FedAvg (mean)~\\cite{mcmahan2017}"), ("trimmed", "Trim
                 ("hybrid_ov4", "\\textbf{CB-SAFE+ (ours)}")]
 main_cap = (r"Test accuracy (\%) under the sign-flip (laundering) attack across four datasets and "
             r"malicious fractions $f$ (mean\,$\pm$\,std over 3 seeds, 50 rounds). "
-            r"Higher is better; best per column in bold. Red entries are provisional (runs still "
-            r"completing). A dash ($-$) marks a configuration not yet evaluated. "
+            r"Higher is better; best per column in bold. "
             r"CB-SAFE+ variants are ablated in Table~\ref{tab:ablation-variants}.")
 prev = build_signflip_table(main_methods, main_cap, "tab:signflip", "table1_signflip.tex")
 print("=== TABLE I: sign-flip robustness, main (preview, acc%) ===")
