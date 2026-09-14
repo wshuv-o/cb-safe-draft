@@ -408,8 +408,14 @@ also \emph{disguises} what it contaminates.
 \begin{proposition}[Laundering by cluster averaging]\label{prop:launder}
 Let each honest update be $h$ (up to noise) and let $m$ members of a cluster of size
 $c$ submit the scaled sign-flip $-\gamma h$. The cluster mean is
-$\mu = \frac{c - m(1+\gamma)}{c}\, h$. Its magnitude equals an honest cluster's
-($|\mu| = |h|$) exactly when $\gamma = 2c/m - 1$, while its direction is inverted.
+\begin{equation}\label{eq:launder}
+\mu \;=\; \frac{c - m(1+\gamma)}{c}\, h ,
+\end{equation}
+whose magnitude equals an honest cluster's, $|\mu| = |h|$, exactly at
+\begin{equation}\label{eq:gammastar}
+\gamma^{*} \;=\; \frac{2c}{m} - 1 ,
+\end{equation}
+while its direction is inverted.
 At the common attack setting $\gamma{=}5$ with $c{=}3$, $m{=}1$ this holds with
 equality: the poisoned cluster sum is indistinguishable from honest by any
 magnitude- or order-statistic test, so a coordinate-wise rule applied to a
@@ -612,7 +618,11 @@ unmasking below 0.28\,s in all configurations.
 $t{=}\lfloor c/2 \rfloor{+}1{=}2$, a cluster survives one dropout but not two: at two
 losses the threshold cannot be met and the whole cluster is discarded, taking its
 surviving honest update with it. Under an i.i.d.\ dropout rate $p$ the expected
-fraction of clusters lost is $\Pr[\text{2 or 3 drop}] = 3p^2(1-p)+p^3$, so $2.8\%$ of
+fraction of clusters lost is
+\begin{equation}\label{eq:dropout}
+\Pr[\text{2 or 3 of } c{=}3 \text{ drop}] \;=\; 3p^{2}(1-p) + p^{3},
+\end{equation}
+so $2.8\%$ of
 clusters at $p{=}0.10$, $10.4\%$ at $p{=}0.20$ and $21.6\%$ at $p{=}0.30$; our
 $10\%$-dropout runs discarded one of ten clusters, consistent with that. Larger $c$
 both widens the anonymity set and raises the dropout budget, while lowering the
@@ -734,10 +744,16 @@ Robust rules are applied across the $k{=}\lceil N/c \rceil$ revealed cluster sum
 across individual clients, so their own preconditions must be restated in terms of
 \emph{contaminated cluster sums} rather than malicious clients. With $N{=}30$, $c{=}3$
 we have $k{=}10$ inputs, and the expected number of contaminated sums is
-$k(1-(1-f)^c)$: $2.7$ at $f{=}0.1$, $4.9$ at $f{=}0.2$, $6.6$ at $f{=}0.3$. We
-configure both selection rules with $b{=}\lceil k(1-(1-f)^c) \rceil$. Multi-Krum
-requires $k>2b+2$ and Bulyan $k\ge 4b+3$; at $k{=}10$ these hold only for $b{\le}3$
-and $b{\le}1$ respectively. Bulyan is therefore already outside its guarantee at
+\begin{equation}\label{eq:dirty}
+\mathbb{E}[\text{contaminated sums}] \;=\; k\big(1-(1-f)^{c}\big),
+\end{equation}
+giving $2.7$ at $f{=}0.1$, $4.9$ at $f{=}0.2$ and $6.6$ at $f{=}0.3$. We configure
+both selection rules with $b = \lceil k(1-(1-f)^c) \rceil$. Their published
+preconditions are
+\begin{equation}\label{eq:precond}
+\text{Multi-Krum: } k > 2b+2, \qquad \text{Bulyan: } k \ge 4b+3 ;
+\end{equation} at $k{=}10$ these hold only for $b{\le}3$
+and $b{\le}1$ respectively by (\ref{eq:precond}). Bulyan is therefore already outside its guarantee at
 $f{=}0.1$ and Multi-Krum from $f{=}0.2$ on. Their degradation at high $f$ is the
 expected consequence of that, not evidence against them, and we say so rather than
 present it as a finding; the laundering claim rests on the coordinate-wise rules,
@@ -974,7 +990,7 @@ CB-SAFE+ & 60.2 & 60.4 & \textbf{57.5} & 58.6 & 60.8\\
 
 \noindent The worst case per rule is in bold. For the coordinate-wise median and
 Multi-Krum an amplitude-adaptive attacker reaches chance ($10.0\%$); for CB-SAFE+ the
-worst attainable value is $57.5\%$, at $\gamma{=}5$ --- the amplitude used throughout
+worst attainable value is $57.5\%$, at $\gamma{=}5$ --- which is exactly $\gamma^{*}$ from (\ref{eq:gammastar}) at $c{=}3$, $m{=}1$, and the amplitude used throughout
 the rest of this paper. The headline configuration is therefore already the
 attacker's best choice against CB-SAFE+, and the basin is shallow: no $\gamma$ in the
 sweep moves it more than $3.3$ points. Small $\gamma$ does not evade the probe,
