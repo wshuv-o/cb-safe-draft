@@ -708,7 +708,11 @@ panel per seed; eight rules (FedGT excluded, see text).}
 
 \subsection{Utility and Cryptographic Equivalence}
 Plain FedAvg reaches 59.0\% test accuracy (mean of the final five of 40 rounds;
-59.6\% at round 40) on the non-IID split. In every round,
+59.6\% at round 40) on the non-IID split. This equivalence check is a single
+40-round run rather than the 50-round, three-seed protocol of the robustness
+experiments, since its purpose is bit-level agreement between the plain and secure
+sums rather than a converged accuracy; the corresponding converged figure is the
+$62.4\%$ of Table~\ref{tab:noattack}. In every round,
 the same client updates were pushed through the full cryptographic pipeline twice
 (once under HQC-128, once under ML-KEM-768), and every per-cluster secure sum was
 compared coordinate-wise against the plain sum. The maximum deviation across all 40
