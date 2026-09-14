@@ -77,3 +77,18 @@ Notes:
 - DOIs were confirmed by author+title+year match on Crossref; open-proceedings entries (Section B) genuinely have no publisher DOI.
 - `safefl2025` (#51) also exists as arXiv:2505.09110; the ACM AsiaCCS 2025 DOI above is the published version.
 - The four `[VERIFY]` arXiv IDs are 2026 preprints — confirm each abstract page resolves before relying on it.
+
+## C. Added during revision (DOIs verified via Crossref by title+year; pages checked live)
+| # | key | venue | link |
+|---|-----|-------|------|
+| - | shamir1979 | Commun. ACM 1979 | https://doi.org/10.1145/359168.359176 |
+| - | bcjr | IEEE Trans. Inf. Theory 1974 | https://doi.org/10.1109/tit.1974.1055186 |
+| - | hkdf | CRYPTO 2010 | https://doi.org/10.1007/978-3-642-14623-7_34 |
+| - | comp | Allerton 2011 | https://doi.org/10.1109/allerton.2011.6120391 |
+| - | hqc | HQC specification site (HTTP 200) | https://pqc-hqc.org/ |
+| - | chacha20 | Bernstein, ChaCha page (HTTP 200) | https://cr.yp.to/chacha.html |
+
+### No link recorded
+`cqsa2026` (FL@ACM CCS workshop, no stable URL located) and `macwilliams1977`
+(1977 North-Holland book, no DOI). Crossref's closest hit for the latter is
+"The Theorems of MacWilliams and Gleason" (1975), a different work, so it is not used.
