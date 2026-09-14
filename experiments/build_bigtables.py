@@ -197,21 +197,35 @@ def build_f0_table(methods, outfile="table_f0.tex"):
     """Reviewer request: an f=0 row for every rule, so attack damage can be told
     apart from implementation damage. Reads the robust_none_*_f00_* runs, which
     existed but fed no table."""
+    # Three image benchmarks only: the f=0 phase never covered Edge-IIoTset, so that
+    # column would be empty. Reporting the complete grid beats a wider one with gaps.
+    dsets = [(ds, d) for ds, d in DSROOT.items() if ds != "Edge-IIoTset"]
     rows, allcells, prev = [], [], []
     for agg, lbl in methods:
-        cells = [fmt(val(runs(dsdir, agg, "none", 0.0))) for _ds, dsdir in DSROOT.items()]
+        cells = []
+        for _ds, dsdir in dsets:
+            # FedGT: at f=0 there is no attack, so the BCJR decoder is inactive and
+            # the run reduces to its aggregation path. The faithful-decoder directory
+            # has no f=0 runs; read the same harness the other rules use, which does.
+            paths = (glob.glob(os.path.join(R, dsdir, "robust_none_fedgt_f00_c3_s*.csv")
+                               if dsdir else
+                               os.path.join(R, "robust_none_fedgt_f00_c3_s*.csv"))
+                     if agg == "fedgt" else runs(dsdir, agg, "none", 0.0))
+            cells.append(fmt(val(paths)))
         rows.append(f"{lbl} & " + " & ".join(cells) + r"\\")
         allcells += cells
         prev.append(lbl.ljust(34) + "".join(f"{c[:18]:>20}" for c in cells))
-    cap = (r"No-attack reference accuracy (\%) at $f{=}0$ (mean\,$\pm$\,std over "
-           r"3 seeds, 50 rounds). Every rule is applied to benign updates only, so a value "
-           r"below the undefended mean is the cost of the aggregation rule itself rather than "
-           r"of any attack. Read the robustness tables against this column."
+    cap = (r"No-attack reference accuracy (\%) at $f{=}0$ on the three image benchmarks "
+           r"(mean\,$\pm$\,std over 3 seeds, 50 rounds). Every rule is applied to benign "
+           r"updates only, so a value below the undefended mean is the cost of the "
+           r"aggregation rule itself rather than of any attack. Read the robustness tables "
+           r"against this column. FedGT is run through the same harness as the other rules "
+           r"here: without an attack its group-testing decoder is inactive."
            + _legend_if_needed(allcells))
     L = [r"\begin{table}[t]\centering\footnotesize",
          r"\caption{" + cap + r"}", r"\label{tab:noattack}",
-         r"\begin{tabular}{@{}lcccc@{}}\toprule",
-         r"Method & CIFAR-10 & FashionMNIST & EMNIST & Edge-IIoTset\\\midrule"] + rows
+         r"\begin{tabular}{@{}lccc@{}}\toprule",
+         r"Method & CIFAR-10 & FashionMNIST & EMNIST\\\midrule"] + rows
     L += [r"\bottomrule\end{tabular}\end{table}"]
     open(os.path.join(TBL, outfile), "w").write("\n".join(L))
     return prev

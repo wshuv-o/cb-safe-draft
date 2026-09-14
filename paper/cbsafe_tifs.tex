@@ -749,9 +749,10 @@ configuration its paper covers.
 
 The no-attack column (Table~\ref{tab:noattack}) exists so these can be told apart: a
 rule scoring below the undefended mean at $f{=}0$ is paying for its own aggregation,
-before any attacker acts. FLTrust costs $10.5$ points on CIFAR-10 this way
-($51.9$ vs $62.4$) and Bulyan $3.2$; every other rule is within $1.0$ point of the
-mean. Robustness numbers should be read against that column, not against $100\%$.
+before any attacker acts. On CIFAR-10 the undefended mean reaches $62.4\%$; FLTrust
+costs $10.5$ points against it ($51.9\%$), Bulyan $3.2$ and Multi-Krum $2.9$, while
+every remaining rule---CB-SAFE+ included, at $62.1\%$---is within $0.9$ points.
+Robustness numbers should be read against that column, not against $100\%$.
 
 \input{../results/tables/table_f0.tex}
 
