@@ -552,7 +552,8 @@ $s_i \leftarrow 0$, window $h_i \leftarrow (\,)\ \forall i$;\quad $\mathcal{E}\l
 \Return $\theta,\ \mathcal{E}$\;
 \end{algorithm}
 
-\section{Implementation}
+\section{Experimental Setup}\label{sec:eval}
+\subsection{Implementation}
 CB-SAFE is implemented in Python on liboqs~0.15.0 (via \texttt{liboqs-python}) and
 PyTorch, with the KEM selected by a one-line configuration change among HQC-128/192/256
 and ML-KEM-512/768/1024 (Kyber round-3 parameter sets are retained for comparison
@@ -566,10 +567,9 @@ Federated training is simulated in-process; every protocol byte count and crypto
 timing reported below is measured from real objects on the wire path of the
 protocol (public keys, ciphertexts, shares, masked vectors), not modeled.
 One training round of 30 clients takes $\approx$21\,s on the RTX 2060; the full
-software and hardware configuration is given once in Section~\ref{sec:eval}.
+software and hardware configuration is given below.
 
-\section{Evaluation}\label{sec:eval}
-\subsection{Setup}
+\subsection{Datasets, Models, and Protocol Configuration}
 \subsubsection{Task and data} Primary task: CIFAR-10 partitioned across $N{=}30$ clients
 by a Dirichlet($\alpha{=}0.5$) label-skew split; a CNN with $d{=}291\,498$
 parameters; one local epoch per round (SGD, lr $0.01$, momentum $0.9$, batch $64$);
@@ -594,6 +594,7 @@ crypto wall-time; dropout-recovery cost.
 
 \subsubsection{Datasets and reproducibility} The four benchmarks are CIFAR-10~\cite{krizhevsky2009} ($50{,}000$/$10{,}000$, $10$ classes), FashionMNIST~\cite{fashionmnist} ($60{,}000$/$10{,}000$, $10$ classes), EMNIST-balanced~\cite{emnist} ($112{,}800$/$18{,}800$, $47$ classes), and Edge-IIoTset~\cite{edgeiiot} (tabular IoT/IIoT intrusion detection, the \texttt{DNN-EdgeIIoT-dataset.csv} release of $2{,}219{,}201$ flows over $15$ classes, class-stratified to at most $120{,}000$ rows), each Dirichlet($\alpha{=}0.5$)~\cite{hsu2019} partitioned across $N{=}30$ clients. Unless stated: overlap degree $o\in\{1,4\}$, Shamir threshold $t{=}\lfloor c/2\rfloor{+}1{=}2$, server root $|\mathcal{D}_0|{=}200$ held out from all clients, and adaptive-gap exclusion (flag margin $\delta{=}0.25$, minimum suspicion gap $0.15$, floor $0.25$) after a warmup of $W{=}5$ rounds; for $N{>}50$ the flag and exclusion switch to robust median-plus-MAD thresholds ($1.0$ and $2.5$ MAD). KEMs span HQC-128/192/256 and ML-KEM-512/768/1024 at matched NIST levels; masks are ChaCha20 keystreams with HKDF-SHA256 per-round seeds. Runs use Python~3.12, PyTorch~2.5.0 (CUDA~12.4), and liboqs-python~0.15.0 on NVIDIA RTX~2060 (6\,GB) and RTX~5080 (16\,GB) GPUs; all results are averaged over three seeds, with significance by paired $t$-tests (Holm-corrected).
 
+\section{Results and Discussion}
 \subsection{Communication and Computation Overhead}
 Table~\ref{tab:overhead} reports measured per-client traffic and crypto time.
 Per-round traffic is identical across all six KEMs (2\,277~KiB per client,
