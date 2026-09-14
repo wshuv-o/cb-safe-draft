@@ -169,9 +169,12 @@ abl_methods = [("reputation", "Base: temporal reputation (ov1)"),
                ("hybrid_ov4", "\\;+ hybrid COMP decode (full)"),
                ("reputation_tf", "Trust-free (no root data)")]
 abl_cap = (r"Ablation of CB-SAFE+ components under sign-flip (same protocol as "
-           r"Table~\ref{tab:signflip}). Overlapping groups and the hybrid COMP decode each add "
-           r"robustness at high $f$; the trust-free variant uses no root dataset but degrades "
-           r"beyond $f{=}0.1$. Best per column in bold.")
+           r"Table~\ref{tab:signflip}). The components separate only on CIFAR-10, the "
+           r"hardest of the four: there overlapping groups and the hybrid COMP decode add "
+           r"robustness at high $f$, while on FashionMNIST, EMNIST and Edge-IIoTset the three "
+           r"variants agree within $0.3$ points and the base rule already suffices. The "
+           r"trust-free variant uses no root dataset but degrades beyond $f{=}0.1$. Best per "
+           r"column in bold.")
 prevA = build_signflip_table(abl_methods, abl_cap, "tab:ablation-variants", "table2_ablation.tex")
 print("\n=== TABLE Ib: CB-SAFE+ ablation (preview, acc%) ===")
 print("\n".join(prevA))
@@ -237,7 +240,9 @@ def build_backdoor_table(methods, outfile="table_backdoor.tex"):
            r"patch trigger is image-specific. No rule here defends against this attack, "
            r"CB-SAFE+ included."
            + _legend_if_needed(allcells))
-    L = [r"\begin{table}[t]\centering\footnotesize",
+    # table*, not table: ten columns do not fit one IEEE column (a single-column
+    # version overflowed the margin by 194pt).
+    L = [r"\begin{table*}[t]\centering\footnotesize",
          r"\caption{" + cap + r"}",
          r"\label{tab:backdoor}", r"\setlength{\tabcolsep}{4pt}",
          r"\begin{tabular}{@{}l" + "ccc" * len(dsets) + r"@{}}\toprule",
@@ -245,7 +250,7 @@ def build_backdoor_table(methods, outfile="table_backdoor.tex"):
          r"\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(l){8-10}",
          r"Method & " + " & ".join(f"$f{{=}}.{int(f*10)}$" for _ in dsets for f in FS)
          + r"\\\midrule"] + rows
-    L += [r"\bottomrule\end{tabular}\end{table}"]
+    L += [r"\bottomrule\end{tabular}\end{table*}"]
     open(os.path.join(TBL, outfile), "w").write("\n".join(L))
     return prev
 

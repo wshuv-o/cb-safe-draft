@@ -67,26 +67,25 @@ key establishment breaks under a quantum adversary, and post-quantum FL today re
 almost entirely on lattice assumptions. We identify a \emph{laundering} effect:
 aggregating securely within clusters of $c$ clients turns amplified sign-flip
 poisoning into plausible-magnitude inverted cluster sums, which defeats every
-coordinate-wise robust rule applied across those sums. We then introduce CB-SAFE+,
-which re-randomizes clustering each round and accumulates per-client suspicion from
-root-anchored direction flags --- temporal group testing over private sums --- so
-attackers the server never observes individually are excluded using only the cluster
+coordinate-wise robust rule applied across those sums. We introduce CB-SAFE+, which
+re-randomizes clustering each round and accumulates per-client suspicion from
+root-anchored direction flags --- temporal group testing over private sums ---
+excluding attackers the server never observes individually, using only the cluster
 sums already revealed. A simulation-based privacy theorem bounds what this discloses,
-and we quantify the tension it manages: the anonymity set grows with $c$ while the
-probability a cluster sum stays clean decays as $(1-f)^{c}$.
+against a tension we quantify: the anonymity set grows with $c$ while the probability
+a cluster sum stays clean decays as $(1-f)^{c}$.
 We instantiate the framework over a code-based KEM (HQC, selected by NIST in March
 2025) --- to our knowledge the first Bonawitz-style masked FL aggregation on a
 code-based rather than lattice KEM. The KEM is pluggable and affects only setup: on a
-291\,498-parameter model with 30 clients, per-round traffic is KEM-independent
-(2\,277~KiB per client) and the code-based premium is a one-time 15.2 vs.\ 3.8~KiB
-per masking partner at NIST level~1, under $0.03\%$ of training traffic. Fixed
-clusters give each client $c-1$ partners, so setup is constant in population;
-CB-SAFE+'s re-randomization needs secrets with all peers, making its one-time setup
-$O(N)$ while per-round cost stays $O(c)$.
-Across CIFAR-10, FashionMNIST, EMNIST, and tabular Edge-IIoTset, the laundering
-effect and CB-SAFE+'s recovery replicate everywhere, and CB-SAFE+ beats every
-baseline under sign-flip in a pooled paired test (Holm-corrected $p{<}0.01$). Under a
-patch-trigger backdoor no rule here succeeds, CB-SAFE+ included.
+291\,498-parameter model with 30 clients, per-round traffic is KEM-independent and
+the code-based premium is a one-time 15.2 vs.\ 3.8~KiB per masking partner at NIST
+level~1, under $0.03\%$ of training traffic. Fixed clusters give $c-1$ partners, so
+setup is constant in population; CB-SAFE+'s re-randomization needs secrets with all
+peers, making its one-time setup $O(N)$ with per-round cost still $O(c)$.
+Across CIFAR-10, FashionMNIST, EMNIST, and tabular Edge-IIoTset the laundering effect
+and CB-SAFE+'s recovery replicate everywhere, and CB-SAFE+ beats every baseline under
+sign-flip in a pooled paired test (Holm-corrected $p{<}0.01$). Under a patch-trigger
+backdoor no rule here succeeds, CB-SAFE+ included.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -349,6 +348,39 @@ count, and re-randomizing the partition each round (CB-SAFE+) does not change th
 per-round argument because each round reveals sums of fresh, independently masked
 updates.
 
+\textbf{What this theorem does not cover.} Three limits deserve stating plainly,
+because the per-round guarantee is weaker than it may read.
+
+\emph{(i) Cross-round composition.} Masks are independent across rounds, but
+\emph{updates} are not: a client trains on the same local data every round, so its
+contributions are strongly correlated. Over $R$ rounds CB-SAFE+ places that client
+with different partners each time, so the server observes $R$ different $c$-party sums
+each containing an approximately repeated vector. That is the same linear-system
+structure the fixed-cluster design refuses within a round, spread across rounds.
+CB-SAFE+ is itself evidence that it carries signal: the defense works precisely by
+inferring a per-client property (maliciousness) from cross-round group sums, and the
+same channel is open to an honest-but-curious server pursuing other per-client
+properties. The correct statement is therefore narrower than ``no privacy is spent'':
+CB-SAFE+ reveals no update \emph{content} beyond the cluster sums CB-SAFE already
+exposes, but re-randomizing those sums over time is deliberately informative about
+individual clients. Quantifying what else is recoverable that way is open.
+
+\emph{(ii) The server chooses the partition.} Our anonymity-set argument assumes the
+partition is drawn honestly. A curious server colluding with one client can instead
+place that colluder with a target every round, reducing the target's effective
+anonymity set to the remaining $c-2$ honest members --- one, at $c{=}3$. Making the
+partition verifiably random (a shared randomness beacon, or a VRF over a public seed)
+closes this and is compatible with the protocol as specified; we assume it rather
+than implement it.
+
+\emph{(iii) The anonymity set is small.} At $c{=}3$ the server sees sums of three
+updates, or two with one colluder. Gradient-inversion attacks \cite{zhu2019} are known
+to succeed on aggregates of this size, so ``sums rather than updates'' should not be
+read as strong protection at small $c$. We do not run an inversion attack on the
+revealed cluster sums; doing so would turn the privacy side of the
+privacy--robustness dial into a measured quantity rather than an asserted one, and is
+the experiment we would add next.
+
 \subsection{Robust Aggregation Across Cluster Sums}\label{sec:tradeoff}
 The server sees $k$ cluster sums $S_1,\dots,S_k$ (means after dividing by alive
 counts) and no individual update. CB-SAFE applies a robust rule across the cluster
@@ -532,13 +564,8 @@ parameters may differ slightly once published (a draft is expected as FIPS~207).
 Federated training is simulated in-process; every protocol byte count and crypto
 timing reported below is measured from real objects on the wire path of the
 protocol (public keys, ciphertexts, shares, masked vectors), not modeled.
-\emph{Reproducibility:} Python 3.12, PyTorch 2.5.0 (CUDA 12.4), liboqs-python
-0.15.0, on NVIDIA RTX 2060 (6\,GB) and RTX 5080 (16\,GB) GPUs; one training round
-of 30 clients takes $\approx$21\,s on the RTX 2060. The tabular Edge-IIoTset runs
-are CPU-bound and GPU-insensitive. All runs use deterministic partitioning and
-cluster assignment; results are averaged over three seeds $\{0,1,2\}$ at 50 rounds,
-significance is by paired $t$-test with Holm correction,
-and every experiment is reproducible from a per-run CSV and the released scripts.
+One training round of 30 clients takes $\approx$21\,s on the RTX 2060; the full
+software and hardware configuration is given once in Section~\ref{sec:eval}.
 
 \section{Evaluation}\label{sec:eval}
 \subsection{Setup}
@@ -577,7 +604,18 @@ compute for all 30 clients against 0.02\,s. Amortized over 40 training rounds
 ($\sim$89\,MiB of per-client update traffic), the code-based premium is below
 $0.03\%$ of total communication (Table~\ref{tab:overhead}). A round with 10\% dropouts
 adds only seed-reveal messages (32~B per survivor--dropout pair) and kept server
-unmasking below 0.28\,s in all configurations. The practicality question that
+unmasking below 0.28\,s in all configurations.
+
+\textbf{Dropout tolerance is a utility cost of small $c$.} With $c{=}3$ and
+$t{=}\lfloor c/2 \rfloor{+}1{=}2$, a cluster survives one dropout but not two: at two
+losses the threshold cannot be met and the whole cluster is discarded, taking its
+surviving honest update with it. Under an i.i.d.\ dropout rate $p$ the expected
+fraction of clusters lost is $\Pr[\text{2 or 3 drop}] = 3p^2(1-p)+p^3$, so $2.8\%$ of
+clusters at $p{=}0.10$, $10.4\%$ at $p{=}0.20$ and $21.6\%$ at $p{=}0.30$; our
+$10\%$-dropout runs discarded one of ten clusters, consistent with that. Larger $c$
+both widens the anonymity set and raises the dropout budget, while lowering the
+probability a cluster sum stays clean --- so dropout tolerance belongs on the same
+privacy--robustness dial as $(1-f)^c$, not beside it. The practicality question that
 motivated this work has a quantitative answer: \emph{cryptographic diversity in FL
 secure aggregation is essentially free at the protocol level once key establishment
 is amortized}: the trade-off is a one-time setup constant, not a per-round tax.
@@ -820,10 +858,11 @@ leaving this result in prose.
 
 \subsection{Generalization Across Datasets and Modalities}\label{sec:general}
 To test whether the laundering effect and CB-SAFE+'s recovery are artifacts of one
-dataset, we repeat the sign-flip evaluation on FashionMNIST (a second image
-benchmark, three seeds) and on Edge-IIoTset (tabular IoT/IIoT intrusion detection
-with a multilayer perceptron, a different modality in the security domain of the
-closest prior work \cite{byzpqfl2026}). The pattern is identical everywhere
+dataset, we repeat the sign-flip evaluation on three further benchmarks, each with
+three seeds: FashionMNIST (a second image task on the same CNN), EMNIST-balanced (47
+classes, a harder label space), and Edge-IIoTset (tabular IoT/IIoT intrusion
+detection with a multilayer perceptron, a different modality in the security domain
+of the closest prior work \cite{byzpqfl2026}). The pattern is identical everywhere
 (Table~\ref{tab:signflip}, Fig.~\ref{fig:dynamics}): every coordinate-wise rule
 collapses to chance at $f{\ge}0.2$ (10.0\% on the 10-class image sets, 7.3\% on
 15-class Edge-IIoTset), Multi-Krum degrades gracefully then falls at $f{=}0.3$, and
