@@ -13,6 +13,7 @@
 \usepackage{rotating}
 \usepackage{graphicx}
 \usepackage[T1]{fontenc}
+\usepackage{url}
 \usepackage{array}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,calc,positioning}
@@ -43,15 +44,17 @@
 
 \begin{document}
 
-\title{CB-SAFE: Code-Based Post-Quantum Secure Aggregation for Byzantine-Robust Federated Learning}
+\title{Laundering by Secure Aggregation: Temporal Group Testing for Byzantine-Robust
+Federated Learning with Code-Based Post-Quantum Confidentiality}
 
 \author{Md~Wahiduzzaman~Suva and Esm-e~Moula~Chowdhury~Abha%
 \thanks{M.~W.~Suva (ID 26-94088-2) and E.~M.~C.~Abha (ID 26-94089-2) are with the
 Department of Computer Science, American International University-Bangladesh,
-Dhaka, Bangladesh (e-mail: 26-94088-2@student.aiub.edu;
-26-94089-2@student.aiub.edu).}%
-\thanks{Manuscript prepared September 2026. Source code and artifacts are available at
-the project repository.}}
+Dhaka, Bangladesh. Corresponding author: M.~W.~Suva
+(e-mail: 26-94088-2@student.aiub.edu; 26-94089-2@student.aiub.edu).}%
+\thanks{Manuscript prepared September 2026. Source code, all result CSVs, and the
+scripts that regenerate every table and figure are available at
+\url{https://github.com/wshuv-o/cb-safe-draft}.}}
 
 \markboth{IEEE Transactions on Information Forensics and Security,~Vol.~XX, No.~X, 2026}%
 {Suva \MakeLowercase{\textit{et al.}}: CB-SAFE: Code-Based Post-Quantum Secure Aggregation for Byzantine-Robust Federated Learning}
@@ -59,37 +62,31 @@ the project repository.}}
 \maketitle
 
 \begin{abstract}
-Secure aggregation protects federated learning (FL) updates by revealing only their
-sum, but its key establishment breaks under a quantum adversary, and post-quantum FL
-today derives confidentiality almost exclusively from lattice assumptions, a single
-point of cryptanalytic failure. We present CB-SAFE, to our knowledge the first FL
-secure-aggregation framework whose post-quantum confidentiality is established by a
-code-based KEM (HQC, selected by NIST in March 2025 to diversify away from lattices)
-rather than a lattice KEM. CB-SAFE treats the KEM as a pluggable module: the same
-double-masking protocol runs over HQC or ML-KEM, and per-round mask seeds are derived
-from long-lived encapsulated secrets, so the KEM affects only a one-time setup.
-Measured on a 291\,498-parameter model with 30 clients, per-round traffic is
-KEM-independent (2\,277~KiB per client), and the entire code-based premium is a
-one-time 15.2 vs.\ 3.8~KiB per client at NIST level~1 (49.4 vs.\ 7.7~KiB at level~5),
-$0.7\%$ of one round's traffic and under $0.03\%$ amortized over training. CB-SAFE further reconciles
-secure aggregation with Byzantine robustness by aggregating securely \emph{within}
-clusters of $c$ clients and applying robust rules (trimmed mean, median, Multi-Krum)
-\emph{across} the revealed cluster sums, and we quantify the resulting
-privacy--robustness tension: the anonymity set grows with $c$ while the probability a
-cluster sum stays uncontaminated decays as $(1-f)^{c}$ under malicious fraction $f$.
-We prove a simulation-based privacy theorem, identify a \emph{laundering} effect by
-which cluster averaging turns amplified sign-flip poisoning into plausible-magnitude
-inverted sums that defeat all coordinate-wise robust rules, and introduce CB-SAFE+:
-re-randomized clustering with root-anchored direction flags accumulates per-client
-suspicion across rounds (temporal group testing over private sums) and excludes
-attackers the server never observes individually, revealing no update content beyond
-the cluster sums CB-SAFE already exposes.
-Experiments across four datasets in two modalities (non-IID CIFAR-10,
-FashionMNIST, and EMNIST, and tabular Edge-IIoTset IoT intrusion detection) with
-label-flipping, sign-flipping, and backdoor attacks validate the framework: the
-laundering effect and CB-SAFE+'s recovery replicate on every dataset (CB-SAFE+
-beats every baseline under sign-flip, Holm-corrected $p{<}0.01$), and the
-implementation is released open-source.
+Secure aggregation reveals only the sum of federated learning (FL) updates, but its
+key establishment breaks under a quantum adversary, and post-quantum FL today rests
+almost entirely on lattice assumptions. We identify a \emph{laundering} effect:
+aggregating securely within clusters of $c$ clients turns amplified sign-flip
+poisoning into plausible-magnitude inverted cluster sums, which defeats every
+coordinate-wise robust rule applied across those sums. We then introduce CB-SAFE+,
+which re-randomizes clustering each round and accumulates per-client suspicion from
+root-anchored direction flags --- temporal group testing over private sums --- so
+attackers the server never observes individually are excluded using only the cluster
+sums already revealed. A simulation-based privacy theorem bounds what this discloses,
+and we quantify the tension it manages: the anonymity set grows with $c$ while the
+probability a cluster sum stays clean decays as $(1-f)^{c}$.
+We instantiate the framework over a code-based KEM (HQC, selected by NIST in March
+2025) --- to our knowledge the first Bonawitz-style masked FL aggregation on a
+code-based rather than lattice KEM. The KEM is pluggable and affects only setup: on a
+291\,498-parameter model with 30 clients, per-round traffic is KEM-independent
+(2\,277~KiB per client) and the code-based premium is a one-time 15.2 vs.\ 3.8~KiB
+per masking partner at NIST level~1, under $0.03\%$ of training traffic. Fixed
+clusters give each client $c-1$ partners, so setup is constant in population;
+CB-SAFE+'s re-randomization needs secrets with all peers, making its one-time setup
+$O(N)$ while per-round cost stays $O(c)$.
+Across CIFAR-10, FashionMNIST, EMNIST, and tabular Edge-IIoTset, the laundering
+effect and CB-SAFE+'s recovery replicate everywhere, and CB-SAFE+ beats every
+baseline under sign-flip in a pooled paired test (Holm-corrected $p{<}0.01$). Under a
+patch-trigger backdoor no rule here succeeds, CB-SAFE+ included.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -137,10 +134,13 @@ lEarning), making five contributions:
 formalizes Bonawitz-style double masking over any IND-CCA2 KEM, with per-round mask
 seeds derived from long-lived encapsulated secrets so key encapsulation is a one-time
 cost. The post-quantum primitive becomes a single replaceable module.
-\item \textbf{The first code-based instantiation, scope-qualified:} to our knowledge,
-CB-SAFE is the first FL secure-aggregation framework whose post-quantum
-confidentiality comes from the NIST-selected code-based KEM (HQC) rather than a
-lattice KEM, at matched NIST security levels.
+\item \textbf{A code-based instantiation, scope-qualified:} to our knowledge, CB-SAFE
+is the first FL secure-aggregation framework to obtain post-quantum confidentiality
+by substituting the \emph{key-establishment KEM} in Bonawitz-style pairwise masking
+with the NIST-selected code-based HQC, at matched NIST security levels. Code-based
+secure aggregation as such is not new --- \cite{lpnsecagg2026} reaches it through
+LPN-based homomorphic encryption --- and we claim only the KEM route, whose
+distinguishing property is that the code-based premium stays a one-time setup cost.
 \item \textbf{A quantified reconciliation of privacy and robustness:} secure
 aggregation \emph{within} clusters of $c$ clients, robust aggregation (trimmed mean,
 median, Multi-Krum) \emph{across} cluster sums, and an explicit trade-off law (the
@@ -184,10 +184,19 @@ aggregate Dilithium-style lattice signatures \cite{narsimhulu2026}; and a 2026
 framework combines reputation-weighted Byzantine-robust aggregation with
 Kyber/lattice-based secure aggregation for IoT threat intelligence
 \cite{byzpqfl2026}. Surveys confirm lattice dominance across post-quantum deployment
-\cite{nguyen2025lattice}. Non-lattice exceptions are rare and code-free: multivariate
+\cite{nguyen2025lattice}. Non-lattice exceptions are few: multivariate
 cryptography with blockchain \cite{singh2025pqfog}, and CQSA, which partitions
 clients into clusters aggregated via GHZ states on near-term \emph{quantum hardware}
-\cite{cqsa2026}. CB-SAFE differs from all of the above on the confidentiality
+\cite{cqsa2026}. Code-based constructions are not absent, however. Closest is
+\cite{lpnsecagg2026}, which builds secure aggregation from key- and
+message-additive homomorphic encryption under Learning Parity with Noise and treats
+the multi-round FL setting explicitly. That work and ours reach code-based
+confidentiality by different routes: it replaces the aggregation primitive with an
+LPN-based homomorphic scheme, whereas we keep Bonawitz-style pairwise masking and
+replace only the key-establishment KEM, which is what lets the same protocol run
+unchanged over HQC or ML-KEM and makes the code-based premium a one-time setup cost
+rather than a per-round one. Our claim is therefore scoped to the KEM route, not to
+code-based secure aggregation in general. CB-SAFE differs from the lattice work on the confidentiality
 assumption: syndrome decoding of quasi-cyclic codes, via a standard-track classical
 KEM \cite{nistir8545}, with the KEM exposed behind an agnostic interface so lattice
 and code-based variants differ in exactly one module.
@@ -451,7 +460,8 @@ regardless of whose data dominates the cluster sum. (iii)~\emph{Temporal group
 testing and adaptive exclusion}: across $o$ consecutive rounds a client is
 re-clustered into $o$ different groups, the across-round analog of $o$ overlapping
 tests. A client accrues a suspicion mark in round $r$ only if its cluster was flagged
-in \emph{every} one of the last $o$ rounds (a windowed COMP decode); writing
+in \emph{every} one of the last $o$ rounds (a windowed combinatorial orthogonal
+matching pursuit (COMP) decode~\cite{comp}); writing
 $G_i^{\,r}=\prod_{\rho=r-o+1}^{r} g_{\ell(i,\rho)}^{\,\rho}$ for that windowed
 conjunction ($o{=}1$ recovers plain per-round accumulation), after $r$ rounds client
 $i$ has accumulated
@@ -597,18 +607,34 @@ HQC-256     & 49.4 & 10.6 & 2\,277 & 26 \\
 Secure-aggregation cost is set by how many pairwise partners each client must
 maintain. All-pairs masking~\cite{bonawitz2017} gives every client $N-1$ partners,
 so per-client setup traffic and per-round mask derivation grow as $O(N)$. CB-SAFE
-masks only \emph{within} clusters of size $c$, capping partners at $c-1$, so both
-quantities are \emph{constant in $N$}. Extrapolating the
-measured HQC-128 and ML-KEM-512 primitives (Table~\ref{tab:overhead}) by partner
-count, at $N{=}1000$ a client's one-time setup is $15.2$~KiB (HQC) or $3.8$~KiB
-(ML-KEM) regardless of population, versus $7.4$~MiB for all-pairs masking, a
-$500\times$ reduction that widens linearly with $N$ (final column of
-Table~\ref{tab:scale-n500}). Because the privacy law
-$\Pr[S_j\ \mathrm{clean}]{=}(1-f)^c$ and the laundering boundary
-(Prop.~\ref{prop:launder}) are stated \emph{per cluster}, they are independent of
-$N$, and the re-randomized group tests add no per-round KEM cost
-(Fig.~\ref{fig:arch}d). CB-SAFE therefore targets the cross-device regime where
-all-pairs masking is infeasible.
+masks only \emph{within} clusters of size $c$, capping partners at $c-1$.
+
+\textbf{The two variants have different setup costs, and we state them separately.}
+With \emph{fixed} clusters, a client ever masks with the same $c-1$ partners, so
+both quantities are \emph{constant in $N$}: extrapolating the measured HQC-128 and
+ML-KEM-512 primitives (Table~\ref{tab:overhead}) by partner count, a client's
+one-time setup is $15.2$~KiB (HQC) or $3.8$~KiB (ML-KEM) at any population, versus
+$7.4$~MiB for all-pairs masking at $N{=}1000$ --- a $500\times$ reduction that
+widens linearly with $N$.
+
+CB-SAFE+ does not inherit that saving. Re-randomizing the partition every round
+means any peer may become a cluster mate, so a client must hold a pairwise secret
+with all $N-1$ peers. That establishment is one-time rather than per-round, but it
+is $O(N)$: the same $7.4$~MiB at $N{=}1000$, and $3.7$~MiB at the $N{=}500$ of
+Table~\ref{tab:scale-n500}. What re-randomization buys is that this cost is paid
+once and the \emph{per-round} traffic stays $O(c)$ --- mask derivation over $c-1$
+partners --- so the saving is in recurring bandwidth, not in setup. Since every
+robustness result in Section~\ref{sec:eval} comes from CB-SAFE+, the
+constant-in-$N$ setup figure should be read as applying to the fixed-cluster
+configuration only. Removing this gap --- per-round encapsulation with only the new
+mates, which reintroduces per-round KEM traffic, or a hash-based key tree that
+derives cluster keys without all-pairs establishment --- is the obvious next step
+and we do not claim it here.
+
+Because the privacy law $\Pr[S_j\ \mathrm{clean}]{=}(1-f)^c$ and the laundering
+boundary (Prop.~\ref{prop:launder}) are stated \emph{per cluster}, they are
+independent of $N$. CB-SAFE therefore targets the cross-device regime where
+recurring all-pairs mask derivation is infeasible.
 
 \textbf{Robustness holds as the population scales.} Cost is only half the
 scaling question; the other is whether robustness survives a $16\times$ larger
@@ -658,6 +684,37 @@ all recovered by seed-reveal plus Shamir reconstruction. Measured in-run, setup 
 2.0\,s (HQC-128) vs.\ 0.02\,s (ML-KEM-512, matched NIST level~1) for all 30 clients, and steady-state
 rounds took $\sim$30\,ms of client-side masking and $\sim$0.29\,s of server-side
 unmasking, negligible against the $\sim$21\,s of local training per round.
+
+\subsection{Baseline Configuration and Where Each Rule Is Valid}\label{sec:baselines-config}
+Robust rules are applied across the $k{=}\lceil N/c \rceil$ revealed cluster sums, not
+across individual clients, so their own preconditions must be restated in terms of
+\emph{contaminated cluster sums} rather than malicious clients. With $N{=}30$, $c{=}3$
+we have $k{=}10$ inputs, and the expected number of contaminated sums is
+$k(1-(1-f)^c)$: $2.7$ at $f{=}0.1$, $4.9$ at $f{=}0.2$, $6.6$ at $f{=}0.3$. We
+configure both selection rules with $b{=}\lceil k(1-(1-f)^c) \rceil$. Multi-Krum
+requires $k>2b+2$ and Bulyan $k\ge 4b+3$; at $k{=}10$ these hold only for $b{\le}3$
+and $b{\le}1$ respectively. Bulyan is therefore already outside its guarantee at
+$f{=}0.1$ and Multi-Krum from $f{=}0.2$ on. Their degradation at high $f$ is the
+expected consequence of that, not evidence against them, and we say so rather than
+present it as a finding; the laundering claim rests on the coordinate-wise rules,
+which have no such precondition.
+
+FLTrust is given the same $|\mathcal{D}_0|{=}200$ root set as CB-SAFE+, so the two
+consume identical server-side data. An earlier revision of these results used a
+server-update normalization that suppressed FLTrust's trust weights; correcting it
+raised FLTrust substantially (for example, on Edge-IIoTset under sign-flip from
+$50.4/43.3/39.9$ to $63.1/62.6/62.5$), and all FLTrust numbers reported here are from
+the corrected implementation. FedGT is our reimplementation of its published BCJR
+decoder rather than an accuracy-thresholded stand-in, run at the $N{=}30$, group-size-3
+configuration its paper covers.
+
+The no-attack column (Table~\ref{tab:noattack}) exists so these can be told apart: a
+rule scoring below the undefended mean at $f{=}0$ is paying for its own aggregation,
+before any attacker acts. FLTrust costs $10.5$ points on CIFAR-10 this way
+($51.9$ vs $62.4$) and Bulyan $3.2$; every other rule is within $1.0$ point of the
+mean. Robustness numbers should be read against that column, not against $100\%$.
+
+\input{../results/tables/table_f0.tex}
 
 \subsection{Robustness Under Attack}
 \textbf{The contamination law holds.} Across all runs, the realized fraction of
@@ -756,7 +813,10 @@ FashionMNIST): order statistics can filter the
 trigger direction's coordinates when contamination is sparse. We therefore claim
 CB-SAFE+ for \emph{untargeted} model poisoning only; targeted trigger attacks under
 secure aggregation remain open, consistent with their difficulty even without
-privacy constraints.
+privacy constraints. Table~\ref{tab:backdoor} reports the full ASR grid rather than
+leaving this result in prose.
+
+\input{../results/tables/table_backdoor.tex}
 
 \subsection{Generalization Across Datasets and Modalities}\label{sec:general}
 To test whether the laundering effect and CB-SAFE+'s recovery are artifacts of one
@@ -772,13 +832,23 @@ CB-SAFE+ tracks the clean baseline. The round-by-round view
 decay progressively while CB-SAFE+ dips during warmup and recovers as exclusions
 fire. At $f{=}0.3$ CB-SAFE+ retains $\sim$95\%, $\sim$99\%,
 and $\sim$99\% of the no-attack accuracy on CIFAR-10, FashionMNIST, and Edge-IIoTset
-respectively, versus 12--18\% for the worst static rule. Pooling all matched
-(dataset, $f$, seed) cells, CB-SAFE+ beats every baseline under a paired $t$-test
-with Holm correction: versus the mean by 56.8 points ($p{<}10^{-15}$), the median by
-43.5 ($p{<}10^{-8}$), Multi-Krum by 18.1 ($p{<}10^{-3}$),
-FLTrust by 5.0 ($p{<}10^{-9}$), and
-FedGT's actual BCJR decoder---across all four datasets at $N{=}30$---by
-18.3 ($p{<}10^{-3}$). The
+respectively, versus 12--18\% for the worst static rule. Pooling all 36 matched
+(dataset, $f$, seed) cells, CB-SAFE+ beats \emph{every} baseline under a paired
+$t$-test with Holm correction across the eight comparisons: the mean by 56.8 points
+($p{<}10^{-15}$), trimmed mean by 45.5 and median by 43.5 (both $p{<}10^{-9}$),
+geometric median by 20.9 ($p{<}10^{-4}$), Multi-Krum by 18.1 ($p{<}10^{-4}$), FedGT's
+actual BCJR decoder by 18.3 ($p{<}10^{-4}$), Bulyan by 12.4 ($p{=}0.007$), and
+FLTrust by 5.0 ($p{<}10^{-9}$).
+
+Two qualifications on that test. It pools heterogeneous configurations, so it
+establishes a population-level ordering, not a per-cell one: at individual cells the
+ranking does change hands---FedGT ties CB-SAFE+ on FashionMNIST at $f{=}0.1$ and
+leads it on Edge-IIoTset at $f{=}0.2$ (65.6 vs 65.2), and Bulyan leads at
+Edge-IIoTset $f{=}0.1$. Per-cell values are in Table~\ref{tab:signflip} and should be
+read directly. Second, the cells are not independent (three seeds share a dataset and
+fraction), so the $p$-values are indicative rather than exact; the weakest comparison,
+Bulyan, is the one to weigh, and it is also the rule operating furthest outside its
+own precondition (Section~\ref{sec:baselines-config}). The
 Edge-IIoTset result is the sharpest: at $f{=}0.3$ CB-SAFE+ holds 64.5\% against a
 $\sim$65\% clean baseline while mean, trimmed mean, and median all sit at 7.4\%.
 FLTrust is the one baseline that also withstands laundering on this dataset,
@@ -931,8 +1001,8 @@ sum-level probes at every malicious fraction we tested, an actively malicious se
 is outside our threat model, and while a naive duty-cycled attacker does not evade
 the temporal test (Table~\ref{tab:duty}), a threshold-aware adversary that jointly
 minimizes its footprint and detectability remains the natural next step. The implementation and all measurement scripts are
-released open-source as, to our knowledge, the first code-based reference point for
-post-quantum secure aggregation in FL.
+released open-source as a reference point for KEM-level cryptographic diversity
+in post-quantum secure aggregation for FL.
 
 \begin{thebibliography}{9}
 \bibitem{bonawitz2017} K.\ Bonawitz \emph{et al.}, ``Practical secure aggregation
@@ -957,6 +1027,12 @@ post-quantum secure aggregation for real-time threat intelligence sharing in
 critical IoT infrastructure,'' arXiv:2601.01053, 2026.
 \bibitem{cqsa2026} A.\ Nath and H.\ Kasyap, ``CQSA: Byzantine-robust clustered quantum secure aggregation in
 federated learning,'' in \emph{Proc.\ Int.\ Workshop Secure Efficient Federated Learning (FL@ACM CCS)}, 2026.
+\bibitem{lpnsecagg2026} ``Post-quantum secure aggregation via code-based homomorphic
+encryption,'' arXiv:2601.13031, 2026.
+\bibitem{comp} C.\ L.\ Chan, P.\ H.\ Che, S.\ Jaggi, and V.\ Saligrama,
+``Non-adaptive probabilistic group testing with noisy measurements: Near-optimal
+bounds with efficient algorithms,'' in \emph{Proc.\ 49th Annu.\ Allerton Conf.\
+Commun., Control, Comput.}, 2011, pp.\ 1832--1839.
 \bibitem{singh2025pqfog} J.\ Singh, P.\ Singh, A.\ Kaur, and M.\ Hedabou,
 ``Post-quantum secure fog-edge computing using federated learning with blockchain,''
 \emph{J.\ Supercomput.}, vol.\ 81, Art.\ no.\ 1249, 2025.

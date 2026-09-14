@@ -61,6 +61,17 @@ def _red(txt):
     return f"\\textcolor{{red}}{{{txt}}}"
 
 
+LEGEND = (r" A dash ($-$) marks a configuration not yet run; such entries are "
+          r"shown in red and are the only gaps in this table.")
+
+
+def _legend_if_needed(cells):
+    """Append the dash/red legend only when the table actually contains such a
+    cell, so a completed grid never carries a legend for markup it lacks and a
+    partial one is never left unexplained."""
+    return LEGEND if any("textcolor{red}" in c for c in cells) else ""
+
+
 def fmt(v, bold=False):
     if v is None:
         return _red("$-$")            # PROVISIONAL: experiment not run yet
@@ -171,12 +182,77 @@ lf_cap = (r"Test accuracy (\%) under the label-flip attack across four datasets 
           r"Label flipping is a mild attack: unlike sign-flip "
           r"(Table~\ref{tab:signflip}), coordinate-wise rules do \emph{not} collapse, which "
           r"isolates laundering as the mechanism behind the sign-flip failures. Higher is better; "
-          r"best per column in bold. Red entries are provisional. A dash ($-$) marks a configuration "
-          r"not evaluated.")
+          r"best per column in bold.")
 prevLF = build_signflip_table(main_methods, lf_cap, "tab:labelflip", "table3_labelflip.tex",
                               attack="labelflip")
 print("\n=== TABLE (secondary): label-flip (preview, acc%) ===")
 print("\n".join(prevLF))
+
+
+# ============ TABLE: no-attack (f=0) reference, one column per dataset ============
+def build_f0_table(methods, outfile="table_f0.tex"):
+    """Reviewer request: an f=0 row for every rule, so attack damage can be told
+    apart from implementation damage. Reads the robust_none_*_f00_* runs, which
+    existed but fed no table."""
+    rows, allcells, prev = [], [], []
+    for agg, lbl in methods:
+        cells = [fmt(val(runs(dsdir, agg, "none", 0.0))) for _ds, dsdir in DSROOT.items()]
+        rows.append(f"{lbl} & " + " & ".join(cells) + r"\\")
+        allcells += cells
+        prev.append(lbl.ljust(34) + "".join(f"{c[:18]:>20}" for c in cells))
+    cap = (r"No-attack reference accuracy (\%) at $f{=}0$ (mean\,$\pm$\,std over "
+           r"3 seeds, 50 rounds). Every rule is applied to benign updates only, so a value "
+           r"below the undefended mean is the cost of the aggregation rule itself rather than "
+           r"of any attack. Read the robustness tables against this column."
+           + _legend_if_needed(allcells))
+    L = [r"\begin{table}[t]\centering\footnotesize",
+         r"\caption{" + cap + r"}", r"\label{tab:noattack}",
+         r"\begin{tabular}{@{}lcccc@{}}\toprule",
+         r"Method & CIFAR-10 & FashionMNIST & EMNIST & Edge-IIoTset\\\midrule"] + rows
+    L += [r"\bottomrule\end{tabular}\end{table}"]
+    open(os.path.join(TBL, outfile), "w").write("\n".join(L))
+    return prev
+
+
+prevF0 = build_f0_table(main_methods)
+print("\n=== TABLE: no-attack f=0 reference (preview, acc%) ===")
+print("\n".join(prevF0))
+
+
+# ============ TABLE: backdoor attack-success rate ============
+def build_backdoor_table(methods, outfile="table_backdoor.tex"):
+    """Reviewer request: backdoor numbers existed only in prose. Edge-IIoTset has no
+    backdoor runs (the patch trigger is image-specific), so it is omitted rather
+    than shown as an empty column."""
+    dsets = [(ds, d) for ds, d in DSROOT.items() if ds != "Edge-IIoTset"]
+    rows, allcells, prev = [], [], []
+    for agg, lbl in methods:
+        cells = [fmt(val(runs(d, agg, "backdoor", f), asr=True))
+                 for _ds, d in dsets for f in FS]
+        rows.append(f"{lbl} & " + " & ".join(cells) + r"\\")
+        allcells += cells
+        prev.append(lbl.ljust(34) + "".join(f"{c[:12]:>14}" for c in cells))
+    cap = (r"Backdoor attack-success rate (\%, lower is better) for the patch-trigger "
+           r"attack (mean\,$\pm$\,std over 3 seeds, 50 rounds). Edge-IIoTset is omitted: the "
+           r"patch trigger is image-specific. No rule here defends against this attack, "
+           r"CB-SAFE+ included."
+           + _legend_if_needed(allcells))
+    L = [r"\begin{table}[t]\centering\footnotesize",
+         r"\caption{" + cap + r"}",
+         r"\label{tab:backdoor}", r"\setlength{\tabcolsep}{4pt}",
+         r"\begin{tabular}{@{}l" + "ccc" * len(dsets) + r"@{}}\toprule",
+         "& " + " & ".join(r"\multicolumn{3}{c}{%s}" % ds for ds, _ in dsets) + r"\\",
+         r"\cmidrule(lr){2-4}\cmidrule(lr){5-7}\cmidrule(l){8-10}",
+         r"Method & " + " & ".join(f"$f{{=}}.{int(f*10)}$" for _ in dsets for f in FS)
+         + r"\\\midrule"] + rows
+    L += [r"\bottomrule\end{tabular}\end{table}"]
+    open(os.path.join(TBL, outfile), "w").write("\n".join(L))
+    return prev
+
+
+prevBD = build_backdoor_table(main_methods)
+print("\n=== TABLE: backdoor ASR (preview, %) ===")
+print("\n".join(prevBD))
 
 # ============ TABLE II: FedGT head-to-head + identification + cost (CIFAR + FMNIST) ============
 methods2 = [("fedgt", "FedGT [TIFS'25]"), ("reputation", "CB-SAFE+ ov1"),
