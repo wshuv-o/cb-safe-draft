@@ -84,8 +84,9 @@ setup is constant in population; CB-SAFE+'s re-randomization needs secrets with 
 peers, making its one-time setup $O(N)$ with per-round cost still $O(c)$.
 Across CIFAR-10, FashionMNIST, EMNIST, and tabular Edge-IIoTset the laundering effect
 and CB-SAFE+'s recovery replicate everywhere, and CB-SAFE+ beats every baseline under
-sign-flip in a pooled paired test (Holm-corrected $p{<}0.01$). Under a patch-trigger
-backdoor no rule here succeeds, CB-SAFE+ included.
+sign-flip in a pooled paired test (Holm-corrected $p{<}0.01$). CB-SAFE+ targets
+untargeted poisoning: a patch-trigger backdoor evades its direction and loss tests,
+a limit we scope out rather than claim.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -845,16 +846,15 @@ main-task accuracy intact for every rule (50--55\%) while ASR stays at 86--97\%
 across mean, trimmed mean, Multi-Krum, \emph{and} CB-SAFE+:
 backdoored cluster sums \emph{reduce} clean root loss
 and align with the honest direction, so they are invisible to loss- and
-direction-based tests alike. The one partial exception is the coordinate-wise
-median at $f{=}0.1$, which suppresses ASR to 67\% on CIFAR-10 (and to 42\% on
-FashionMNIST): order statistics can filter the
-trigger direction's coordinates when contamination is sparse. We therefore claim
-CB-SAFE+ for \emph{untargeted} model poisoning only; targeted trigger attacks under
-secure aggregation remain open, consistent with their difficulty even without
-privacy constraints. Table~\ref{tab:backdoor} reports the full ASR grid rather than
-leaving this result in prose.
+direction-based tests alike. Among these rules the partial exception at $f{=}0.1$ is
+the coordinate-wise median, which suppresses ASR to 67\% on CIFAR-10 (and to 42\% on
+FashionMNIST): order statistics can filter the trigger direction's coordinates when
+contamination is sparse, and rules that trim per coordinate after a selection step
+share that property. We therefore claim CB-SAFE+ for \emph{untargeted} model
+poisoning only; targeted trigger attacks under secure aggregation remain open,
+consistent with their difficulty even without privacy constraints, and we do not
+position CB-SAFE+ against defenses built for them.
 
-\input{../results/tables/table_backdoor.tex}
 
 \subsection{Generalization Across Datasets and Modalities}\label{sec:general}
 To test whether the laundering effect and CB-SAFE+'s recovery are artifacts of one
