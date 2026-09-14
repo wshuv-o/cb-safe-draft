@@ -67,27 +67,32 @@ establishment breaks under a quantum adversary. Post-quantum FL today rests almo
 entirely on lattice assumptions. We identify a \emph{laundering} effect. Aggregating
 securely within clusters of $c$ clients turns amplified sign-flip poisoning into
 inverted cluster sums of plausible magnitude. Every coordinate-wise robust rule
-applied across those sums is defeated. We introduce CB-SAFE+. It re-randomizes the
-clustering each round. It accumulates per-client suspicion from root-anchored
-direction flags, a form of temporal group testing over private sums. Attackers the
-server never observes individually are excluded. Only the cluster sums already
-revealed are used. A simulation-based privacy theorem bounds what this discloses. We
-also quantify the tension it manages. The anonymity set grows with $c$. The
-probability that a cluster sum stays clean decays as $(1-f)^{c}$.
-We instantiate the framework over a code-based KEM. HQC was selected by NIST in March
-2025. To our knowledge this is the first Bonawitz-style masked FL aggregation built
-on a code-based rather than a lattice KEM. The KEM is pluggable and affects only
+applied across those sums is defeated. We introduce CB-SAFE+, a defense for
+untargeted poisoning. It re-randomizes the clustering each round. It accumulates
+per-client suspicion from root-anchored direction flags, a form of temporal group
+testing over private sums. Attackers the server never observes individually are
+excluded, using only the cluster sums already revealed. Identification is sharp
+enough to act on: on CIFAR-10 it excludes every attacker at all three malicious
+fractions, while wrongly excluding at most $0.3$ honest clients on average, and none
+at $f{=}0.3$. A simulation-based privacy theorem bounds what this discloses. We also
+quantify the tension it manages. The anonymity set grows with $c$. The probability
+that a cluster sum stays clean decays as $(1-f)^{c}$.
+We instantiate the framework over HQC, the code-based KEM NIST selected in March
+2025. To our knowledge this is the first Bonawitz-style masked FL aggregation on a
+code-based rather than a lattice KEM. The KEM is pluggable and affects only
 setup. On a 291\,498-parameter model with 30 clients, per-round traffic is
 KEM-independent. The full code-based premium is a one-time 15.2 versus 3.8~KiB per
 masking partner at NIST level~1. That is under $0.03\%$ of training traffic. Fixed
-clusters give each client $c-1$ partners, so setup is constant in population.
-CB-SAFE+ instead needs secrets with all peers. Its one-time setup is therefore
-$O(N)$, while its per-round cost stays $O(c)$.
+clusters cap partners at $c-1$, so their setup is constant in population. CB-SAFE+
+needs secrets with all peers, making its one-time setup $O(N)$ at per-round cost
+$O(c)$.
 We evaluate on CIFAR-10, FashionMNIST, EMNIST, and tabular Edge-IIoTset. The
 laundering effect and CB-SAFE+'s recovery replicate on every dataset. CB-SAFE+ beats
 every baseline under sign-flip in a pooled paired test (Holm-corrected $p{<}0.01$).
-CB-SAFE+ targets untargeted poisoning. A patch-trigger backdoor evades its direction
-and loss tests, which we state as a limit of scope.
+The advantage holds as the population grows. At $500$ clients, a $16\times$ larger
+federation, CB-SAFE+ reaches $65.7\%$ where the coordinate-wise rules stay near
+chance and the closest group-testing baseline has no valid configuration at all. It
+does so while excluding $11$ honest clients of $400$, or $2.75\%$.
 \end{abstract}
 
 \begin{IEEEkeywords}
