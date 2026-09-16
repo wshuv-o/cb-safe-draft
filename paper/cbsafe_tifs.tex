@@ -44,8 +44,8 @@
 
 \begin{document}
 
-\title{Laundering by Secure Aggregation: Temporal Group Testing for Byzantine-Robust
-Federated Learning with Code-Based Post-Quantum Confidentiality}
+\title{Recovering Byzantine Robustness from Code-Based Post-Quantum Secure
+Aggregation by Temporal Group Testing}
 
 \author{Md~Wahiduzzaman~Suva and Esm-e~Moula~Chowdhury~Abha%
 \thanks{M.~W.~Suva (ID 26-94088-2) and E.~M.~C.~Abha (ID 26-94089-2) are with the
@@ -56,8 +56,8 @@ Dhaka, Bangladesh. Corresponding author: M.~W.~Suva
 scripts that regenerate every table and figure are available at
 \url{https://github.com/wshuv-o/cb-safe-draft}.}}
 
-\markboth{IEEE Transactions on Information Forensics and Security,~Vol.~XX, No.~X, 2026}%
-{Suva \MakeLowercase{\textit{et al.}}: CB-SAFE: Code-Based Post-Quantum Secure Aggregation for Byzantine-Robust Federated Learning}
+\markboth{IEEE Transactions on Dependable and Secure Computing,~Vol.~XX, No.~X, 2026}%
+{Suva \MakeLowercase{\textit{et al.}}: Recovering Byzantine Robustness from Code-Based Post-Quantum Secure Aggregation}
 
 \maketitle
 
@@ -137,19 +137,7 @@ framework provides both under a code-based, classical post-quantum assumption.
 
 This paper presents CB-SAFE (Code-Based Secure Aggregation for Federated
 lEarning), making five contributions:
-\begin{enumerate}
-\item A KEM-agnostic secure-aggregation protocol (Definition~1) that
-formalizes Bonawitz-style double masking over any IND-CCA2 KEM. Per-round mask seeds
-are derived from long-lived encapsulated secrets, so key encapsulation is a one-time
-cost. The post-quantum primitive becomes a single replaceable module.
-\item A code-based instantiation, scope-qualified. To our knowledge, CB-SAFE
-is the first FL secure-aggregation framework to obtain post-quantum confidentiality
-by substituting the \emph{key-establishment KEM} in Bonawitz-style pairwise masking
-with the NIST-selected code-based HQC, at matched NIST security levels. Code-based
-secure aggregation as such is not new. Prior work \cite{lpnsecagg2026} reaches it
-through LPN-based homomorphic encryption. We therefore claim only the KEM route. Its
-distinguishing property is that the code-based premium stays a one-time setup cost.
-\item A quantified reconciliation of privacy and robustness. Secure
+\begin{enumerate}\item A quantified reconciliation of privacy and robustness. Secure
 aggregation runs \emph{within} clusters of $c$ clients. Robust aggregation (trimmed
 mean, median, Multi-Krum) runs \emph{across} the cluster sums. An explicit trade-off
 law relates the two: the anonymity set is $c$, while the clean-cluster probability
@@ -164,6 +152,17 @@ privacy-preserving observations. It excludes malicious clients the server has ne
 observed individually. The flags are post-processing of already-revealed cluster
 sums. The defense therefore adds \emph{no} update-content leakage beyond CB-SAFE
 itself (Theorem~\ref{thm:priv}).
+\item A KEM-agnostic secure-aggregation protocol (Definition~1) that
+formalizes Bonawitz-style double masking over any IND-CCA2 KEM. Per-round mask seeds
+are derived from long-lived encapsulated secrets, so key encapsulation is a one-time
+cost. The post-quantum primitive becomes a single replaceable module.
+\item A code-based instantiation, scope-qualified. To our knowledge, CB-SAFE
+is the first FL secure-aggregation framework to obtain post-quantum confidentiality
+by substituting the \emph{key-establishment KEM} in Bonawitz-style pairwise masking
+with the NIST-selected code-based HQC, at matched NIST security levels. Code-based
+secure aggregation as such is not new. Prior work \cite{lpnsecagg2026} reaches it
+through LPN-based homomorphic encryption. We therefore claim only the KEM route. Its
+distinguishing property is that the code-based premium stays a one-time setup cost.
 \item A measured cost analysis. On a 291k-parameter model, per-round traffic
 is KEM-independent. The full code-based premium is a one-time 15.2~KiB against
 3.8~KiB per client at NIST level~1. That is $0.7\%$ of one round's traffic and under
